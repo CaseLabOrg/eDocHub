@@ -25,6 +25,12 @@ docker-compose up —build
 
 [http://localhost:8080/hello](http://localhost:8080/hello)
 
+4. Чтобы открыть Swagger UI, используйте следующий URL:
+
+[http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+
+Swagger UI предоставляет возможность взаимодействовать с REST API и просматривать всю доступную документацию.
+
 ## Остановка проекта:
 Чтобы остановить все запущенные контейнеры, используйте команду:
 
