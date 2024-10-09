@@ -1,4 +1,4 @@
-package com.example.ecm.pojo;
+package com.example.ecm.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -11,6 +11,6 @@ import lombok.Setter;
 public class Content {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer documentId;
+    private Long id;
     private String content;
 }

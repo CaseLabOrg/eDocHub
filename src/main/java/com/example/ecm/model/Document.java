@@ -1,4 +1,4 @@
-package com.example.ecm.pojo;
+package com.example.ecm.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -15,19 +15,30 @@ import java.util.Map;
 public class Document {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer documentId;
+    private Long id;
+
+    @Column(nullable = false)
     private String title;
-    private String description;
+
     @ManyToOne
-    @JoinColumn(name="user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
     @ManyToOne
-    @JoinColumn(name="type_id")
+    @JoinColumn(name = "type_id", nullable = false)
     private DocumentType documentType;
-    private LocalDateTime createdAt;
+
+    @Column(name = "description")
+    private String description;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime created_at;
+
+    @Column(name = "version", nullable = false)
     private Integer version;
 
     @OneToMany(mappedBy = "document")
     @MapKeyJoinColumn(name = "attribute_id")
     private Map<Attribute, Value> values = new HashMap<>();
 }
+

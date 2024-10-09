@@ -1,4 +1,4 @@
-package com.example.ecm.pojo;
+package com.example.ecm.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -11,7 +11,7 @@ import lombok.Setter;
 public class Value {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer valueId;
+    private Long id;
     @ManyToOne
     @JoinColumn(name = "attribute_id")
     private Attribute attribute;

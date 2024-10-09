@@ -1,4 +1,4 @@
-package com.example.ecm.pojo;
+package com.example.ecm.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -11,7 +11,7 @@ import lombok.Setter;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer userId;
+    private Long id;
     private String name;
     private String surname;
     private String email;
