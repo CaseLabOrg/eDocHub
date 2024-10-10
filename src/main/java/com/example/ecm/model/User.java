@@ -1,16 +1,19 @@
 package com.example.ecm.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Класс сущности User, представляющий пользователя в системе.
  * Включает поля: id, username, FirstName, MiddleName, LastName, email.
  * Используется для хранения информации о пользователях в базе данных.
  */
-@Data
 @Entity
 @Table(name = "users")
+@Getter
+@Setter
 public class User {
 
     /**
