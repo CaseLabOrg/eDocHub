@@ -2,7 +2,7 @@ package com.example.ecm.controller;
 
 import com.example.ecm.dto.CreateDocumentRequest;
 import com.example.ecm.dto.CreateDocumentResponse;
-import com.example.ecm.dto.CreateDocumentTypeResponse;
+import com.example.ecm.dto.SignatureDto;
 import com.example.ecm.service.DocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -79,4 +79,8 @@ public class DocumentController {
         return documentService.getAllDocuments();
     }
 
+    @PostMapping("/{id}")
+    public void signDocument(@PathVariable Long id, @RequestBody SignatureDto signature) {
+        documentService.signDocument(id, signature);
+    }
 }

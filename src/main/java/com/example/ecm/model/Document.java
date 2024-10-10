@@ -5,7 +5,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -52,4 +54,8 @@ public class Document {
     @OneToMany(mappedBy = "document")
     @MapKeyJoinColumn(name = "attribute_id")
     private Map<Attribute, Value> values = new HashMap<>();
+
+    /** Подписи документа */
+    @OneToMany(mappedBy = "document", fetch = FetchType.LAZY)
+    private List<Signature> signatures = new ArrayList<>();
 }
