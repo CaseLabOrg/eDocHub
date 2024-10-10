@@ -1,7 +1,8 @@
 package com.example.ecm.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -9,9 +10,10 @@ import java.util.List;
  * Сущность, представляющая тип документа.
  * Используется для классификации документов по их типам.
  */
-@Data
 @Entity
 @Table(name = "document_types")
+@Getter
+@Setter
 public class DocumentType {
 
     /**

@@ -3,6 +3,7 @@ package com.example.ecm.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,12 +12,11 @@ import java.util.Map;
  * Класс-сущность, представляющий документ в системе.
  * Документ содержит информацию о его атрибутах и связан с пользователем и типом документа.
  */
-@Setter
-@Getter
 @Entity
 @Table(name="documents")
+@Setter
+@Getter
 public class Document {
-
     /** Уникальный идентификатор документа */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

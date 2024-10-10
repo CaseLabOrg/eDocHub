@@ -29,5 +29,8 @@ public class Attribute {
     private String name;
 
     /** Флаг, указывающий, является ли данный атрибут обязательным для заполнения */
+    @Column(nullable = false)
+    private String name;
+
     private Boolean required;
 }

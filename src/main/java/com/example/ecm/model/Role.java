@@ -5,22 +5,14 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name="values")
+@Table(name="roles")
 @Getter
 @Setter
-public class Value {
+public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-  
-    @ManyToOne
-    @JoinColumn(name = "attribute_id")
-    private Attribute attribute;
-
-    @ManyToOne
-    @JoinColumn(name = "document_id")
-    private Document document;
 
     @Column(nullable = false)
-    private String value;
+    private String name;
 }
