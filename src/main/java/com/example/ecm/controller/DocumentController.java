@@ -75,8 +75,8 @@ public class DocumentController {
      * @return List<CreateDocumentTypeResponse>.
      */
     @GetMapping
-    public List<CreateDocumentTypeResponse> getAllDocument() {
-        return documentService.getAllDocumentTypes();
+    public List<CreateDocumentResponse> getAllDocument() {
+        return documentService.getAllDocuments();
     }
 
 }
