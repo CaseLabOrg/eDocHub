@@ -13,8 +13,10 @@ public class Value {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @ManyToOne
+
     @JoinColumn(name = "attribute_id")
     private Attribute attribute;
+
     @ManyToOne
     @JoinColumn(name = "document_id")
     private Document document;

@@ -28,13 +28,12 @@ public class Document {
     @JoinColumn(name = "type_id", nullable = false)
     private DocumentType documentType;
 
-    @Column(name = "description")
     private String description;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(nullable = false)
     private LocalDateTime created_at;
 
-    @Column(name = "version", nullable = false)
+    @Column(nullable = false)
     private Integer version;
 
     @OneToMany(mappedBy = "document")
