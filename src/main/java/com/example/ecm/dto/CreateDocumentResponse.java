@@ -11,25 +11,61 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * DTO (Data Transfer Object) для ответа при создании или запросе документа.
+ * Этот класс используется для передачи данных документа в ответе на запросы REST API.
+ */
 @Getter
 @Setter
 public class CreateDocumentResponse {
+
+    /**
+     * Уникальный идентификатор документа.
+     */
     private Long id;
 
+    /**
+     * Заголовок документа.
+     */
     private String title;
 
+    /**
+     * Пользователь, связанный с документом (создатель или ответственный).
+     */
     private User user;
 
+    /**
+     * Тип документа, определяющий его классификацию.
+     */
     private DocumentType documentType;
 
+    /**
+     * Описание документа.
+     */
     private String description;
 
+    /**
+     * Дата и время создания документа.
+     */
     private LocalDateTime created_at;
 
+    /**
+     * Версия документа.
+     */
     private Integer version;
 
+    /**
+     * Карта атрибутов документа и их значений.
+     * Хранит пары ключ-значение для кастомных атрибутов документа.
+     */
     private Map<Attribute, Value> values = new HashMap<>();
 
+    /**
+     * Метод для установки или добавления атрибутов документа.
+     * Если карта значений не пустая, новые значения добавляются к существующим.
+     *
+     * @param values карта атрибутов и их значений для добавления в документ.
+     */
     public void setValues(Map<Attribute, Value> values) {
         if (this.values == null) {
             this.values = new HashMap<>();

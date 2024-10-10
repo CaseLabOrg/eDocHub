@@ -29,6 +29,10 @@ public class DocumentType {
     @Column(nullable = false, unique = true)
     String name;
 
+    /**
+     * Список атрибутов, связанных с типом документа.
+     * Используется для хранения характеристик, которые могут быть применены к документам данного типа.
+     */
     @OneToMany(mappedBy = "documentType", fetch = FetchType.EAGER)
     private List<Attribute> attributes;
 }

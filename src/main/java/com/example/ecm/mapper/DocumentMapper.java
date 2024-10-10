@@ -1,15 +1,25 @@
 package com.example.ecm.mapper;
 
-
 import com.example.ecm.dto.CreateDocumentRequest;
 import com.example.ecm.dto.CreateDocumentResponse;
 import com.example.ecm.model.Document;
 import org.springframework.stereotype.Component;
 
+/**
+ * Компонент для маппинга данных между DTO (Data Transfer Objects) и сущностью Document.
+ * Используется для преобразования данных запросов и ответов в объекты модели и обратно.
+ */
 @Component
 public class DocumentMapper {
+
+    /**
+     * Преобразует запрос на создание документа (CreateDocumentRequest) в объект сущности Document.
+     *
+     * @param request - запрос на создание документа.
+     * @return объект модели Document, содержащий данные из запроса.
+     */
     public Document toDocument(CreateDocumentRequest request) {
-        Document document  = new Document();
+        Document document = new Document();
         document.setTitle(request.getTitle());
         document.setUser(request.getUser());
         document.setDocumentType(request.getDocumentType());
@@ -19,8 +29,14 @@ public class DocumentMapper {
         return document;
     }
 
+    /**
+     * Обновляет существующий документ на основе данных запроса.
+     *
+     * @param request - существующий объект документа, который нужно обновить.
+     * @return обновленный объект модели Document.
+     */
     public Document documentUpdate(Document request) {
-        Document document  = new Document();
+        Document document = new Document();
         document.setTitle(request.getTitle());
         document.setUser(request.getUser());
         document.setDocumentType(request.getDocumentType());
@@ -29,6 +45,13 @@ public class DocumentMapper {
         document.setVersion(request.getVersion());
         return document;
     }
+
+    /**
+     * Преобразует сущность Document в ответ на запрос создания документа (CreateDocumentResponse).
+     *
+     * @param document - сущность документа.
+     * @return объект CreateDocumentResponse, содержащий данные документа.
+     */
     public CreateDocumentResponse toCreateDocumentResponse(Document document) {
         CreateDocumentResponse createDocumentResponse = new CreateDocumentResponse();
         createDocumentResponse.setId(document.getId());
