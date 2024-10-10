@@ -18,5 +18,7 @@ public class Value {
     @ManyToOne
     @JoinColumn(name = "document_id")
     private Document document;
+
+    @Column(nullable = false)
     private String value;
 }

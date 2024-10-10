@@ -12,9 +12,13 @@ public class Attribute {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @ManyToOne
     @JoinColumn(name = "document_type_id")
     private DocumentType documentType;
+
+    @Column(nullable = false)
     private String name;
+
     private Boolean required;
 }
