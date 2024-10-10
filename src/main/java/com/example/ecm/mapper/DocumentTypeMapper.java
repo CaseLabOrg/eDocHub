@@ -3,7 +3,9 @@ package com.example.ecm.mapper;
 import com.example.ecm.dto.CreateDocumentTypeRequest;
 import com.example.ecm.dto.CreateDocumentTypeResponse;
 import com.example.ecm.model.DocumentType;
+import org.springframework.stereotype.Component;
 
+@Component
 public class DocumentTypeMapper {
     public DocumentType toDocumentType(CreateDocumentTypeRequest request) {
         DocumentType documentType = new DocumentType();

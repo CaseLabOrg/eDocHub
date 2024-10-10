@@ -27,9 +27,7 @@ public class DocumentTypeController {
 
     @GetMapping("/{id}")
     public ResponseEntity<CreateDocumentTypeResponse> getDocumentTypeById(@PathVariable Long id) {
-        return documentTypeService.getDocumentTypeById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(documentTypeService.getDocumentTypeById(id));
     }
 
     @GetMapping

@@ -3,6 +3,8 @@ package com.example.ecm.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * Сущность, представляющая тип документа.
  * Используется для классификации документов по их типам.
@@ -26,4 +28,7 @@ public class DocumentType {
      */
     @Column(nullable = false, unique = true)
     String name;
+
+    @OneToMany(mappedBy = "documentType", fetch = FetchType.EAGER)
+    private List<Attribute> attributes;
 }
