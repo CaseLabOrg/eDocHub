@@ -5,7 +5,9 @@ import com.example.ecm.dto.CreateDocumentResponse;
 import com.example.ecm.mapper.DocumentMapper;
 import com.example.ecm.model.Document;
 import com.example.ecm.repository.DocumentRepository;
+import io.minio.MinioClient;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,9 +15,12 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class DocumentService {
-
     private final DocumentRepository documentRepository;
     private final DocumentMapper documentMapper;
+    private final MinioClient minioClient;
+
+    @Value("${minio.bucket-name}")
+    private String bucketName;
 
     /**
      * Создает новый документ.

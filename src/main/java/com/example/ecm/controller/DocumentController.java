@@ -8,7 +8,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -17,6 +19,7 @@ import java.util.List;
  */
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/documents")
 public class DocumentController {
 
     // Экземпляр DocumentService для обработки бизнес-логики, связанной с документами.
@@ -29,7 +32,11 @@ public class DocumentController {
      * @return Ответ с информацией о созданном документе.
      */
     @PostMapping
-    public ResponseEntity<CreateDocumentResponse> createFile(@Valid @RequestBody CreateDocumentRequest createDocumentRequest) {
+    public ResponseEntity<CreateDocumentResponse> createFile(
+            @Nullable @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestPart CreateDocumentRequest createDocumentRequest) {
+
+        // Ваша логика для обработки документа
         CreateDocumentResponse documentResponse = documentService.createDocument(createDocumentRequest);
         return ResponseEntity.ok(documentResponse);
     }

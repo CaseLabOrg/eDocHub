@@ -5,6 +5,8 @@ import com.example.ecm.dto.CreateDocumentResponse;
 import com.example.ecm.model.Document;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 /**
  * Компонент для маппинга данных между DTO (Data Transfer Objects) и сущностью Document.
  * Используется для преобразования данных запросов и ответов в объекты модели и обратно.
@@ -24,7 +26,7 @@ public class DocumentMapper {
         document.setUser(request.getUser());
         document.setDocumentType(request.getDocumentType());
         document.setDescription(request.getDescription());
-        document.setCreated_at(request.getCreated_at());
+        document.setCreated_at(LocalDateTime.now());
         document.setVersion(request.getVersion());
         return document;
     }
