@@ -2,7 +2,9 @@ package com.example.ecm.service;
 
 import com.example.ecm.dto.CreateDocumentRequest;
 import com.example.ecm.dto.CreateDocumentResponse;
+import com.example.ecm.dto.SignatureDto;
 import com.example.ecm.mapper.DocumentMapper;
+import com.example.ecm.mapper.SignatureMapper;
 import com.example.ecm.model.Document;
 import com.example.ecm.repository.DocumentRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ public class DocumentService {
 
     private final DocumentRepository documentRepository;
     private final DocumentMapper documentMapper;
+    private final SignatureMapper signatureMapper;
 
     /**
      * Создает новый документ.
@@ -73,5 +76,19 @@ public class DocumentService {
                 .orElseThrow(() -> new RuntimeException("Document not found"));
         Document documentUpdate = documentMapper.documentUpdate(document);
         return documentMapper.toCreateDocumentResponse(documentRepository.save(documentUpdate));
+    }
+
+    /**
+     * Добавляет подпись в документ.
+     *
+     * @param id идентификатор документа
+     * @param signatureDto подпись
+     */
+    public void signDocument(Long id, SignatureDto signatureDto) {
+        var document = documentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Document not found"));
+        var signatures = document.getSignatures();
+        signatures.add(signatureMapper.toSignature(signatureDto));
+        document.setSignatures(signatures);
     }
 }
