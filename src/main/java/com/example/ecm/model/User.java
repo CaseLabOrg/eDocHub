@@ -7,7 +7,7 @@ import lombok.Setter;
 
 /**
  * Класс сущности User, представляющий пользователя в системе.
- * Включает поля: id, username, FirstName, MiddleName, LastName, email.
+ * Включает поля: id, FirstName, MiddleName, LastName, email.
  * Используется для хранения информации о пользователях в базе данных.
  */
 @Entity
@@ -24,15 +24,15 @@ public class User {
     private Long id;
 
     /**
-     * Имя пользователя (логин). Должно быть уникальным и не может быть null.
+     * Электронная почта пользователя(логин). Должна быть уникальной и не может быть null.
      */
     @Column(nullable = false, unique = true)
-    private String username;
+    private String email;
 
     /**
      * Имя пользователя. Не может быть null.
      */
-    @Column(nullable = false)
+    @Column(name="name", nullable = false)
     private String FirstName;
 
     /**
@@ -44,12 +44,6 @@ public class User {
     /**
      * Фамилия пользователя. Не может быть null.
      */
-    @Column(nullable = false)
+    @Column(name="surname", nullable = false)
     private String LastName;
-
-    /**
-     * Электронная почта пользователя. Должна быть уникальной и не может быть null.
-     */
-    @Column(nullable = false, unique = true)
-    private String email;
 }
