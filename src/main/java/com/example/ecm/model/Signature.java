@@ -40,4 +40,8 @@ public class Signature {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "document_id", nullable = false)
+    private Document document;
 }

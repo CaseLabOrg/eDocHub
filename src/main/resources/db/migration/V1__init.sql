@@ -57,5 +57,6 @@ CREATE TABLE Signatures(
                       id BIGSERIAL PRIMARY KEY,
                       hash VARCHAR(255),
                       placeholder_name VARCHAR(255),
-                      user_id BIGINT
+                      user_id BIGINT,
+                      document_id BIGINT
 );
