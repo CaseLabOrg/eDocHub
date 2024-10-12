@@ -38,7 +38,9 @@ public class CreateDocumentRequest {
          * Поле для указания версии, может использоваться для контроля изменений.
          */
         private Integer version;
-
+        /**
+         * Содержание документа
+         */
         private String base64Content;
 
 }

@@ -75,6 +75,10 @@ public class CreateDocumentResponse {
         }
     }
 
+    /**
+     * Содержание документа
+     */
+
     private String base64Content;
 
 }
