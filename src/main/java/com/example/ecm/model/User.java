@@ -46,4 +46,10 @@ public class User {
      */
     @Column(name="surname", nullable = false)
     private String LastName;
+
+    /**
+     * Электронная почта пользователя. Должна быть уникальной и не может быть null.
+     */
+    @Column(nullable = false, unique = true)
+    private String email;
 }
