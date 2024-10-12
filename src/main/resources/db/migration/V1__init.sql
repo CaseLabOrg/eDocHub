@@ -53,3 +53,9 @@ CREATE TABLE Roles(
                       name VARCHAR(255)
 );
 
+CREATE TABLE Signatures(
+                      id BIGSERIAL PRIMARY KEY,
+                      hash VARCHAR(255),
+                      placeholder_name VARCHAR(255),
+                      user_id BIGINT
+);

@@ -7,10 +7,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class SignatureMapper {
     public Signature toSignature(SignatureDto dto) {
-        return new Signature(dto.getPlaceholderTitle(), dto.getHash(), dto.getUser());
+        Signature signature = new Signature();
+        signature.setHash(dto.getHash());
+        signature.setPlaceholderTitle(dto.getPlaceholderTitle());
+        signature.setUser(dto.getUser());
+        return signature;
     }
 
     public SignatureDto fromSignature(Signature model) {
-        return new SignatureDto(model.getHash(), model.getPlaceholderTitle(), model.getUser());
+        SignatureDto signatureDto = new SignatureDto();
+        signatureDto.setId(model.getId());
+        signatureDto.setHash(model.getHash());
+        signatureDto.setPlaceholderTitle(model.getPlaceholderTitle());
+        signatureDto.setUser(model.getUser());
+        return signatureDto;
     }
 }

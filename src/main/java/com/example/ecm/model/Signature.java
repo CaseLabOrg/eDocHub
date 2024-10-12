@@ -2,13 +2,13 @@ package com.example.ecm.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
@@ -17,13 +17,15 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@NoArgsConstructor
-@AllArgsConstructor
 @Table(name = "signatures")
 public class Signature {
 
-    /** Подпись, хранящаяся в виде хэша */
+    /** Уникальный идентификатор документа */
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    /** Подпись, хранящаяся в виде хэша */
     @Column(name = "hash", nullable = false)
     private String hash;
 
