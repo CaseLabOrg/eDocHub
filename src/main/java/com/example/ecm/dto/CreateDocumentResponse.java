@@ -75,4 +75,6 @@ public class CreateDocumentResponse {
         }
     }
 
+    private String base64Content;
+
 }

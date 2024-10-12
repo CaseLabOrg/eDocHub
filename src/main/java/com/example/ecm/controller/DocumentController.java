@@ -2,15 +2,12 @@ package com.example.ecm.controller;
 
 import com.example.ecm.dto.CreateDocumentRequest;
 import com.example.ecm.dto.CreateDocumentResponse;
-import com.example.ecm.dto.CreateDocumentTypeResponse;
 import com.example.ecm.service.DocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -32,11 +29,7 @@ public class DocumentController {
      * @return Ответ с информацией о созданном документе.
      */
     @PostMapping
-    public ResponseEntity<CreateDocumentResponse> createFile(
-            @Nullable @RequestParam(value = "file", required = false) MultipartFile file,
-            @RequestPart CreateDocumentRequest createDocumentRequest) {
-
-        // Ваша логика для обработки документа
+    public ResponseEntity<CreateDocumentResponse> createFile( @RequestBody CreateDocumentRequest createDocumentRequest) throws Exception {
         CreateDocumentResponse documentResponse = documentService.createDocument(createDocumentRequest);
         return ResponseEntity.ok(documentResponse);
     }
@@ -48,7 +41,7 @@ public class DocumentController {
      * @return Ответ с данными документа.
      */
     @GetMapping("/{id}")
-    private ResponseEntity<CreateDocumentResponse> getDocument(@PathVariable Long id) {
+    private ResponseEntity<CreateDocumentResponse> getDocument(@PathVariable Long id) throws Exception {
         return ResponseEntity.ok(documentService.getDocumentById(id));
     }
 

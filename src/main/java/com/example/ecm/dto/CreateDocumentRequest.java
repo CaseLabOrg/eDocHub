@@ -5,8 +5,6 @@ import com.example.ecm.model.User;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-
 /**
  * DTO (Data Transfer Object) для создания нового документа.
  * Этот класс используется для передачи данных при создании документа через REST API.
@@ -40,5 +38,7 @@ public class CreateDocumentRequest {
          * Поле для указания версии, может использоваться для контроля изменений.
          */
         private Integer version;
+
+        private String base64Content;
 
 }

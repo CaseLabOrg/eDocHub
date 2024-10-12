@@ -5,22 +5,18 @@ import com.example.ecm.dto.CreateDocumentResponse;
 import com.example.ecm.mapper.DocumentMapper;
 import com.example.ecm.model.Document;
 import com.example.ecm.repository.DocumentRepository;
-import io.minio.MinioClient;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class DocumentService {
     private final DocumentRepository documentRepository;
     private final DocumentMapper documentMapper;
-    private final MinioClient minioClient;
-
-    @Value("${minio.bucket-name}")
-    private String bucketName;
+    private final MinioService minioService;
 
     /**
      * Создает новый документ.
@@ -31,19 +27,26 @@ public class DocumentService {
     public CreateDocumentResponse createDocument(CreateDocumentRequest createDocumentRequest) {
         Document document = documentMapper.toDocument(createDocumentRequest);
         Document documentSaved = documentRepository.save(document);
+        boolean success = minioService.addDocument(documentSaved.getId(), createDocumentRequest);
+        if (!success) {
+            documentRepository.deleteById(documentSaved.getId());
+            return null;
+        }
         return documentMapper.toCreateDocumentResponse(documentSaved);
     }
 
     /**
      * Получает документ по идентификатору.
      *
-     * @param id идентификатор документа
+     * @param id иден   тификатор документа
      * @return ответ с данными документа
      */
     public CreateDocumentResponse getDocumentById(Long id) {
-        return documentRepository.findById(id)
+        CreateDocumentResponse response = documentRepository.findById(id)
                 .map(documentMapper::toCreateDocumentResponse)
                 .orElseThrow(() -> new RuntimeException("Document not found"));
+        response.setBase64Content(minioService.getBase64DocumentByName(response.getId() + "_" + response.getTitle()));
+        return response;
     }
 
     /**
@@ -52,9 +55,13 @@ public class DocumentService {
      * @return список ответов с данными всех документов
      */
     public List<CreateDocumentResponse> getAllDocuments() {
-        return documentRepository.findAll().stream()
+        List<CreateDocumentResponse> list = documentRepository.findAll().stream()
                 .map(documentMapper::toCreateDocumentResponse)
                 .toList();
+        for (CreateDocumentResponse response : list) {
+            response.setBase64Content(minioService.getBase64DocumentByName(response.getId() + "_" + response.getTitle()));
+        }
+        return list;
     }
 
     /**
@@ -63,6 +70,8 @@ public class DocumentService {
      * @param id идентификатор документа
      */
     public void deleteDocument(Long id) {
+        Optional<Document> document = documentRepository.findById(id);
+        document.ifPresent(value -> minioService.deleteDocumentByName(value.getId() + "_" + value.getTitle()));
         documentRepository.deleteById(id);
     }
 
@@ -76,7 +85,15 @@ public class DocumentService {
     public CreateDocumentResponse updateDocument(Long id, CreateDocumentRequest createDocumentRequest) {
         Document document = documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Document not found"));
-        Document documentUpdate = documentMapper.documentUpdate(document);
-        return documentMapper.toCreateDocumentResponse(documentRepository.save(documentUpdate));
+        minioService.deleteDocumentByName(document.getId() + "_" + document.getTitle());
+        document.setTitle(createDocumentRequest.getTitle());
+        document.setUser(createDocumentRequest.getUser());
+        document.setDocumentType(createDocumentRequest.getDocumentType());
+        document.setDescription(createDocumentRequest.getDescription());
+        document.setVersion(createDocumentRequest.getVersion());
+        minioService.addDocument(id, createDocumentRequest);
+        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(documentRepository.save(document));
+        response.setBase64Content(createDocumentRequest.getBase64Content());
+        return response;
     }
 }

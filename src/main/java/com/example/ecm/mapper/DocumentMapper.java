@@ -32,23 +32,6 @@ public class DocumentMapper {
     }
 
     /**
-     * Обновляет существующий документ на основе данных запроса.
-     *
-     * @param request - существующий объект документа, который нужно обновить.
-     * @return обновленный объект модели Document.
-     */
-    public Document documentUpdate(Document request) {
-        Document document = new Document();
-        document.setTitle(request.getTitle());
-        document.setUser(request.getUser());
-        document.setDocumentType(request.getDocumentType());
-        document.setDescription(request.getDescription());
-        document.setCreated_at(request.getCreated_at());
-        document.setVersion(request.getVersion());
-        return document;
-    }
-
-    /**
      * Преобразует сущность Document в ответ на запрос создания документа (CreateDocumentResponse).
      *
      * @param document - сущность документа.
