@@ -2,6 +2,7 @@ package com.example.ecm.controller;
 
 import com.example.ecm.dto.CreateDocumentRequest;
 import com.example.ecm.dto.CreateDocumentResponse;
+import com.example.ecm.dto.SignatureDto;
 import com.example.ecm.service.DocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ public class DocumentController {
      * @return Ответ с информацией о созданном документе.
      */
     @PostMapping
-    public ResponseEntity<CreateDocumentResponse> createFile( @RequestBody CreateDocumentRequest createDocumentRequest) throws Exception {
+    public ResponseEntity<CreateDocumentResponse> createFile(@Valid @RequestBody CreateDocumentRequest createDocumentRequest) {
         CreateDocumentResponse documentResponse = documentService.createDocument(createDocumentRequest);
         return ResponseEntity.ok(documentResponse);
     }
@@ -41,7 +42,7 @@ public class DocumentController {
      * @return Ответ с данными документа.
      */
     @GetMapping("/{id}")
-    private ResponseEntity<CreateDocumentResponse> getDocument(@PathVariable Long id) throws Exception {
+    private ResponseEntity<CreateDocumentResponse> getDocument(@PathVariable Long id) {
         return ResponseEntity.ok(documentService.getDocumentById(id));
     }
 
@@ -79,4 +80,14 @@ public class DocumentController {
         return documentService.getAllDocuments();
     }
 
+    /**
+     * POST-метод для подписания документа по его ID.
+     *
+     * @param id Идентификатор документа, который нужно подписать.
+     * @param signature Объект запроса, содержащий данные подписи.
+     */
+    @PostMapping("/{id}")
+    public void signDocument(@PathVariable Long id, @RequestBody SignatureDto signature) {
+        documentService.signDocument(id, signature);
+    }
 }

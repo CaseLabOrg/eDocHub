@@ -2,7 +2,9 @@ package com.example.ecm.service;
 
 import com.example.ecm.dto.CreateDocumentRequest;
 import com.example.ecm.dto.CreateDocumentResponse;
+import com.example.ecm.dto.SignatureDto;
 import com.example.ecm.mapper.DocumentMapper;
+import com.example.ecm.mapper.SignatureMapper;
 import com.example.ecm.model.Document;
 import com.example.ecm.repository.DocumentRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import java.util.Optional;
 public class DocumentService {
     private final DocumentRepository documentRepository;
     private final DocumentMapper documentMapper;
+    private final SignatureMapper signatureMapper;
     private final MinioService minioService;
 
     /**
@@ -38,7 +41,7 @@ public class DocumentService {
     /**
      * Получает документ по идентификатору.
      *
-     * @param id иден   тификатор документа
+     * @param id идентификатор документа
      * @return ответ с данными документа
      */
     public CreateDocumentResponse getDocumentById(Long id) {
@@ -95,5 +98,19 @@ public class DocumentService {
         CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(documentRepository.save(document));
         response.setBase64Content(createDocumentRequest.getBase64Content());
         return response;
+    }
+
+    /**
+     * Добавляет подпись в документ.
+     *
+     * @param id идентификатор документа
+     * @param signatureDto подпись
+     */
+    public void signDocument(Long id, SignatureDto signatureDto) {
+        var document = documentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Document not found"));
+        var signatures = document.getSignatures();
+        signatures.add(signatureMapper.toSignature(signatureDto));
+        document.setSignatures(signatures);
     }
 }
