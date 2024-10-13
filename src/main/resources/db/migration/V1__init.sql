@@ -60,3 +60,10 @@ CREATE TABLE Signatures(
                       user_id BIGINT,
                       document_id BIGINT
 );
+
+CREATE TABLE Signature_Requests(
+                           id BIGSERIAL PRIMARY KEY,
+                           user_id_to BIGINT,
+                           document_id BIGINT,
+                           approved BOOLEAN
+);
