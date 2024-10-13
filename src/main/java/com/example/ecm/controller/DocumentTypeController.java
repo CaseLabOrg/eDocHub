@@ -4,6 +4,7 @@ import com.example.ecm.dto.CreateDocumentTypeRequest;
 import com.example.ecm.dto.CreateDocumentTypeResponse;
 import com.example.ecm.service.DocumentTypeService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -67,6 +68,7 @@ public class DocumentTypeController {
      * @param request Объект запроса с новыми данными для обновления типа документа.
      * @return Ответ с обновленными данными типа документа.
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<CreateDocumentTypeResponse> updateDocumentType(@PathVariable Long id, @RequestBody CreateDocumentTypeRequest request) {
         return ResponseEntity.ok(documentTypeService.updateDocumentType(id, request));
@@ -78,6 +80,7 @@ public class DocumentTypeController {
      * @param id Идентификатор типа документа, который нужно удалить.
      * @return Ответ без содержимого (No Content) после успешного удаления.
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteDocumentTypeById(@PathVariable Long id) {
         documentTypeService.deleteDocumentType(id);
