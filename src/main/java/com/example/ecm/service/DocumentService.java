@@ -13,9 +13,14 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Сервис для работы с документами.
+ * Обеспечивает создание, получение, обновление и удаление документов.
+ */
 @Service
 @RequiredArgsConstructor
 public class DocumentService {
+
     private final DocumentRepository documentRepository;
     private final DocumentMapper documentMapper;
     private final SignatureMapper signatureMapper;
@@ -23,9 +28,11 @@ public class DocumentService {
 
     /**
      * Создает новый документ.
+     * Сохраняет данные документа в базе данных и файл в MinIO.
+     * В случае ошибки сохранения файла, документ удаляется из базы данных.
      *
      * @param createDocumentRequest запрос на создание документа
-     * @return ответ с данными созданного документа
+     * @return ответ с данными созданного документа или null в случае ошибки
      */
     public CreateDocumentResponse createDocument(CreateDocumentRequest createDocumentRequest) {
         Document document = documentMapper.toDocument(createDocumentRequest);
@@ -41,10 +48,12 @@ public class DocumentService {
     }
 
     /**
-     * Получает документ по идентификатору.
+     * Получает документ по его идентификатору.
+     * Если документ существует, данные загружаются, включая содержимое файла в формате Base64.
      *
      * @param id идентификатор документа
      * @return ответ с данными документа
+     * @throws RuntimeException если документ не найден
      */
     public CreateDocumentResponse getDocumentById(Long id) {
         CreateDocumentResponse response = documentRepository.findById(id)
@@ -55,7 +64,8 @@ public class DocumentService {
     }
 
     /**
-     * Получает все документы.
+     * Получает список всех документов.
+     * Каждый документ в списке включает данные и содержимое файла в формате Base64.
      *
      * @return список ответов с данными всех документов
      */
@@ -70,7 +80,8 @@ public class DocumentService {
     }
 
     /**
-     * Удаляет документ по идентификатору.
+     * Удаляет документ по его идентификатору.
+     * Удаляются как данные из базы, так и файл из MinIO.
      *
      * @param id идентификатор документа
      */
@@ -81,11 +92,13 @@ public class DocumentService {
     }
 
     /**
-     * Обновляет документ по идентификатору.
+     * Обновляет данные существующего документа.
+     * Старое содержимое документа удаляется из MinIO, и загружается новое.
      *
      * @param id идентификатор документа
      * @param createDocumentRequest запрос на обновление документа
      * @return ответ с данными обновленного документа
+     * @throws RuntimeException если документ не найден
      */
     public CreateDocumentResponse updateDocument(Long id, CreateDocumentRequest createDocumentRequest) {
         Document document = documentRepository.findById(id)
