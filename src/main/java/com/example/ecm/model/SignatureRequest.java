@@ -20,5 +20,12 @@ public class SignatureRequest {
     @ManyToOne
     @JoinColumn(name = "document_id")
     private Document document;
+
+    /**
+     * Флаг, который обозначает была ли поставлена подпись.
+     * null - заявка пока не была обработана
+     * false - документ был отклонен
+     * true - документ был подписан
+     */
     private Boolean approved;
 }
