@@ -49,15 +49,14 @@ public class User {
     @Column(name="surname", nullable = false)
     private String LastName;
 
-    /**
-     * Электронная почта пользователя. Должна быть уникальной и не может быть null.
-     */
-    @Column(nullable = false, unique = true)
-    private String email;
-
     @Column(nullable = false)
     private String password;
 
-    //@JoinTable(name = "")
-   // private List<Role> roles;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "User_Roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private List<Role> roles;
 }
