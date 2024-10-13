@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 /**
  * Класс сущности User, представляющий пользователя в системе.
  * Включает поля: id, FirstName, MiddleName, LastName, email.
@@ -46,4 +48,15 @@ public class User {
      */
     @Column(name="surname", nullable = false)
     private String LastName;
+
+    @Column(nullable = false)
+    private String password;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "User_Roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private List<Role> roles;
 }
