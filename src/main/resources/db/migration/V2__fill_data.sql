@@ -1,6 +1,6 @@
 INSERT INTO document_types(id, name) VALUES (1, 'a');
 
-INSERT INTO users(id, name, surname, email, password) VALUES (1, 'admin', 'admin', 'admin', 'admin');
+INSERT INTO users(id, name, surname, email, password) VALUES (1, 'admin', 'admin', 'admin', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa');
 
 INSERT INTO attributes(document_type_id, name, required) VALUES(1, 'test1', false);
 INSERT INTO attributes(document_type_id, name, required) VALUES(1, 'test2', true);

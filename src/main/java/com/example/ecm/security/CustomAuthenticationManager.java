@@ -17,16 +17,16 @@ public class CustomAuthenticationManager implements AuthenticationManager {
     @Bean
     private PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder();}
 
+
+    private final CustomUserDetailService userDetailService;
+
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-
-       // var user = userDetailService.loadUserByUsername(authentication.getName());
-
-       // if (!passwordEncoder().matches(authentication.getCredentials().toString(), user.getPassword())) {
-      //      throw new BadCredentialsException("wrong password");
-       // }
-       // return new UserPrincipalAuthenticationToken(user);
-        return null;
+        var user = userDetailService.loadUserByUsername(authentication.getName());
+        if (!passwordEncoder().matches(authentication.getCredentials().toString(), user.getPassword())) {
+            throw new BadCredentialsException("wrong password");
+        }
+    return new UserPrincipalAuthenticationToken(user);
     }
 
 }
