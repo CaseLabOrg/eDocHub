@@ -31,8 +31,7 @@ public class DocumentController {
      */
     @PostMapping
     public ResponseEntity<CreateDocumentResponse> createFile(@Valid @RequestBody CreateDocumentRequest createDocumentRequest) {
-        CreateDocumentResponse documentResponse = documentService.createDocument(createDocumentRequest);
-        return ResponseEntity.ok(documentResponse);
+        return ResponseEntity.ok(documentService.createDocument(createDocumentRequest));
     }
 
     /**

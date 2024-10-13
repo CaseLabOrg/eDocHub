@@ -35,7 +35,9 @@ public class DocumentService {
             documentRepository.deleteById(documentSaved.getId());
             return null;
         }
-        return documentMapper.toCreateDocumentResponse(documentSaved);
+        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(documentRepository.save(document));
+        response.setBase64Content(createDocumentRequest.getBase64Content());
+        return response;
     }
 
     /**
