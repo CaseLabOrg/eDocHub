@@ -33,5 +33,8 @@ public class CreateUserResponse {
      */
     private String email;
 
+    /**
+     * Множество ролей созданного пользователя.
+     */
     private Set<RoleResponse> roles;
 }
