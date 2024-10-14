@@ -9,7 +9,7 @@ import java.util.Collection;
 @Getter
 @Builder
 public class UserPrincipal implements UserDetails {
-    private final Integer id;
+    private final Long id;
     private final String login;
     private final String password;
     private final Collection<? extends GrantedAuthority> authorities;

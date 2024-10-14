@@ -35,6 +35,7 @@ public class User {
     @Column(nullable = false)
     private String surname;
 
+
     /**
      * Электронная почта пользователя. Должна быть уникальной и не может быть null.
      */
