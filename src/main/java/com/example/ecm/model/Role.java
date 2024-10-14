@@ -2,6 +2,8 @@ package com.example.ecm.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -25,9 +27,6 @@ public class Role {
     @Column(nullable = false, unique = true)
     private String name;
 
-    /**
-     * Связь с таблицей UserRoles, представляющая пользователей, которым назначена данная роль.
-     */
-    @OneToMany(mappedBy = "role")
-    private Set<UserRoles> userRoles;
+    @ManyToMany(mappedBy = "roles")
+    private Set<User> users = new HashSet<>();
 }

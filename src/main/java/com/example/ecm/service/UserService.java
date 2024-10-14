@@ -3,12 +3,17 @@ package com.example.ecm.service;
 import com.example.ecm.dto.CreateUserRequest;
 import com.example.ecm.dto.CreateUserResponse;
 import com.example.ecm.mapper.UserMapper;
+import com.example.ecm.model.Role;
 import com.example.ecm.model.User;
+import com.example.ecm.repository.RoleRepository;
 import com.example.ecm.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -20,6 +25,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final RoleRepository roleRepository;
 
     /**
      * Конструктор для внедрения зависимости UserRepository и UserMapper.
@@ -27,9 +33,10 @@ public class UserService {
      * @param userRepository Репозиторий для работы с пользователями
      * @param userMapper     Маппер для преобразования между User и DTO
      */
-    public UserService(UserRepository userRepository, UserMapper userMapper) {
+    public UserService(UserRepository userRepository, UserMapper userMapper, RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
+        this.roleRepository = roleRepository;
     }
 
     /**
@@ -38,9 +45,13 @@ public class UserService {
      * @param createUserRequest DTO с данными для создания нового пользователя
      * @return DTO с данными сохраненного пользователя
      */
+    @Transactional
     public CreateUserResponse createUser(CreateUserRequest createUserRequest) {
         User user = userMapper.toUser(createUserRequest);
+        user.setRoles(getSavedRoles(user));
         User savedUser = userRepository.save(user);
+
+
         return userMapper.toCreateUserResponse(savedUser);
     }
 
@@ -80,6 +91,7 @@ public class UserService {
                     existingUser.setSurname(updateUserRequest.getSurname());
                     existingUser.setEmail(updateUserRequest.getEmail());
                     existingUser.setPassword(updateUserRequest.getPassword());
+                    existingUser.setRoles(userMapper.toRoles(updateUserRequest.getRoles()));
                     User updatedUser = userRepository.save(existingUser);
                     return userMapper.toCreateUserResponse(updatedUser);
                 }).orElseThrow(() -> new RuntimeException("User not found"));
@@ -92,6 +104,26 @@ public class UserService {
      */
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
+    }
+
+    /**
+     * Возвращает набор ролей, связанных с пользователем, сохраняя новые или обновляя существующие.
+     *
+     * @param user Пользователь, для которого определяются роли
+     * @return Набор сохраненных ролей
+     */
+    private Set<Role> getSavedRoles(User user){
+        Set<Role> savedRoles = new HashSet<>();
+        for(Role role : user.getRoles()){
+            Optional<Role> existingRole = roleRepository.findByName(role.getName());
+            if(existingRole.isPresent()){
+                role = existingRole.get();
+            }
+            role.getUsers().add(user);
+            savedRoles.add(roleRepository.save(role));
+        }
+
+        return savedRoles;
     }
 }
 
