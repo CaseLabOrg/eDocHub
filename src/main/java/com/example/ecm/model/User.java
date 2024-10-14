@@ -5,12 +5,11 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Класс сущности User, представляющий пользователя в системе.
- * Включает поля: id, FirstName, MiddleName, LastName, email.
- * Используется для хранения информации о пользователях в базе данных.
  */
 @Entity
 @Table(name = "users")
@@ -26,37 +25,51 @@ public class User {
     private Long id;
 
     /**
-     * Электронная почта пользователя(логин). Должна быть уникальной и не может быть null.
+     * Имя пользователя. Не может быть null.
+     */
+    @Column(nullable = false)
+    private String name;
+
+    /**
+     * Фамилия пользователя. Не может быть null.
+     */
+    @Column(nullable = false)
+    private String surname;
+
+
+    /**
+     * Электронная почта пользователя. Должна быть уникальной и не может быть null.
      */
     @Column(nullable = false, unique = true)
     private String email;
 
     /**
-     * Имя пользователя. Не может быть null.
+     * Пароль пользователя, не может быть null.
      */
-    @Column(name="name", nullable = false)
-    private String FirstName;
-
-    /**
-     * Отчество пользователя. Может быть null.
-     */
-    @Column
-    private String MiddleName;
-
-    /**
-     * Фамилия пользователя. Не может быть null.
-     */
-    @Column(name="surname", nullable = false)
-    private String LastName;
-
     @Column(nullable = false)
     private String password;
 
+    /**
+     * Роли пользователя
+     */
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "User_Roles",
+            name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    private List<Role> roles;
+    private Set<Role> roles;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return Objects.equals(id, user.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
 }
