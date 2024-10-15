@@ -6,6 +6,7 @@ import com.example.ecm.dto.SignatureDto;
 import com.example.ecm.mapper.DocumentMapper;
 import com.example.ecm.mapper.SignatureMapper;
 import com.example.ecm.model.Document;
+import com.example.ecm.model.Signature;
 import com.example.ecm.repository.DocumentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -95,7 +96,7 @@ public class DocumentService {
      * Обновляет данные существующего документа.
      * Старое содержимое документа удаляется из MinIO, и загружается новое.
      *
-     * @param id идентификатор документа
+     * @param id                    идентификатор документа
      * @param createDocumentRequest запрос на обновление документа
      * @return ответ с данными обновленного документа
      * @throws RuntimeException если документ не найден
@@ -118,13 +119,13 @@ public class DocumentService {
     /**
      * Добавляет подпись в документ.
      *
-     * @param id идентификатор документа
+     * @param id           идентификатор документа
      * @param signatureDto подпись
      */
     public void signDocument(Long id, SignatureDto signatureDto) {
-        var document = documentRepository.findById(id)
+        Document document = documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Document not found"));
-        var signatures = document.getSignatures();
+        List<Signature> signatures = document.getSignatures();
         signatures.add(signatureMapper.toSignature(signatureDto));
         document.setSignatures(signatures);
     }

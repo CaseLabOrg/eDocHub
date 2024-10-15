@@ -3,6 +3,7 @@ package com.example.ecm.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Set;
 
@@ -11,6 +12,7 @@ import java.util.Set;
  * Используется для передачи данных от клиента при создании нового пользователя.
  */
 @Getter
+@Setter
 public class CreateUserRequest {
 
     /**
