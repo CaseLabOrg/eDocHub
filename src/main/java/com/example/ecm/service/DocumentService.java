@@ -26,6 +26,7 @@ public class DocumentService {
     private final DocumentMapper documentMapper;
     private final SignatureMapper signatureMapper;
     private final MinioService minioService;
+    private final UserService userService;
 
     /**
      * Создает новый документ.
@@ -70,8 +71,9 @@ public class DocumentService {
      *
      * @return список ответов с данными всех документов
      */
-    public List<CreateDocumentResponse> getAllDocuments() {
-        List<CreateDocumentResponse> list = documentRepository.findAll().stream()
+    public List<CreateDocumentResponse> getAllUserDocuments(String email) {
+        Long userId = userService.findByEmail(email).get().getId();
+        List<CreateDocumentResponse> list = documentRepository.findDocumentsBySignature(userId).stream()
                 .map(documentMapper::toCreateDocumentResponse)
                 .toList();
         for (CreateDocumentResponse response : list) {
