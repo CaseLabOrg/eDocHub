@@ -107,6 +107,15 @@ public class UserService {
     }
 
     /**
+     * Поиск пользователя по email
+     *
+     * @param email Почта пользователя
+     */
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    /**
      * Возвращает набор ролей, связанных с пользователем, сохраняя новые или обновляя существующие.
      *
      * @param user Пользователь, для которого определяются роли

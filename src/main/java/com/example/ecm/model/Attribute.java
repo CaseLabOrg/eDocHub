@@ -1,5 +1,7 @@
 package com.example.ecm.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,6 +22,7 @@ public class Attribute {
     private Long id;
 
     /** Тип документа, к которому относится атрибут */
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "document_type_id")
     private DocumentType documentType;

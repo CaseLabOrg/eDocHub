@@ -1,5 +1,6 @@
 package com.example.ecm.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -35,6 +36,7 @@ public class DocumentType {
      * Список атрибутов, связанных с типом документа.
      * Используется для хранения характеристик, которые могут быть применены к документам данного типа.
      */
+    @JsonManagedReference
     @OneToMany(mappedBy = "documentType", fetch = FetchType.EAGER)
     private List<Attribute> attributes;
 }
