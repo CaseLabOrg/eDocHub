@@ -3,6 +3,8 @@ package com.example.ecm.mapper;
 import com.example.ecm.dto.*;
 import com.example.ecm.model.Role;
 import com.example.ecm.model.User;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
@@ -15,6 +17,7 @@ import java.util.Set;
 @Component
 public class UserMapper {
 
+
     /**
      * Преобразует объект CreateUserRequest в сущность User.
      *
@@ -26,7 +29,6 @@ public class UserMapper {
         user.setName(request.getName());
         user.setSurname(request.getSurname());
         user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
         return user;
     }
 

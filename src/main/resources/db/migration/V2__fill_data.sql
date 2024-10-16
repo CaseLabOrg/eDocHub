@@ -13,5 +13,6 @@ INSERT INTO values(attribute_id, document_id, value) VALUES (2,1, '52');
 INSERT INTO signatures(hash, placeholder_name, user_id) VALUES ('lkj41k4k1','section1', 1);
 
 INSERT INTO roles(id, name) VALUES (1, 'ADMIN');
+INSERT INTO roles(id, name) VALUES (2, 'USER');
 
 INSERT INTO user_roles VALUES (1, 1);
