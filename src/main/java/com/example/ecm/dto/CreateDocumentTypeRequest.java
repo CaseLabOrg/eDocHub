@@ -23,5 +23,5 @@ public class CreateDocumentTypeRequest {
      * Список атрибутов, связанных с данным типом документа.
      * Атрибуты определяют специфические поля и характеристики для документов этого типа.
      */
-    private List<Attribute> attributes;
+    private List<Long> attributesIds;
 }

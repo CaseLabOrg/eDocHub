@@ -34,6 +34,7 @@ public class DocumentTypeMapper {
         CreateDocumentTypeResponse createDocumentTypeResponse = new CreateDocumentTypeResponse();
         createDocumentTypeResponse.setId(documentType.getId());
         createDocumentTypeResponse.setName(documentType.getName());
+        createDocumentTypeResponse.setAttributes(documentType.getAttributes());
         return createDocumentTypeResponse;
     }
 }
