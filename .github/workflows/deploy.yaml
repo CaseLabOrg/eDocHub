@@ -2,7 +2,7 @@ name: Java CD with Docker
 
 on:
   push:
-    branches: [ "main", "feature/38-cd" ]
+    branches: [ "main" ]
   workflow_run:
     workflows: ["Java CI with Maven"]
     types:
