@@ -21,12 +21,12 @@ public class CreateDocumentRequest {
         /**
          * Пользователь, который создает или загружает документ.
          */
-        private User user;
+        private Long userId;
 
         /**
          * Тип документа, определяющий его классификацию.
          */
-        private DocumentType documentType;
+        private Long documentTypeId;
 
         /**
          * Описание документа, предоставленное пользователем.

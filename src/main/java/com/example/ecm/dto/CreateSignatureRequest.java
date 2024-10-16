@@ -1,7 +1,5 @@
 package com.example.ecm.dto;
 
-import com.example.ecm.model.User;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,7 +9,7 @@ import lombok.Setter;
  */
 @Setter
 @Getter
-public class SignatureDto {
+public class CreateSignatureRequest {
 
     /**
      * Уникальный идентификатор подписи.
@@ -35,5 +33,5 @@ public class SignatureDto {
      * Пользователь, которому принадлежит подпись.
      * Определяет, кто оставил подпись.
      */
-    private User user;
+    private Long userId;
 }
