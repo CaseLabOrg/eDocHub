@@ -3,15 +3,18 @@ package com.example.ecm.init;
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
 import io.minio.errors.MinioException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 
 /**
  * Инициализатор MinIO, который запускается при старте приложения.
@@ -41,16 +44,24 @@ public class MinioInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         try {
-            // Проверка существования бакета
             boolean isExist = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
             if (!isExist) {
-                // Создание нового бакета, если он не существует
                 minioClient.makeBucket(MakeBucketArgs.builder()
                         .bucket(bucketName)
                         .build());
+
+                byte[] decodedBytes = Base64.getDecoder().decode("SGVsbG8sIFdvcmxkIQ=="); // Hello, World txt file
+
+                minioClient.putObject(
+                        PutObjectArgs.builder()
+                                .bucket(bucketName)
+                                .object("1_hw")
+                                .stream(new ByteArrayInputStream(decodedBytes), decodedBytes.length, -1)
+                                .contentType("text/plain")
+                                .build()
+                ); // поменять при изменении миграций
             }
         } catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
-            // Обработка возможных исключений
             System.err.println("Error occurred: " + e);
         }
     }

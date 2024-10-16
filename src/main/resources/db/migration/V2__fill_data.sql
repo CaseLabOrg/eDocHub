@@ -6,7 +6,7 @@ INSERT INTO attributes(document_type_id, name, required) VALUES(1, 'test1', fals
 INSERT INTO attributes(document_type_id, name, required) VALUES(1, 'test2', true);
 
 
-INSERT INTO documents(user_id, type_id) VALUES (1, 1);
+INSERT INTO documents(user_id, type_id, title, description) VALUES (1, 1, 'hw.txt', 'Hello, World! txt file');
 
 INSERT INTO values(attribute_id, document_id, value) VALUES (2,1, '52');
 
