@@ -27,7 +27,6 @@ public class UserMapper {
         user.setSurname(request.getSurname());
         user.setEmail(request.getEmail());
         user.setPassword(request.getPassword());
-        user.setRoles(toRoles(request.getRoles()));
         return user;
     }
 
@@ -62,22 +61,5 @@ public class UserMapper {
             rolesResponse.add(roleResponse);
         }
         return rolesResponse;
-    }
-
-    /**
-     * Преобразует набор DTO RoleRequest в сущности Role.
-     *
-     * @param roleRequests набор запросов на создание ролей
-     * @return набор сущностей ролей
-     */
-    public Set<Role> toRoles(Set<RoleRequest> roleRequests) {
-        Set<Role> roles = new HashSet<>();
-        for(RoleRequest roleRequest : roleRequests) {
-            Role role = new Role();
-            role.setName(roleRequest.getRoleName());
-            roles.add(role);
-        }
-
-        return roles;
     }
 }

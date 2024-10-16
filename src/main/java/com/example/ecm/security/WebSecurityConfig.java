@@ -28,7 +28,7 @@ public class WebSecurityConfig {
                 .httpBasic(withDefaults())
                 .sessionManagement(httpSecuritySessionManagementConfigurer -> httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("auth/*").permitAll()
+                        .requestMatchers("auth/*", "hello").permitAll()
                         .anyRequest().authenticated())
                 .build();
     }

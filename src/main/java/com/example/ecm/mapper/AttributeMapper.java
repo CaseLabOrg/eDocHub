@@ -1,7 +1,7 @@
 package com.example.ecm.mapper;
 
-import com.example.ecm.dto.AttributeRequest;
-import com.example.ecm.dto.AttributeResponse;
+import com.example.ecm.dto.CreateAttributeRequest;
+import com.example.ecm.dto.CreateAttributeResponse;
 import com.example.ecm.model.Attribute;
 import com.example.ecm.model.DocumentType;
 import org.springframework.stereotype.Component;
@@ -21,7 +21,7 @@ public class AttributeMapper {
      * @param documentType - тип документа, необходимый для создания атрибута.
      * @return объект модели Attribute, содержащий данные из запроса.
      */
-    public Attribute toAttribute(AttributeRequest request, DocumentType documentType) {
+    public Attribute toAttribute(CreateAttributeRequest request, DocumentType documentType) {
         Attribute attribute = new Attribute();
         attribute.setDocumentType(documentType);
         attribute.setName(request.getName());
@@ -35,12 +35,12 @@ public class AttributeMapper {
      * @param attribute - сущность атрибута документа.
      * @return объект AttributeResponse, содержащий данные атрибута документа.
      */
-    public AttributeResponse toAttributeResponse(Attribute attribute) {
-        AttributeResponse attributeResponse = new AttributeResponse();
-        attributeResponse.setId(attribute.getId());
-        attributeResponse.setDocumentTypeName(attribute.getDocumentType().getName());
-        attributeResponse.setName(attribute.getName());
-        attributeResponse.setRequired(attribute.getRequired());
-        return attributeResponse;
+    public CreateAttributeResponse toAttributeResponse(Attribute attribute) {
+        CreateAttributeResponse createAttributeResponse = new CreateAttributeResponse();
+        createAttributeResponse.setId(attribute.getId());
+        createAttributeResponse.setDocumentTypeName(attribute.getDocumentType().getName());
+        createAttributeResponse.setName(attribute.getName());
+        createAttributeResponse.setRequired(attribute.getRequired());
+        return createAttributeResponse;
     }
 }

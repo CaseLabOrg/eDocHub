@@ -3,6 +3,7 @@ package com.example.ecm.controller;
 import com.example.ecm.dto.CreateUserRequest;
 import com.example.ecm.dto.CreateUserResponse;
 import com.example.ecm.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,18 +14,10 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
-
-    /**
-     * Конструктор для внедрения зависимости UserService.
-     *
-     * @param userService Сервис для работы с пользователями
-     */
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
 
     /**
      * Создание нового пользователя.
@@ -46,9 +39,7 @@ public class UserController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<CreateUserResponse> getUserById(@PathVariable Long id) {
-        return userService.getUserById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(userService.getUserById(id));
     }
 
     /**
