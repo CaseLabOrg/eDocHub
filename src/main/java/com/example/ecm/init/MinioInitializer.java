@@ -55,7 +55,7 @@ public class MinioInitializer implements CommandLineRunner {
                 minioClient.putObject(
                         PutObjectArgs.builder()
                                 .bucket(bucketName)
-                                .object("1_hw")
+                                .object("1_hw.txt")
                                 .stream(new ByteArrayInputStream(decodedBytes), decodedBytes.length, -1)
                                 .contentType("text/plain")
                                 .build()
