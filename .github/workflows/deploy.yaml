@@ -31,6 +31,10 @@ jobs:
           docker build -t ${{ secrets.DOCKER_USERNAME }}/app:latest .
           docker push ${{ secrets.DOCKER_USERNAME }}/app:latest
 
+      - name: Add server to known_hosts
+        run: |
+          ssh-keyscan -p 2231 digital.mephi.ru >> ~/.ssh/known_hosts
+
       - name: Deploy with Docker Compose
         run: |
-          ssh -p 2231 ubuntu@digital.mephi.ru "sudo -i && cd /home/ubuntu/eDocHub/ && docker-compose pull && docker-compose up -d"
+          ssh -v -p 2231 ubuntu@digital.mephi.ru "sudo -i && cd /home/ubuntu/eDocHub/ && docker-compose pull && docker-compose up -d"
