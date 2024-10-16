@@ -1,11 +1,7 @@
 CREATE TABLE Documents(
                           id BIGSERIAL PRIMARY KEY,
-                          title VARCHAR(255),
                           user_id BIGINT,
-                          type_id BIGINT,
-                          description VARCHAR(255),
-                          created_at DATE,
-                          version INTEGER
+                          type_id BIGINT
 );
 
 CREATE TABLE Document_Types(
@@ -23,8 +19,8 @@ CREATE TABLE Attributes(
 
 CREATE TABLE Values(
                        id BIGSERIAL PRIMARY KEY,
-                       attribute_id INTEGER,
-                       document_id INTEGER,
+                       attribute_id BIGINT,
+                       document_version_id BIGINT,
                        value VARCHAR(255)
 );
 
@@ -58,12 +54,22 @@ CREATE TABLE Signatures(
                       hash VARCHAR(255),
                       placeholder_name VARCHAR(255),
                       user_id BIGINT,
-                      document_id BIGINT
+                      document_version_id BIGINT
 );
 
 CREATE TABLE Signature_Requests(
                            id BIGSERIAL PRIMARY KEY,
                            user_id_to BIGINT,
-                           document_id BIGINT,
+                           document_version_id BIGINT,
                            approved BOOLEAN
+);
+
+
+CREATE TABLE Document_Version(
+                        id BIGSERIAL PRIMARY KEY,
+                        version_id BIGINT,
+                        document_id BIGINT,
+                        title VARCHAR(255),
+                        description VARCHAR(255),
+                        created_at TIMESTAMP
 );

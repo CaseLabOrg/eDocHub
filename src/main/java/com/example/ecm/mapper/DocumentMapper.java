@@ -22,12 +22,12 @@ public class DocumentMapper {
      */
     public Document toDocument(CreateDocumentRequest request) {
         Document document = new Document();
-        document.setTitle(request.getTitle());
+       // document.setTitle(request.getTitle());
         document.setUser(request.getUser());
         document.setDocumentType(request.getDocumentType());
-        document.setDescription(request.getDescription());
-        document.setCreated_at(LocalDateTime.now());
-        document.setVersion(request.getVersion());
+     //   document.setDescription(request.getDescription());
+     //   document.setCreated_at(LocalDateTime.now());
+     //   document.setVersion(request.getVersion());
         return document;
     }
 
@@ -40,13 +40,13 @@ public class DocumentMapper {
     public CreateDocumentResponse toCreateDocumentResponse(Document document) {
         CreateDocumentResponse createDocumentResponse = new CreateDocumentResponse();
         createDocumentResponse.setId(document.getId());
-        createDocumentResponse.setTitle(document.getTitle());
+     //   createDocumentResponse.setTitle(document.getTitle());
         createDocumentResponse.setUser(document.getUser());
         createDocumentResponse.setDocumentType(document.getDocumentType());
-        createDocumentResponse.setDescription(document.getDescription());
-        createDocumentResponse.setCreated_at(document.getCreated_at());
-        createDocumentResponse.setVersion(document.getVersion());
-        createDocumentResponse.setValues(document.getValues());
+     //   createDocumentResponse.setDescription(document.getDescription());
+      //  createDocumentResponse.setCreated_at(document.getCreated_at());
+     //   createDocumentResponse.setVersion(document.getVersion());
+     //   createDocumentResponse.setValues(document.getValues());
         return createDocumentResponse;
     }
 }

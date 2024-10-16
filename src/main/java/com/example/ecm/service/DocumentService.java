@@ -88,7 +88,7 @@ public class DocumentService {
      */
     public void deleteDocument(Long id) {
         Optional<Document> document = documentRepository.findById(id);
-        document.ifPresent(value -> minioService.deleteDocumentByName(value.getId() + "_" + value.getTitle()));
+        //document.ifPresent(value -> minioService.deleteDocumentByName(value.getId() + "_" + value.getTitle()));
         documentRepository.deleteById(id);
     }
 
@@ -104,12 +104,12 @@ public class DocumentService {
     public CreateDocumentResponse updateDocument(Long id, CreateDocumentRequest createDocumentRequest) {
         Document document = documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Document not found"));
-        minioService.deleteDocumentByName(document.getId() + "_" + document.getTitle());
-        document.setTitle(createDocumentRequest.getTitle());
+      //  minioService.deleteDocumentByName(document.getId() + "_" + document.getTitle());
+       // document.setTitle(createDocumentRequest.getTitle());
         document.setUser(createDocumentRequest.getUser());
         document.setDocumentType(createDocumentRequest.getDocumentType());
-        document.setDescription(createDocumentRequest.getDescription());
-        document.setVersion(createDocumentRequest.getVersion());
+      //  document.setDescription(createDocumentRequest.getDescription());
+       // document.setVersion(createDocumentRequest.getVersion());
         minioService.addDocument(id, createDocumentRequest);
         CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(documentRepository.save(document));
         response.setBase64Content(createDocumentRequest.getBase64Content());
@@ -125,8 +125,8 @@ public class DocumentService {
     public void signDocument(Long id, SignatureDto signatureDto) {
         Document document = documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Document not found"));
-        List<Signature> signatures = document.getSignatures();
-        signatures.add(signatureMapper.toSignature(signatureDto));
-        document.setSignatures(signatures);
+     //   List<Signature> signatures = document.getSignatures();
+      //  signatures.add(signatureMapper.toSignature(signatureDto));
+     //   document.setSignatures(signatures);
     }
 }
