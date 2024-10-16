@@ -1,7 +1,7 @@
 package com.example.ecm.service;
 
-import com.example.ecm.dto.AttributeRequest;
-import com.example.ecm.dto.AttributeResponse;
+import com.example.ecm.dto.CreateAttributeRequest;
+import com.example.ecm.dto.CreateAttributeResponse;
 import com.example.ecm.mapper.AttributeMapper;
 import com.example.ecm.model.Attribute;
 import com.example.ecm.model.DocumentType;
@@ -30,7 +30,7 @@ public class AttributeService {
      * @param request запрос на создание атрибута документа
      * @return ответ с данными созданного атрибута документа
      */
-    public AttributeResponse createAttribute(AttributeRequest request) {
+    public CreateAttributeResponse createAttribute(CreateAttributeRequest request) {
         DocumentType documentType = documentTypeRepository.findByName(request.getDocumentTypeName())
                 .orElseThrow(() -> new RuntimeException("Document Type not found"));
 
@@ -45,7 +45,7 @@ public class AttributeService {
      * @param id идентификатор атрибута документа
      * @return ответ с данными атрибута документа
      */
-    public AttributeResponse getAttributeById(Long id) {
+    public CreateAttributeResponse getAttributeById(Long id) {
         return attributeRepository.findById(id)
                 .map(attributeMapper::toAttributeResponse)
                 .orElseThrow(() -> new RuntimeException("Attribute not found"));
@@ -56,7 +56,7 @@ public class AttributeService {
      *
      * @return список ответов с данными всех атрибутов документов
      */
-    public List<AttributeResponse> getAllAttributes() {
+    public List<CreateAttributeResponse> getAllAttributes() {
         return attributeRepository.findAll().stream()
                 .map(attributeMapper::toAttributeResponse)
                 .toList();
@@ -69,7 +69,7 @@ public class AttributeService {
      * @param request запрос на обновление атрибута документа
      * @return ответ с данными обновленного атрибута документа
      */
-    public AttributeResponse updateAttribute(Long id, AttributeRequest request) {
+    public CreateAttributeResponse updateAttribute(Long id, CreateAttributeRequest request) {
         Attribute attribute = attributeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Attribute not found"));
         DocumentType documentType = documentTypeRepository.findByName(request.getDocumentTypeName())

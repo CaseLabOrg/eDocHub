@@ -26,8 +26,9 @@ public class AttributeController {
      * @param request Объект запроса с данными для создания нового атрибута документа.
      * @return Ответ с данными созданного атрибута документа.
      */
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping
-    public ResponseEntity<AttributeResponse> createAttribute(@RequestBody AttributeRequest request) {
+    public ResponseEntity<CreateAttributeResponse> createAttribute(@RequestBody CreateAttributeRequest request) {
         return ResponseEntity.ok(attributeService.createAttribute(request));
     }
 
@@ -38,7 +39,7 @@ public class AttributeController {
      * @return Ответ с данными атрибута документа.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<AttributeResponse> getAttributeById(@PathVariable Long id) {
+    public ResponseEntity<CreateAttributeResponse> getAttributeById(@PathVariable Long id) {
         return ResponseEntity.ok(attributeService.getAttributeById(id));
     }
 
@@ -48,7 +49,7 @@ public class AttributeController {
      * @return Список всех атрибутов документов.
      */
     @GetMapping
-    public List<AttributeResponse> getAllAttributes() {
+    public List<CreateAttributeResponse> getAllAttributes() {
         return attributeService.getAllAttributes();
     }
 
@@ -59,9 +60,9 @@ public class AttributeController {
      * @param request Объект запроса с новыми данными для обновления атрибута документа.
      * @return Ответ с обновленными данными атрибута документа.
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<AttributeResponse> updateAttribute(@PathVariable Long id, @RequestBody AttributeRequest request) {
+    public ResponseEntity<CreateAttributeResponse> updateAttribute(@PathVariable Long id, @RequestBody CreateAttributeRequest request) {
         return ResponseEntity.ok(attributeService.updateAttribute(id, request));
     }
 
@@ -71,7 +72,7 @@ public class AttributeController {
      * @param id Идентификатор атрибута документа, который нужно удалить.
      * @return Ответ без содержимого (No Content) после успешного удаления.
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAttribute(@PathVariable Long id) {
         attributeService.deleteAttribute(id);
