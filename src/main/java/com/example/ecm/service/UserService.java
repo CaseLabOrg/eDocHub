@@ -5,13 +5,16 @@ import com.example.ecm.dto.CreateUserResponse;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.mapper.UserMapper;
 import com.example.ecm.model.User;
+import com.example.ecm.repository.RoleRepository;
 import com.example.ecm.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Сервис для выполнения операций с пользователями, включая создание, получение,
@@ -22,7 +25,9 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder encoder;
 
     /**
      * Создание нового пользователя на основе данных из DTO.
@@ -33,6 +38,8 @@ public class UserService {
     @Transactional
     public CreateUserResponse createUser(CreateUserRequest createUserRequest) {
         User user = userMapper.toUser(createUserRequest);
+        user.setRoles(Set.of(roleRepository.findByName("USER").orElseThrow(() -> new NotFoundException("No USER role"))));
+        user.setPassword(encoder.encode(createUserRequest.getPassword()));
         User savedUser = userRepository.save(user);
 
         return userMapper.toCreateUserResponse(savedUser);
@@ -72,7 +79,7 @@ public class UserService {
         user.setName(updateUserRequest.getName());
         user.setSurname(updateUserRequest.getSurname());
         user.setEmail(updateUserRequest.getEmail());
-        user.setPassword(updateUserRequest.getPassword());
+        user.setPassword(encoder.encode(updateUserRequest.getPassword()));
         User updatedUser = userRepository.save(user);
 
         return userMapper.toCreateUserResponse(updatedUser);
