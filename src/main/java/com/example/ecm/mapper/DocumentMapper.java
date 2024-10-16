@@ -23,8 +23,6 @@ public class DocumentMapper {
     public Document toDocument(CreateDocumentRequest request) {
         Document document = new Document();
         document.setTitle(request.getTitle());
-        document.setUser(request.getUser());
-        document.setDocumentType(request.getDocumentType());
         document.setDescription(request.getDescription());
         document.setCreated_at(LocalDateTime.now());
         document.setVersion(request.getVersion());

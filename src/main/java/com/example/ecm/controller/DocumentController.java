@@ -2,12 +2,11 @@ package com.example.ecm.controller;
 
 import com.example.ecm.dto.CreateDocumentRequest;
 import com.example.ecm.dto.CreateDocumentResponse;
-import com.example.ecm.dto.SignatureDto;
+import com.example.ecm.dto.CreateSignatureRequest;
 import com.example.ecm.service.DocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -88,7 +87,7 @@ public class DocumentController {
      * @param signature Объект запроса, содержащий данные подписи.
      */
     @PostMapping("/{id}")
-    public void signDocument(@PathVariable Long id, @RequestBody SignatureDto signature) {
+    public void signDocument(@PathVariable Long id, @RequestBody CreateSignatureRequest signature) {
         documentService.signDocument(id, signature);
     }
 }
