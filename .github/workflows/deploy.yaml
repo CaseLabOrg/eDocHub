@@ -37,4 +37,4 @@ jobs:
 
       - name: Deploy with Docker Compose
         run: |
-          ssh -v -p 2231 ubuntu@digital.mephi.ru "sudo -i && cd /home/ubuntu/eDocHub/ && docker-compose pull && docker-compose up -d"
+          ssh -v -p 2231 ubuntu@digital.mephi.ru "cd /home/ubuntu/eDocHub/ && sudo docker-compose pull && sudo docker-compose up -d"
