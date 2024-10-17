@@ -4,6 +4,8 @@ import com.example.ecm.dto.CreateDocumentRequest;
 import com.example.ecm.dto.CreateDocumentResponse;
 import com.example.ecm.dto.CreateSignatureRequest;
 import com.example.ecm.exception.NotFoundException;
+import com.example.ecm.kafka.event.DocumentSignedEvent;
+import com.example.ecm.kafka.service.EventProducerService;
 import com.example.ecm.mapper.DocumentMapper;
 import com.example.ecm.mapper.SignatureMapper;
 import com.example.ecm.model.Document;
@@ -32,6 +34,7 @@ public class DocumentService {
     private final SignatureMapper signatureMapper;
     private final MinioService minioService;
     private final UserService userService;
+    private final EventProducerService eventProducerService;
 
     /**
      * Создает новый документ.
@@ -136,6 +139,8 @@ public class DocumentService {
                 .orElseThrow(() -> new NotFoundException("Document not found"));
         List<Signature> signatures = document.getSignatures();
         signatures.add(signatureMapper.toSignature(createSignatureRequest));
+        DocumentSignedEvent event = new DocumentSignedEvent(id, document.getUser().getId(), createSignatureRequest.getUserId(), createSignatureRequest.getPlaceholderTitle());
+        eventProducerService.sendDocumentSignedEvent(event);
         document.setSignatures(signatures);
     }
 
