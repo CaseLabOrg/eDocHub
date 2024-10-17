@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +24,7 @@ import java.util.Map;
 public class DocumentVersion {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     /** Уникальный идентификатор, нужен для того, чтобы не использовать составной первичный ключ */
     private Long id;
     private Long versionId;
@@ -38,11 +39,12 @@ public class DocumentVersion {
     private String title;
 
     /** Описание документа */
+    @Column
     private String description;
 
     /** Дата создания документа, обязательное поле */
     @Column(name = "created_at", nullable = false)
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
 
     /**
      * Атрибуты документа, хранящиеся в виде карты, связывающей атрибуты с их значениями

@@ -16,4 +16,4 @@ INSERT INTO roles(id, name) VALUES (1, 'ADMIN');
 
 INSERT INTO user_roles VALUES (1, 1);
 
-INSERT INTO document_version(id, version_id, document_id) VALUES (1, 1, 1)
+INSERT INTO document_version(id, version_id,  document_id, title, description) VALUES (1,1, 1, 'hw.txt', 'test')

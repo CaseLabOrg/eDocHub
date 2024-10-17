@@ -1,9 +1,13 @@
 package com.example.ecm.dto;
 
+import com.example.ecm.model.Attribute;
 import com.example.ecm.model.DocumentType;
 import com.example.ecm.model.User;
+import com.example.ecm.model.Value;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.Map;
 
 /**
  * DTO (Data Transfer Object) для создания нового документа.
@@ -21,23 +25,21 @@ public class CreateDocumentRequest {
         /**
          * Пользователь, который создает или загружает документ.
          */
-        private User user;
+        private Long userId;
 
         /**
          * Тип документа, определяющий его классификацию.
          */
-        private DocumentType documentType;
+        private Long documentTypeId;
 
         /**
          * Описание документа, предоставленное пользователем.
          */
         private String description;
 
-        /**
-         * Версия документа.
-         * Поле для указания версии, может использоваться для контроля изменений.
-         */
-        private Integer version;
+
+        private Map<Attribute, Value> values;
+
         /**
          * Содержание документа
          */

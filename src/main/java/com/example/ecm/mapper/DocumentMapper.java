@@ -3,6 +3,8 @@ package com.example.ecm.mapper;
 import com.example.ecm.dto.CreateDocumentRequest;
 import com.example.ecm.dto.CreateDocumentResponse;
 import com.example.ecm.model.Document;
+import com.example.ecm.model.DocumentVersion;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -12,41 +14,50 @@ import java.time.LocalDateTime;
  * Используется для преобразования данных запросов и ответов в объекты модели и обратно.
  */
 @Component
+@RequiredArgsConstructor
 public class DocumentMapper {
 
+    private final DocumentTypeMapper documentTypeMapper;
+    private final UserMapper userMapper;
     /**
      * Преобразует запрос на создание документа (CreateDocumentRequest) в объект сущности Document.
      *
      * @param request - запрос на создание документа.
      * @return объект модели Document, содержащий данные из запроса.
      */
-    public Document toDocument(CreateDocumentRequest request) {
-        Document document = new Document();
-       // document.setTitle(request.getTitle());
-        document.setUser(request.getUser());
-        document.setDocumentType(request.getDocumentType());
-     //   document.setDescription(request.getDescription());
-     //   document.setCreated_at(LocalDateTime.now());
-     //   document.setVersion(request.getVersion());
-        return document;
+
+
+    public DocumentVersion createDocumentVersion(CreateDocumentRequest request) {
+       DocumentVersion documentVersion = new DocumentVersion();
+       documentVersion.setCreatedAt(LocalDateTime.now());
+       documentVersion.setDescription(request.getDescription());
+       documentVersion.setTitle(request.getTitle());
+       return documentVersion;
     }
 
+    public DocumentVersion toDocumentVersion(CreateDocumentRequest request) {
+        DocumentVersion documentVersion = new DocumentVersion();
+        documentVersion.setCreatedAt(LocalDateTime.now());
+        documentVersion.setDescription(request.getDescription());
+        documentVersion.setTitle(request.getTitle());
+        return documentVersion;
+    }
     /**
      * Преобразует сущность Document в ответ на запрос создания документа (CreateDocumentResponse).
      *
      * @param document - сущность документа.
      * @return объект CreateDocumentResponse, содержащий данные документа.
      */
-    public CreateDocumentResponse toCreateDocumentResponse(Document document) {
+    public CreateDocumentResponse toCreateDocumentResponse(Document document, DocumentVersion documentVersion) {
         CreateDocumentResponse createDocumentResponse = new CreateDocumentResponse();
         createDocumentResponse.setId(document.getId());
-     //   createDocumentResponse.setTitle(document.getTitle());
-        createDocumentResponse.setUser(document.getUser());
-        createDocumentResponse.setDocumentType(document.getDocumentType());
-     //   createDocumentResponse.setDescription(document.getDescription());
-      //  createDocumentResponse.setCreated_at(document.getCreated_at());
-     //   createDocumentResponse.setVersion(document.getVersion());
-     //   createDocumentResponse.setValues(document.getValues());
+        createDocumentResponse.setUser(userMapper.toCreateUserResponse(document.getUser()));
+        createDocumentResponse.setDocumentType(documentTypeMapper.toCreateDocumentTypeResponse(document.getDocumentType()));
+
+        createDocumentResponse.setTitle(documentVersion.getTitle());
+        createDocumentResponse.setDescription(documentVersion.getDescription());
+        createDocumentResponse.setCreated_at(documentVersion.getCreatedAt());
+        createDocumentResponse.setValues(documentVersion.getValues());
         return createDocumentResponse;
     }
 }

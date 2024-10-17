@@ -25,6 +25,7 @@ public class Document {
     private Long id;
 
     /** Пользователь, который создал документ */
+
     @ManyToOne()
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

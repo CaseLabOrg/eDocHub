@@ -66,10 +66,10 @@ CREATE TABLE Signature_Requests(
 
 
 CREATE TABLE Document_Version(
-                        id BIGSERIAL PRIMARY KEY,
-                        version_id BIGINT,
-                        document_id BIGINT,
-                        title VARCHAR(255),
-                        description VARCHAR(255),
-                        created_at TIMESTAMP
+                                 id BIGSERIAL PRIMARY KEY,
+                                 version_id BIGINT,
+                                 document_id BIGINT,
+                                 title VARCHAR(255),
+                                 description VARCHAR(255),
+                                 created_at TIMESTAMP
 );

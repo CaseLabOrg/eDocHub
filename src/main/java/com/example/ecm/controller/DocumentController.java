@@ -1,8 +1,6 @@
 package com.example.ecm.controller;
 
-import com.example.ecm.dto.CreateDocumentRequest;
-import com.example.ecm.dto.CreateDocumentResponse;
-import com.example.ecm.dto.SignatureDto;
+import com.example.ecm.dto.*;
 import com.example.ecm.service.DocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -53,8 +51,8 @@ public class DocumentController {
      * @return Ответ с обновленными данными документа.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<CreateDocumentResponse> updateDocument(@PathVariable Long id, @Valid @RequestBody CreateDocumentRequest document) {
-        return ResponseEntity.ok(documentService.updateDocument(id, document));
+    public ResponseEntity<CreateDocumentVersionResponse> updateDocument(@PathVariable Long id, @Valid @RequestBody CreateDocumentVersionRequest document) {
+        return ResponseEntity.ok(documentService.updateDocumentVersion(id, document));
     }
 
     /**

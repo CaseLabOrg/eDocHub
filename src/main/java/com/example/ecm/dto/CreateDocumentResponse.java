@@ -25,19 +25,24 @@ public class CreateDocumentResponse {
     private Long id;
 
     /**
+     * Версия документа.
+     */
+    private Long versionId;
+
+    /**
      * Заголовок документа.
      */
     private String title;
 
     /**
-     * Пользователь, связанный с документом (создатель или ответственный).
+     * Пользователь, который создает или загружает документ.
      */
-    private User user;
+    private CreateUserResponse user;
 
     /**
      * Тип документа, определяющий его классификацию.
      */
-    private DocumentType documentType;
+    private CreateDocumentTypeResponse documentType;
 
     /**
      * Описание документа.
@@ -49,10 +54,6 @@ public class CreateDocumentResponse {
      */
     private LocalDateTime created_at;
 
-    /**
-     * Версия документа.
-     */
-    private Integer version;
 
     /**
      * Карта атрибутов документа и их значений.

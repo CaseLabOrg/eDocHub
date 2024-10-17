@@ -1,16 +1,17 @@
 package com.example.ecm.service;
 
-import com.example.ecm.dto.CreateDocumentRequest;
-import com.example.ecm.dto.CreateDocumentResponse;
-import com.example.ecm.dto.SignatureDto;
-import com.example.ecm.mapper.DocumentMapper;
-import com.example.ecm.mapper.SignatureMapper;
-import com.example.ecm.model.Document;
-import com.example.ecm.model.Signature;
+import com.example.ecm.dto.*;
+import com.example.ecm.mapper.*;
+import com.example.ecm.model.*;
 import com.example.ecm.repository.DocumentRepository;
+import com.example.ecm.repository.DocumentTypeRepository;
+import com.example.ecm.repository.DocumentVersionRepository;
+import com.example.ecm.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,10 +23,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class DocumentService {
 
+    private final DocumentVersionMapper documentVersionMapper;
     private final DocumentRepository documentRepository;
     private final DocumentMapper documentMapper;
-    private final SignatureMapper signatureMapper;
+    private final UserRepository userRepository;
+    private final DocumentTypeRepository documentTypeRepository;
     private final MinioService minioService;
+    private final DocumentVersionRepository documentVersionRepository;
 
     /**
      * Создает новый документ.
@@ -36,14 +40,37 @@ public class DocumentService {
      * @return ответ с данными созданного документа или null в случае ошибки
      */
     public CreateDocumentResponse createDocument(CreateDocumentRequest createDocumentRequest) {
-        Document document = documentMapper.toDocument(createDocumentRequest);
+
+
+        DocumentVersion documentVersion = documentMapper.toDocumentVersion(createDocumentRequest);
+        DocumentVersion documentVersionSaved = documentVersionRepository.save(documentVersion);
+
+        User user = userRepository.findById(createDocumentRequest.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        DocumentType documentType = documentTypeRepository.findById(createDocumentRequest.getDocumentTypeId())
+                .orElseThrow(() -> new RuntimeException("DocumentType not found"));
+
+        Document document = new Document();
+        document.setUser(user);
+        document.setDocumentType(documentType);
+
+
         Document documentSaved = documentRepository.save(document);
-        boolean success = minioService.addDocument(documentSaved.getId(), createDocumentRequest);
+        CreateDocumentVersionRequest createDocumentVersionRequest = new CreateDocumentVersionRequest();
+
+        createDocumentVersionRequest.setDescription(documentVersion.getDescription());
+        createDocumentVersionRequest.setTitle(documentVersion.getTitle());
+        //response.setValues();
+        createDocumentVersionRequest.setBase64Content(createDocumentRequest.getBase64Content());
+
+
+        boolean success = minioService.addDocument(documentVersionSaved.getId(), createDocumentVersionRequest);
         if (!success) {
-            documentRepository.deleteById(documentSaved.getId());
+            documentRepository.deleteById(documentVersionSaved.getId());
             return null;
         }
-        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(documentRepository.save(document));
+
+        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(documentSaved, documentVersionSaved);
         response.setBase64Content(createDocumentRequest.getBase64Content());
         return response;
     }
@@ -57,11 +84,17 @@ public class DocumentService {
      * @throws RuntimeException если документ не найден
      */
     public CreateDocumentResponse getDocumentById(Long id) {
-        CreateDocumentResponse response = documentRepository.findById(id)
-                .map(documentMapper::toCreateDocumentResponse)
+        Document document = documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Document not found"));
-        response.setBase64Content(minioService.getBase64DocumentByName(response.getId() + "_" + response.getTitle()));
+
+        DocumentVersion documentVersion = documentVersionRepository.findById(document.getDocumentVersions().getLast().getId()).
+                orElseThrow(() -> new RuntimeException("Document not found"));
+
+        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document, documentVersion);
+
+        response.setBase64Content(minioService.getBase64DocumentByName(documentVersion.getId() + "_" + response.getTitle()));
         return response;
+
     }
 
     /**
@@ -71,14 +104,21 @@ public class DocumentService {
      * @return список ответов с данными всех документов
      */
     public List<CreateDocumentResponse> getAllDocuments() {
-        List<CreateDocumentResponse> list = documentRepository.findAll().stream()
-                .map(documentMapper::toCreateDocumentResponse)
-                .toList();
-        for (CreateDocumentResponse response : list) {
-            response.setBase64Content(minioService.getBase64DocumentByName(response.getId() + "_" + response.getTitle()));
+
+            return documentRepository.findAll().stream()
+                    .map(document -> {
+                        DocumentVersion documentVersion = document.getDocumentVersions().getLast();
+
+                        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document, documentVersion);
+
+                        response.setBase64Content(minioService.getBase64DocumentByName(documentVersion.getId() + "_" + response.getTitle()));
+
+                        return response;
+                    })
+                    .toList();
         }
-        return list;
-    }
+
+
 
     /**
      * Удаляет документ по его идентификатору.
@@ -88,31 +128,33 @@ public class DocumentService {
      */
     public void deleteDocument(Long id) {
         Optional<Document> document = documentRepository.findById(id);
-        //document.ifPresent(value -> minioService.deleteDocumentByName(value.getId() + "_" + value.getTitle()));
+        List<DocumentVersion> list = document.get().getDocumentVersions();
+
+        if(document.isPresent()){
+            for(DocumentVersion documentVersion : list) {
+                minioService.deleteDocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle());
+            }
+        }
+
         documentRepository.deleteById(id);
     }
 
-    /**
-     * Обновляет данные существующего документа.
-     * Старое содержимое документа удаляется из MinIO, и загружается новое.
-     *
-     * @param id                    идентификатор документа
-     * @param createDocumentRequest запрос на обновление документа
-     * @return ответ с данными обновленного документа
-     * @throws RuntimeException если документ не найден
-     */
-    public CreateDocumentResponse updateDocument(Long id, CreateDocumentRequest createDocumentRequest) {
+
+    public CreateDocumentVersionResponse updateDocumentVersion(Long id, CreateDocumentVersionRequest createDocumentVersionRequest) {
         Document document = documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Document not found"));
-      //  minioService.deleteDocumentByName(document.getId() + "_" + document.getTitle());
-       // document.setTitle(createDocumentRequest.getTitle());
-        document.setUser(createDocumentRequest.getUser());
-        document.setDocumentType(createDocumentRequest.getDocumentType());
-      //  document.setDescription(createDocumentRequest.getDescription());
-       // document.setVersion(createDocumentRequest.getVersion());
-        minioService.addDocument(id, createDocumentRequest);
-        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(documentRepository.save(document));
-        response.setBase64Content(createDocumentRequest.getBase64Content());
+
+        DocumentVersion documentVersion = new DocumentVersion();
+
+        documentVersion = documentVersionMapper.toDocumentVersion(createDocumentVersionRequest);
+        documentVersion.setVersionId((long)document.getDocumentVersions().size());
+
+        CreateDocumentVersionResponse response = documentVersionMapper.toCreateDocumentVersionResponse(documentVersionRepository.save(documentVersion));
+
+        minioService.addDocument(documentVersion.getId(), createDocumentVersionRequest);
+
+
+        response.setBase64Content(createDocumentVersionRequest.getBase64Content());
         return response;
     }
 
