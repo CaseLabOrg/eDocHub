@@ -26,16 +26,6 @@ public class CreateDocumentResponse {
     private Long id;
 
     /**
-     * Версия документа.
-     */
-    private Long versionId;
-
-    /**
-     * Заголовок документа.
-     */
-    private String title;
-
-    /**
      * Пользователь, который создает или загружает документ.
      */
     private CreateUserResponse user;
@@ -45,23 +35,5 @@ public class CreateDocumentResponse {
      */
     private CreateDocumentTypeResponse documentType;
 
-    /**
-     * Описание документа.
-     */
-    private String description;
-
-    /**
-     * Дата и время создания документа.
-     */
-    private LocalDateTime created_at;
-
-
-    private List<SetValueRequest> values;
-
-    /**
-     * Содержание документа
-     */
-
-    private String base64Content;
-
+    private List<CreateDocumentVersionResponse> documentVersions;
 }

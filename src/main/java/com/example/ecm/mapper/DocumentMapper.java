@@ -48,16 +48,12 @@ public class DocumentMapper {
      * @param document - сущность документа.
      * @return объект CreateDocumentResponse, содержащий данные документа.
      */
-    public CreateDocumentResponse toCreateDocumentResponse(Document document, DocumentVersion documentVersion) {
+    public CreateDocumentResponse toCreateDocumentResponse(Document document) {
         CreateDocumentResponse createDocumentResponse = new CreateDocumentResponse();
         createDocumentResponse.setId(document.getId());
         createDocumentResponse.setUser(userMapper.toCreateUserResponse(document.getUser()));
         createDocumentResponse.setDocumentType(documentTypeMapper.toCreateDocumentTypeResponse(document.getDocumentType()));
 
-        createDocumentResponse.setTitle(documentVersion.getTitle());
-        createDocumentResponse.setDescription(documentVersion.getDescription());
-        createDocumentResponse.setCreated_at(documentVersion.getCreatedAt());
-        createDocumentResponse.setVersionId(documentVersion.getId());
         return createDocumentResponse;
     }
 }

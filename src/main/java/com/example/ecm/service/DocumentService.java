@@ -5,6 +5,7 @@ import com.example.ecm.mapper.*;
 import com.example.ecm.model.*;
 import com.example.ecm.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -30,6 +31,7 @@ public class DocumentService {
     private final DocumentVersionRepository documentVersionRepository;
     private final AttributeRepository attributeRepository;
     private final ValueRepository valueRepository;
+    private final SignatureMapper signatureMapper;
 
     /**
      * Создает новый документ.
@@ -53,6 +55,7 @@ public class DocumentService {
         DocumentVersion documentVersion = documentMapper.toDocumentVersion(createDocumentRequest);
         documentVersion.setDocument(documentSaved);
         documentVersion.setVersionId(1L);
+        documentVersion.setCreatedAt(LocalDateTime.now());
         DocumentVersion documentVersionSaved = documentVersionRepository.save(documentVersion);
 
         setValues(createDocumentRequest.getValues(), documentVersionSaved);
@@ -69,10 +72,14 @@ public class DocumentService {
             throw new RuntimeException("Could not add document");
         }
 
-        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(documentSaved, documentVersionSaved);
-        response.setBase64Content(createDocumentRequest.getBase64Content());
-        response.setVersionId(documentVersion.getVersionId());
-        response.setValues(createDocumentRequest.getValues());
+        List<CreateDocumentVersionResponse> documentVersions = new ArrayList<>();
+        CreateDocumentVersionResponse createDocumentVersionResponse = documentVersionMapper.toCreateDocumentVersionResponse(documentVersionSaved);
+        createDocumentVersionResponse.setBase64Content(createDocumentRequest.getBase64Content());
+        createDocumentVersionResponse.setValues(createDocumentRequest.getValues());
+        documentVersions.add(createDocumentVersionResponse);
+
+        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(documentSaved);
+        response.setDocumentVersions(documentVersions);
         return response;
     }
 
@@ -88,13 +95,9 @@ public class DocumentService {
         Document document = documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Document not found"));
 
-        DocumentVersion documentVersion = documentVersionRepository.findById(document.getDocumentVersions().getLast().getId()).
-                orElseThrow(() -> new RuntimeException("Document not found"));
+        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document);
 
-        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document, documentVersion);
-
-        response.setBase64Content(minioService.getBase64DocumentByName(documentVersion.getId() + "_" + response.getTitle()));
-        return response;
+        return getCreateDocumentResponse(document, response);
 
     }
 
@@ -108,17 +111,25 @@ public class DocumentService {
 
             return documentRepository.findAll().stream()
                     .map(document -> {
-                        DocumentVersion documentVersion = document.getDocumentVersions().getLast();
+                        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document);
 
-                        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document, documentVersion);
-
-                        response.setBase64Content(minioService.getBase64DocumentByName(documentVersion.getId() + "_" + response.getTitle()));
-
-                        return response;
+                        return getCreateDocumentResponse(document, response);
                     })
                     .toList();
         }
 
+    private CreateDocumentResponse getCreateDocumentResponse(Document document, CreateDocumentResponse response) {
+        response.setDocumentVersions(document.getDocumentVersions().stream()
+                .map(version -> {
+                    CreateDocumentVersionResponse versionResponse = documentVersionMapper.toCreateDocumentVersionResponse(version);
+                    String base64Content = minioService.getBase64DocumentByName(version.getId() + "_" + version.getTitle());
+                    versionResponse.setBase64Content(base64Content);
+                    return versionResponse;
+                })
+                .toList());
+
+        return response;
+    }
 
 
     /**
@@ -144,32 +155,21 @@ public class DocumentService {
                 .orElseThrow(() -> new RuntimeException("Document not found"));
 
         DocumentVersion documentVersion = documentVersionMapper.toDocumentVersion(createDocumentVersionRequest);
-        documentVersion.setVersionId((long)document.getDocumentVersions().size());
+        documentVersion.setVersionId((long)document.getDocumentVersions().size() + 1);
+        documentVersion.setCreatedAt(LocalDateTime.now());
+        documentVersion.setDocument(document);
+
+        CreateDocumentVersionResponse response = documentVersionMapper.toCreateDocumentVersionResponse(documentVersionRepository.save(documentVersion));
 
         setValues(createDocumentVersionRequest.getValues(), documentVersion);
 
-        CreateDocumentVersionResponse response = documentVersionMapper.toCreateDocumentVersionResponse(documentVersionRepository.save(documentVersion));
         minioService.addDocument(documentVersion.getId(), createDocumentVersionRequest);
         response.setBase64Content(createDocumentVersionRequest.getBase64Content());
         response.setValues(createDocumentVersionRequest.getValues());
         return response;
     }
 
-    /**
-     * Добавляет подпись в документ.
-     *
-     * @param id           идентификатор документа
-     * @param signatureDto подпись
-     */
-    public void signDocument(Long id, SignatureDto signatureDto) {
-        Document document = documentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Document not found"));
-     //   List<Signature> signatures = document.getSignatures();
-      //  signatures.add(signatureMapper.toSignature(signatureDto));
-     //   document.setSignatures(signatures);
-    }
-
-    public void setValues(List<SetValueRequest> values, DocumentVersion documentVersion) {
+    private void setValues(List<SetValueRequest> values, DocumentVersion documentVersion) {
         for (SetValueRequest newValue : values) {
             Attribute attribute = attributeRepository.findByName(newValue.getAttributeName())
                     .orElseThrow(() -> new RuntimeException("Attribute not found"));
@@ -179,5 +179,19 @@ public class DocumentService {
             value.setValue(newValue.getValue());
             valueRepository.save(value);
         }
+    }
+
+    /**
+     * Добавляет подпись в документ.
+     *
+     * @param id           идентификатор документа
+     * @param signatureDto подпись
+     */
+    public void signDocument(Long id, SignatureDto signatureDto) {
+        DocumentVersion documentVersion = documentVersionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Document version not found"));
+        List<Signature> signatures = documentVersion.getSignatures();
+        signatures.add(signatureMapper.toSignature(signatureDto));
+        documentVersion.setSignatures(signatures);
     }
 }

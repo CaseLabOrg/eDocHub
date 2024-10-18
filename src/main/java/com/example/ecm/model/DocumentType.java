@@ -21,15 +21,15 @@ public class DocumentType {
      * Генерируется автоматически.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    Long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     /**
      * Название типа документа.
      * Это поле является обязательным и должно быть уникальным.
      */
     @Column(nullable = false, unique = true)
-    String name;
+    private String name;
 
     /**
      * Список атрибутов, связанных с типом документа.

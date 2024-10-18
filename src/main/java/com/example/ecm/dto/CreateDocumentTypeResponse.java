@@ -28,5 +28,5 @@ public class CreateDocumentTypeResponse {
      * Список атрибутов, связанных с данным типом документа.
      * Атрибуты определяют характеристики и поля для документов этого типа.
      */
-    private List<Attribute> attributes;
+    private List<AttributeResponse> attributes;
 }

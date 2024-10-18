@@ -68,7 +68,7 @@ public class DocumentTypeController {
      * @param request Объект запроса с новыми данными для обновления типа документа.
      * @return Ответ с обновленными данными типа документа.
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<CreateDocumentTypeResponse> updateDocumentType(@PathVariable Long id, @RequestBody CreateDocumentTypeRequest request) {
         return ResponseEntity.ok(documentTypeService.updateDocumentType(id, request));

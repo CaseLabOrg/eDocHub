@@ -6,7 +6,8 @@ CREATE TABLE Documents(
 
 CREATE TABLE Document_Types(
                                id BIGSERIAL PRIMARY KEY,
-                               name VARCHAR(255)
+                               name VARCHAR(255),
+                               constraint uniq_name UNIQUE(name)
 );
 
 
