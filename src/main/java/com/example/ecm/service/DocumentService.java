@@ -3,10 +3,7 @@ package com.example.ecm.service;
 import com.example.ecm.dto.*;
 import com.example.ecm.mapper.*;
 import com.example.ecm.model.*;
-import com.example.ecm.repository.DocumentRepository;
-import com.example.ecm.repository.DocumentTypeRepository;
-import com.example.ecm.repository.DocumentVersionRepository;
-import com.example.ecm.repository.UserRepository;
+import com.example.ecm.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Сервис для работы с документами.
@@ -30,6 +28,8 @@ public class DocumentService {
     private final DocumentTypeRepository documentTypeRepository;
     private final MinioService minioService;
     private final DocumentVersionRepository documentVersionRepository;
+    private final AttributeRepository attributeRepository;
+    private final ValueRepository valueRepository;
 
     /**
      * Создает новый документ.
@@ -40,38 +40,39 @@ public class DocumentService {
      * @return ответ с данными созданного документа или null в случае ошибки
      */
     public CreateDocumentResponse createDocument(CreateDocumentRequest createDocumentRequest) {
-
-
-        DocumentVersion documentVersion = documentMapper.toDocumentVersion(createDocumentRequest);
-        DocumentVersion documentVersionSaved = documentVersionRepository.save(documentVersion);
-
         User user = userRepository.findById(createDocumentRequest.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         DocumentType documentType = documentTypeRepository.findById(createDocumentRequest.getDocumentTypeId())
                 .orElseThrow(() -> new RuntimeException("DocumentType not found"));
-
         Document document = new Document();
         document.setUser(user);
         document.setDocumentType(documentType);
 
-
         Document documentSaved = documentRepository.save(document);
+
+        DocumentVersion documentVersion = documentMapper.toDocumentVersion(createDocumentRequest);
+        documentVersion.setDocument(documentSaved);
+        documentVersion.setVersionId(1L);
+        DocumentVersion documentVersionSaved = documentVersionRepository.save(documentVersion);
+
+        setValues(createDocumentRequest.getValues(), documentVersionSaved);
+
         CreateDocumentVersionRequest createDocumentVersionRequest = new CreateDocumentVersionRequest();
 
         createDocumentVersionRequest.setDescription(documentVersion.getDescription());
         createDocumentVersionRequest.setTitle(documentVersion.getTitle());
-        //response.setValues();
         createDocumentVersionRequest.setBase64Content(createDocumentRequest.getBase64Content());
-
 
         boolean success = minioService.addDocument(documentVersionSaved.getId(), createDocumentVersionRequest);
         if (!success) {
             documentRepository.deleteById(documentVersionSaved.getId());
-            return null;
+            throw new RuntimeException("Could not add document");
         }
 
         CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(documentSaved, documentVersionSaved);
         response.setBase64Content(createDocumentRequest.getBase64Content());
+        response.setVersionId(documentVersion.getVersionId());
+        response.setValues(createDocumentRequest.getValues());
         return response;
     }
 
@@ -127,15 +128,13 @@ public class DocumentService {
      * @param id идентификатор документа
      */
     public void deleteDocument(Long id) {
-        Optional<Document> document = documentRepository.findById(id);
-        List<DocumentVersion> list = document.get().getDocumentVersions();
+        Document document = documentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Document not found"));
+        List<DocumentVersion> list = document.getDocumentVersions();
 
-        if(document.isPresent()){
-            for(DocumentVersion documentVersion : list) {
-                minioService.deleteDocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle());
-            }
+        for(DocumentVersion documentVersion : list) {
+            minioService.deleteDocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle());
         }
-
         documentRepository.deleteById(id);
     }
 
@@ -144,17 +143,15 @@ public class DocumentService {
         Document document = documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Document not found"));
 
-        DocumentVersion documentVersion = new DocumentVersion();
-
-        documentVersion = documentVersionMapper.toDocumentVersion(createDocumentVersionRequest);
+        DocumentVersion documentVersion = documentVersionMapper.toDocumentVersion(createDocumentVersionRequest);
         documentVersion.setVersionId((long)document.getDocumentVersions().size());
 
+        setValues(createDocumentVersionRequest.getValues(), documentVersion);
+
         CreateDocumentVersionResponse response = documentVersionMapper.toCreateDocumentVersionResponse(documentVersionRepository.save(documentVersion));
-
         minioService.addDocument(documentVersion.getId(), createDocumentVersionRequest);
-
-
         response.setBase64Content(createDocumentVersionRequest.getBase64Content());
+        response.setValues(createDocumentVersionRequest.getValues());
         return response;
     }
 
@@ -170,5 +167,17 @@ public class DocumentService {
      //   List<Signature> signatures = document.getSignatures();
       //  signatures.add(signatureMapper.toSignature(signatureDto));
      //   document.setSignatures(signatures);
+    }
+
+    public void setValues(List<SetValueRequest> values, DocumentVersion documentVersion) {
+        for (SetValueRequest newValue : values) {
+            Attribute attribute = attributeRepository.findByName(newValue.getAttributeName())
+                    .orElseThrow(() -> new RuntimeException("Attribute not found"));
+            Value value = new Value();
+            value.setAttribute(attribute);
+            value.setDocumentVersion(documentVersion);
+            value.setValue(newValue.getValue());
+            valueRepository.save(value);
+        }
     }
 }

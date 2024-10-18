@@ -34,7 +34,7 @@ public class CreateDocumentVersionResponse {
      * Атрибуты документа, хранящиеся в виде карты, связывающей атрибуты с их значениями
      */
 
-    private Map<Attribute, Value> values;
+    private List<SetValueRequest> values;
 
     private String base64Content;
 

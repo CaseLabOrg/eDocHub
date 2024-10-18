@@ -16,15 +16,12 @@ public class DocumentVersionMapper {
     private final SignatureMapper signatureMapper;
 
     public DocumentVersion toDocumentVersion(CreateDocumentVersionRequest request){
-
         DocumentVersion documentVersion = new DocumentVersion();
 
         documentVersion.setTitle(request.getTitle());
         documentVersion.setDescription(request.getDescription());
         documentVersion.setCreatedAt(LocalDateTime.now());
-
-        //value
-
+        
         return documentVersion;
     }
 
@@ -36,7 +33,6 @@ public class DocumentVersionMapper {
         response.setTitle(documentVersion.getTitle());
         response.setId(documentVersion.getId());
         response.setVersionId(documentVersion.getVersionId());
-        //response.setValues();
         response.setSignatures(documentVersion.getSignatures().stream()
                 .map(signatureMapper::fromSignature)
                 .toList());

@@ -57,7 +57,7 @@ public class DocumentMapper {
         createDocumentResponse.setTitle(documentVersion.getTitle());
         createDocumentResponse.setDescription(documentVersion.getDescription());
         createDocumentResponse.setCreated_at(documentVersion.getCreatedAt());
-        createDocumentResponse.setValues(documentVersion.getValues());
+        createDocumentResponse.setVersionId(documentVersion.getId());
         return createDocumentResponse;
     }
 }

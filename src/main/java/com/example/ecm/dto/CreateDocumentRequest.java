@@ -7,6 +7,7 @@ import com.example.ecm.model.Value;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -38,7 +39,7 @@ public class CreateDocumentRequest {
         private String description;
 
 
-        private Map<Attribute, Value> values;
+        private List<SetValueRequest> values;
 
         /**
          * Содержание документа
