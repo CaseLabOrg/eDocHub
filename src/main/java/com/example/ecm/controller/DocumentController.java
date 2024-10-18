@@ -74,10 +74,11 @@ public class DocumentController {
      *
      * @return List<CreateDocumentTypeResponse>.
      */
+    /*
     @GetMapping
     public List<CreateDocumentResponse> getAllDocument(Principal principal) {
         return documentService.getAllUserDocuments(principal.getName());
-    }
+    }*/
 
     /**
      * POST-метод для подписания документа по его ID.
@@ -85,8 +86,10 @@ public class DocumentController {
      * @param id Идентификатор документа, который нужно подписать.
      * @param signature Объект запроса, содержащий данные подписи.
      */
+    /*
     @PostMapping("/{id}")
     public void signDocument(@PathVariable Long id, @RequestBody CreateSignatureRequest signature) {
         documentService.signDocument(id, signature);
     }
+    */
 }

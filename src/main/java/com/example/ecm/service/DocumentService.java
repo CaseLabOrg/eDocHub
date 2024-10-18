@@ -42,12 +42,13 @@ public class DocumentService {
     private final DocumentTypeRepository documentTypeRepository;
     private final DocumentMapper documentMapper;
     private final UserRepository userRepository;
-    private final DocumentTypeRepository documentTypeRepository;
     private final MinioService minioService;
     private final DocumentVersionRepository documentVersionRepository;
     private final AttributeRepository attributeRepository;
     private final ValueRepository valueRepository;
     private final SignatureMapper signatureMapper;
+
+    private final UserService userService;
 
 
     /**
@@ -203,8 +204,8 @@ public class DocumentService {
      * Добавляет подпись в документ.
      *
      * @param id           идентификатор документа
-     * @param createSignatureRequest подпись
      */
+    /*
     public void signDocument(Long id, SignatureDto signatureDto) {
         DocumentVersion documentVersion = documentVersionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Document version not found"));
@@ -213,6 +214,7 @@ public class DocumentService {
         documentVersion.setSignatures(signatures);
 
     }
+    */
 
     private User getUser(Long id) {
         return userService.findById(id).orElseThrow(() -> new NotFoundException("No such user"));

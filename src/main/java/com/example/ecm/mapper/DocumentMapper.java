@@ -27,19 +27,11 @@ public class DocumentMapper {
      */
 
     public DocumentVersion createDocumentVersion(CreateDocumentRequest request) {
-       DocumentVersion documentVersion = new DocumentVersion();
-       documentVersion.setCreatedAt(LocalDateTime.now());
-       documentVersion.setDescription(request.getDescription());
-       documentVersion.setTitle(request.getTitle());
-       return documentVersion;
-
-    public Document toDocument(CreateDocumentRequest request) {
-        Document document = new Document();
-        document.setTitle(request.getTitle());
-        document.setDescription(request.getDescription());
-        document.setCreated_at(LocalDateTime.now());
-        document.setVersion(request.getVersion());
-        return document;
+        DocumentVersion documentVersion = new DocumentVersion();
+        documentVersion.setCreatedAt(LocalDateTime.now());
+        documentVersion.setDescription(request.getDescription());
+        documentVersion.setTitle(request.getTitle());
+        return documentVersion;
     }
 
     public DocumentVersion toDocumentVersion(CreateDocumentRequest request) {

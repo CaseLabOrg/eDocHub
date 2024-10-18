@@ -1,6 +1,6 @@
 package com.example.ecm.mapper;
 
-import com.example.ecm.dto.AttributeResponse;
+import com.example.ecm.dto.CreateAttributeResponse;
 import com.example.ecm.dto.CreateDocumentTypeRequest;
 import com.example.ecm.dto.CreateDocumentTypeResponse;
 import com.example.ecm.model.DocumentType;
@@ -42,7 +42,7 @@ public class DocumentTypeMapper {
                         Collections.emptyList() :
                         documentType.getAttributes().stream()
                                 .map(attribute -> {
-                                    AttributeResponse attributeResponse = new AttributeResponse();
+                                    CreateAttributeResponse attributeResponse = new CreateAttributeResponse();
                                     attributeResponse.setId(attribute.getId());
                                     attributeResponse.setName(attribute.getName());
                                     attributeResponse.setDocumentTypeName(documentType.getName());
