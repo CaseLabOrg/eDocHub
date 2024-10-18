@@ -1,12 +1,14 @@
 package com.example.ecm.controller;
 
 import com.example.ecm.dto.*;
+
 import com.example.ecm.service.DocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 /**
@@ -73,8 +75,8 @@ public class DocumentController {
      * @return List<CreateDocumentTypeResponse>.
      */
     @GetMapping
-    public List<CreateDocumentResponse> getAllDocument() {
-        return documentService.getAllDocuments();
+    public List<CreateDocumentResponse> getAllDocument(Principal principal) {
+        return documentService.getAllUserDocuments(principal.getName());
     }
 
     /**
@@ -84,7 +86,7 @@ public class DocumentController {
      * @param signature Объект запроса, содержащий данные подписи.
      */
     @PostMapping("/{id}")
-    public void signDocument(@PathVariable Long id, @RequestBody SignatureDto signature) {
+    public void signDocument(@PathVariable Long id, @RequestBody CreateSignatureRequest signature) {
         documentService.signDocument(id, signature);
     }
 }

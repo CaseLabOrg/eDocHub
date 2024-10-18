@@ -3,6 +3,7 @@ package com.example.ecm.controller;
 import com.example.ecm.dto.CreateDocumentTypeRequest;
 import com.example.ecm.dto.CreateDocumentTypeResponse;
 import com.example.ecm.service.DocumentTypeService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -15,19 +16,12 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/document-types")
+@RequiredArgsConstructor
 public class DocumentTypeController {
 
     // Экземпляр DocumentTypeService для выполнения бизнес-логики, связанной с типами документов.
     private final DocumentTypeService documentTypeService;
 
-    /**
-     * Конструктор для внедрения зависимости сервиса типов документов.
-     *
-     * @param documentTypeService Сервис для работы с типами документов.
-     */
-    public DocumentTypeController(DocumentTypeService documentTypeService) {
-        this.documentTypeService = documentTypeService;
-    }
 
     /**
      * POST-метод для создания нового типа документа.
@@ -80,7 +74,7 @@ public class DocumentTypeController {
      * @param id Идентификатор типа документа, который нужно удалить.
      * @return Ответ без содержимого (No Content) после успешного удаления.
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteDocumentTypeById(@PathVariable Long id) {
         documentTypeService.deleteDocumentType(id);

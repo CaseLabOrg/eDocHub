@@ -39,10 +39,4 @@ public class CreateUserRequest {
      */
     @NotNull
     private String password;
-
-    /**
-     * Множество ролей пользователя. Не может быть null
-     */
-    @NotNull
-    private Set<RoleRequest> roles;
 }

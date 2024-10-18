@@ -4,6 +4,21 @@ import com.example.ecm.dto.*;
 import com.example.ecm.mapper.*;
 import com.example.ecm.model.*;
 import com.example.ecm.repository.*;
+
+import com.example.ecm.dto.CreateDocumentRequest;
+import com.example.ecm.dto.CreateDocumentResponse;
+import com.example.ecm.dto.CreateSignatureRequest;
+import com.example.ecm.exception.NotFoundException;
+import com.example.ecm.kafka.event.DocumentSignedEvent;
+import com.example.ecm.kafka.service.EventProducerService;
+import com.example.ecm.mapper.DocumentMapper;
+import com.example.ecm.mapper.SignatureMapper;
+import com.example.ecm.model.Document;
+import com.example.ecm.model.DocumentType;
+import com.example.ecm.model.Signature;
+import com.example.ecm.model.User;
+import com.example.ecm.repository.DocumentRepository;
+import com.example.ecm.repository.DocumentTypeRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
@@ -24,6 +39,7 @@ public class DocumentService {
 
     private final DocumentVersionMapper documentVersionMapper;
     private final DocumentRepository documentRepository;
+    private final DocumentTypeRepository documentTypeRepository;
     private final DocumentMapper documentMapper;
     private final UserRepository userRepository;
     private final DocumentTypeRepository documentTypeRepository;
@@ -32,6 +48,7 @@ public class DocumentService {
     private final AttributeRepository attributeRepository;
     private final ValueRepository valueRepository;
     private final SignatureMapper signatureMapper;
+
 
     /**
      * Создает новый документ.
@@ -49,7 +66,6 @@ public class DocumentService {
         Document document = new Document();
         document.setUser(user);
         document.setDocumentType(documentType);
-
         Document documentSaved = documentRepository.save(document);
 
         DocumentVersion documentVersion = documentMapper.toDocumentVersion(createDocumentRequest);
@@ -116,6 +132,7 @@ public class DocumentService {
                         return getCreateDocumentResponse(document, response);
                     })
                     .toList();
+
         }
 
     private CreateDocumentResponse getCreateDocumentResponse(Document document, CreateDocumentResponse response) {
@@ -152,6 +169,7 @@ public class DocumentService {
 
     public CreateDocumentVersionResponse updateDocumentVersion(Long id, CreateDocumentVersionRequest createDocumentVersionRequest) {
         Document document = documentRepository.findById(id)
+
                 .orElseThrow(() -> new RuntimeException("Document not found"));
 
         DocumentVersion documentVersion = documentVersionMapper.toDocumentVersion(createDocumentVersionRequest);
@@ -185,7 +203,7 @@ public class DocumentService {
      * Добавляет подпись в документ.
      *
      * @param id           идентификатор документа
-     * @param signatureDto подпись
+     * @param createSignatureRequest подпись
      */
     public void signDocument(Long id, SignatureDto signatureDto) {
         DocumentVersion documentVersion = documentVersionRepository.findById(id)
@@ -193,5 +211,14 @@ public class DocumentService {
         List<Signature> signatures = documentVersion.getSignatures();
         signatures.add(signatureMapper.toSignature(signatureDto));
         documentVersion.setSignatures(signatures);
+
+    }
+
+    private User getUser(Long id) {
+        return userService.findById(id).orElseThrow(() -> new NotFoundException("No such user"));
+    }
+
+    private DocumentType getDocumentType(Long id) {
+        return documentTypeRepository.findById(id).orElseThrow(() -> new NotFoundException("No such document type"));
     }
 }

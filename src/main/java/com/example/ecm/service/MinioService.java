@@ -59,7 +59,7 @@ public class MinioService {
             // Получение расширения файла
             String fileExtension = request.getTitle().substring(request.getTitle().lastIndexOf('.') + 1);
 
-            // Загрузка файла в MinIO
+
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
@@ -88,13 +88,10 @@ public class MinioService {
     public String getBase64DocumentByName(String name) {
         InputStream stream = null;
         try {
-            // Получение документа из MinIO
             stream = minioClient.getObject(GetObjectArgs.builder()
                     .bucket(bucketName)
                     .object(name)
                     .build());
-
-            // Преобразование содержимого в Base64
             return Base64.getEncoder().encodeToString(stream.readAllBytes());
         } catch (MinioException e) {
             e.printStackTrace();
@@ -120,7 +117,6 @@ public class MinioService {
      */
     public void deleteDocumentByName(String name) {
         try {
-            // Удаление документа из MinIO
             minioClient.removeObject(RemoveObjectArgs.builder()
                     .bucket(bucketName)
                     .object(name)
