@@ -1,9 +1,7 @@
-package com.example.ecm.dto;
+package com.example.ecm.dto.responses;
 
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.List;
 
 /**
  * DTO (Data Transfer Object) для ответа на запрос создания или обновления атрибута документа.

@@ -1,14 +1,15 @@
 package com.example.ecm.controller;
 
-import com.example.ecm.dto.*;
-
+import com.example.ecm.dto.requests.CreateDocumentRequest;
+import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
+import com.example.ecm.dto.responses.CreateDocumentResponse;
+import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
 import com.example.ecm.service.DocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
 
 /**

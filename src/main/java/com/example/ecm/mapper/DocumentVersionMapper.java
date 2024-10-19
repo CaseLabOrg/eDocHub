@@ -1,15 +1,12 @@
 package com.example.ecm.mapper;
 
 
-import com.example.ecm.dto.CreateDocumentVersionRequest;
-import com.example.ecm.dto.CreateDocumentVersionResponse;
-import com.example.ecm.dto.SetValueRequest;
+import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
+import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
+import com.example.ecm.dto.requests.SetValueRequest;
 import com.example.ecm.model.DocumentVersion;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
-
-import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
 @Component

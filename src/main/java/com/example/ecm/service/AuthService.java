@@ -1,6 +1,6 @@
 package com.example.ecm.service;
 
-import com.example.ecm.dto.LoginResponse;
+import com.example.ecm.dto.responses.LoginResponse;
 import com.example.ecm.security.UserPrincipal;
 import com.example.ecm.security.jwt.JwtIssuer;
 import lombok.RequiredArgsConstructor;

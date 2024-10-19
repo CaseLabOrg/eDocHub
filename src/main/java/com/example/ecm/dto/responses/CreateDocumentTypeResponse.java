@@ -1,6 +1,5 @@
-package com.example.ecm.dto;
+package com.example.ecm.dto.responses;
 
-import com.example.ecm.model.Attribute;
 import lombok.Getter;
 import lombok.Setter;
 

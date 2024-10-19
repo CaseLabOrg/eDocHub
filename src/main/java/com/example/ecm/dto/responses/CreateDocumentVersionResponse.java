@@ -1,5 +1,6 @@
-package com.example.ecm.dto;
+package com.example.ecm.dto.responses;
 
+import com.example.ecm.dto.requests.SetValueRequest;
 import lombok.Getter;
 import lombok.Setter;
 

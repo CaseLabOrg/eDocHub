@@ -1,10 +1,10 @@
 package com.example.ecm.mapper;
 
-import com.example.ecm.dto.*;
+import com.example.ecm.dto.requests.CreateUserRequest;
+import com.example.ecm.dto.responses.CreateUserResponse;
+import com.example.ecm.dto.responses.GetRoleResponse;
 import com.example.ecm.model.Role;
 import com.example.ecm.model.User;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
@@ -54,13 +54,13 @@ public class UserMapper {
      * @param roles набор ролей
      * @return набор DTO с данными ролей
      */
-    public Set<RoleResponse> toRolesResponse(Set<Role> roles) {
-        Set<RoleResponse> rolesResponse = new HashSet<>();
+    public Set<GetRoleResponse> toRolesResponse(Set<Role> roles) {
+        Set<GetRoleResponse> rolesResponse = new HashSet<>();
         for(Role role : roles) {
-            RoleResponse roleResponse = new RoleResponse();
-            roleResponse.setId(role.getId());
-            roleResponse.setName(role.getName());
-            rolesResponse.add(roleResponse);
+            GetRoleResponse getRoleResponse = new GetRoleResponse();
+            getRoleResponse.setId(role.getId());
+            getRoleResponse.setName(role.getName());
+            rolesResponse.add(getRoleResponse);
         }
         return rolesResponse;
     }
