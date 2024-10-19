@@ -1,8 +1,11 @@
 package com.example.ecm.service;
 
 import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
+import com.example.ecm.dto.requests.CreateSignatureRequestRequest;
 import com.example.ecm.dto.requests.SetValueRequest;
 import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
+import com.example.ecm.dto.responses.CreateSignatureRequestResponse;
+import com.example.ecm.exception.ForbiddenException;
 import com.example.ecm.exception.ServerException;
 import com.example.ecm.mapper.*;
 import com.example.ecm.model.*;
@@ -18,6 +21,7 @@ import com.example.ecm.model.DocumentType;
 import com.example.ecm.model.User;
 import com.example.ecm.repository.DocumentRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
+import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -42,6 +46,7 @@ public class DocumentService {
     private final DocumentVersionRepository documentVersionRepository;
     private final AttributeRepository attributeRepository;
     private final ValueRepository valueRepository;
+    private final SignatureRequestRepository signatureRequestRepository;
     private final SignatureMapper signatureMapper;
 
     private final UserService userService;
@@ -200,16 +205,37 @@ public class DocumentService {
      *
      * @param id           идентификатор документа
      */
-    /*
-    public void signDocument(Long id, SignatureDto signatureDto) {
-        DocumentVersion documentVersion = documentVersionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Document version not found"));
-        List<Signature> signatures = documentVersion.getSignatures();
-        signatures.add(signatureMapper.toSignature(signatureDto));
-        documentVersion.setSignatures(signatures);
 
+    public CreateSignatureRequestResponse sendToSign(Long id, CreateSignatureRequestRequest request, UserPrincipal currentUser) {
+        Document document = documentRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Document with id: " + id +" not found"));
+
+        DocumentVersion documentVersion = document.getDocumentVersions().stream()
+                .filter(v -> v.getVersionId().equals(request.getDocumentVersionId()))
+                .findFirst().orElseThrow(() -> new NotFoundException("Document version with id: " + id +" not found"));
+
+        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
+
+        if (!currentUser.getId().equals(document.getUser().getId()) || !currentUser.isAdmin()) {
+            throw new ForbiddenException("You have no permission to send this document");
+        }
+
+        Signature signature = signatureMapper.toSignature(document, documentVersion);
+
+        documentVersion.getSignatures().add(signature);
+
+        documentVersionRepository.save(documentVersion);
+
+        SignatureRequest signatureRequest = new SignatureRequest();
+        signatureRequest.setUserTo(user);
+        signatureRequest.setDocumentVersion(documentVersion);
+        signatureRequest.setStatus("PENDING");
+
+        signatureRequest = signatureRequestRepository.save(signatureRequest);
+
+        return signatureMapper.toCreateSignatureRequestResponse(signatureRequest);
     }
-    */
+
 
     private User getUser(Long id) {
         return userService.findById(id).orElseThrow(() -> new NotFoundException("No such user"));

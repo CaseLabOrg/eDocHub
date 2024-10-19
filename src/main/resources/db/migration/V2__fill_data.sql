@@ -20,4 +20,6 @@ INSERT INTO user_roles VALUES (1, 1);
 INSERT INTO Document_Types_Attributes VALUES (1, 1);
 INSERT INTO Document_Types_Attributes VALUES (2, 1);
 
-INSERT INTO document_version(version_id,  document_id, title, description) VALUES (1, 1, 'hw.txt', 'test')
+INSERT INTO document_version(version_id,  document_id, title, description) VALUES (1, 1, 'hw.txt', 'test');
+
+INSERT INTO signatures(hash, placeholder_name, user_id, document_version_id) VALUES ('testHash', 'testPlaceholder', 1, 1);
