@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,60 +26,14 @@ public class CreateDocumentResponse {
     private Long id;
 
     /**
-     * Заголовок документа.
+     * Пользователь, который создает или загружает документ.
      */
-    private String title;
-
-    /**
-     * Пользователь, связанный с документом (создатель или ответственный).
-     */
-    private User user;
+    private CreateUserResponse user;
 
     /**
      * Тип документа, определяющий его классификацию.
      */
-    private DocumentType documentType;
+    private CreateDocumentTypeResponse documentType;
 
-    /**
-     * Описание документа.
-     */
-    private String description;
-
-    /**
-     * Дата и время создания документа.
-     */
-    private LocalDateTime created_at;
-
-    /**
-     * Версия документа.
-     */
-    private Integer version;
-
-    /**
-     * Карта атрибутов документа и их значений.
-     * Хранит пары ключ-значение для кастомных атрибутов документа.
-     */
-    private Map<Attribute, Value> values = new HashMap<>();
-
-    /**
-     * Метод для установки или добавления атрибутов документа.
-     * Если карта значений не пустая, новые значения добавляются к существующим.
-     *
-     * @param values карта атрибутов и их значений для добавления в документ.
-     */
-    public void setValues(Map<Attribute, Value> values) {
-        if (this.values == null) {
-            this.values = new HashMap<>();
-        }
-        if (values != null) {
-            this.values.putAll(values);  // Добавляем все новые значения в существующую карту
-        }
-    }
-
-    /**
-     * Содержание документа
-     */
-
-    private String base64Content;
-
+    private List<CreateDocumentVersionResponse> documentVersions;
 }

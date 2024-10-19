@@ -18,10 +18,4 @@ public class CreateDocumentTypeRequest {
      * Название типа документа.
      */
     private String name;
-
-    /**
-     * Список атрибутов, связанных с данным типом документа.
-     * Атрибуты определяют специфические поля и характеристики для документов этого типа.
-     */
-    private List<Long> attributesIds;
 }

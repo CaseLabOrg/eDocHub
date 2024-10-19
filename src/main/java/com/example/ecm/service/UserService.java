@@ -4,6 +4,7 @@ import com.example.ecm.dto.CreateUserRequest;
 import com.example.ecm.dto.CreateUserResponse;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.mapper.UserMapper;
+import com.example.ecm.model.Role;
 import com.example.ecm.model.User;
 import com.example.ecm.repository.RoleRepository;
 import com.example.ecm.repository.UserRepository;
@@ -54,6 +55,20 @@ public class UserService {
     public CreateUserResponse getUserById(Long id) {
         return userRepository.findById(id)
                 .map(userMapper::toCreateUserResponse).orElseThrow(() -> new NotFoundException("No such user"));
+    }
+
+    public CreateUserResponse addRole(Long id, String name) {
+        Role role = roleRepository.findByName(name.toUpperCase()).orElseThrow(() -> new NotFoundException("No such user"));
+        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("No such user"));
+        user.getRoles().add(role);
+        return userMapper.toCreateUserResponse(userRepository.save(user));
+    }
+
+    public CreateUserResponse removeRole(Long id, String name) {
+        Role role = roleRepository.findByName(name.toUpperCase()).orElseThrow(() -> new NotFoundException("No such user"));
+        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("No such user"));
+        user.getRoles().remove(role);
+        return userMapper.toCreateUserResponse(userRepository.save(user));
     }
 
     /**

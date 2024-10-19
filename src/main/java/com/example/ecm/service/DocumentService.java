@@ -1,5 +1,10 @@
 package com.example.ecm.service;
 
+import com.example.ecm.dto.*;
+import com.example.ecm.mapper.*;
+import com.example.ecm.model.*;
+import com.example.ecm.repository.*;
+
 import com.example.ecm.dto.CreateDocumentRequest;
 import com.example.ecm.dto.CreateDocumentResponse;
 import com.example.ecm.dto.CreateSignatureRequest;
@@ -15,10 +20,14 @@ import com.example.ecm.model.User;
 import com.example.ecm.repository.DocumentRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Сервис для работы с документами.
@@ -28,13 +37,19 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class DocumentService {
 
+    private final DocumentVersionMapper documentVersionMapper;
     private final DocumentRepository documentRepository;
     private final DocumentTypeRepository documentTypeRepository;
     private final DocumentMapper documentMapper;
-    private final SignatureMapper signatureMapper;
+    private final UserRepository userRepository;
     private final MinioService minioService;
+    private final DocumentVersionRepository documentVersionRepository;
+    private final AttributeRepository attributeRepository;
+    private final ValueRepository valueRepository;
+    private final SignatureMapper signatureMapper;
+
     private final UserService userService;
-    private final EventProducerService eventProducerService;
+
 
     /**
      * Создает новый документ.
@@ -45,17 +60,43 @@ public class DocumentService {
      * @return ответ с данными созданного документа или null в случае ошибки
      */
     public CreateDocumentResponse createDocument(CreateDocumentRequest createDocumentRequest) {
-        Document document = documentMapper.toDocument(createDocumentRequest);
-        document.setUser(getUser(createDocumentRequest.getUserId()));
-        document.setDocumentType(getDocumentType(createDocumentRequest.getUserId()));
+        User user = userRepository.findById(createDocumentRequest.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        DocumentType documentType = documentTypeRepository.findById(createDocumentRequest.getDocumentTypeId())
+                .orElseThrow(() -> new RuntimeException("DocumentType not found"));
+        Document document = new Document();
+        document.setUser(user);
+        document.setDocumentType(documentType);
         Document documentSaved = documentRepository.save(document);
-        boolean success = minioService.addDocument(documentSaved.getId(), createDocumentRequest);
+
+        DocumentVersion documentVersion = documentMapper.toDocumentVersion(createDocumentRequest);
+        documentVersion.setDocument(documentSaved);
+        documentVersion.setVersionId(1L);
+        documentVersion.setCreatedAt(LocalDateTime.now());
+        DocumentVersion documentVersionSaved = documentVersionRepository.save(documentVersion);
+
+        setValues(createDocumentRequest.getValues(), documentVersionSaved);
+
+        CreateDocumentVersionRequest createDocumentVersionRequest = new CreateDocumentVersionRequest();
+
+        createDocumentVersionRequest.setDescription(documentVersion.getDescription());
+        createDocumentVersionRequest.setTitle(documentVersion.getTitle());
+        createDocumentVersionRequest.setBase64Content(createDocumentRequest.getBase64Content());
+
+        boolean success = minioService.addDocument(documentVersionSaved.getId(), createDocumentVersionRequest);
         if (!success) {
-            documentRepository.deleteById(documentSaved.getId());
-            return null;
+            documentRepository.deleteById(documentVersionSaved.getId());
+            throw new RuntimeException("Could not add document");
         }
-        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(documentRepository.save(document));
-        response.setBase64Content(createDocumentRequest.getBase64Content());
+
+        List<CreateDocumentVersionResponse> documentVersions = new ArrayList<>();
+        CreateDocumentVersionResponse createDocumentVersionResponse = documentVersionMapper.toCreateDocumentVersionResponse(documentVersionSaved);
+        createDocumentVersionResponse.setBase64Content(createDocumentRequest.getBase64Content());
+        createDocumentVersionResponse.setValues(createDocumentRequest.getValues());
+        documentVersions.add(createDocumentVersionResponse);
+
+        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(documentSaved);
+        response.setDocumentVersions(documentVersions);
         return response;
     }
 
@@ -68,11 +109,13 @@ public class DocumentService {
      * @throws RuntimeException если документ не найден
      */
     public CreateDocumentResponse getDocumentById(Long id) {
-        CreateDocumentResponse response = documentRepository.findById(id)
-                .map(documentMapper::toCreateDocumentResponse)
-                .orElseThrow(() -> new NotFoundException("Document not found"));
-        response.setBase64Content(minioService.getBase64DocumentByName(response.getId() + "_" + response.getTitle()));
-        return response;
+        Document document = documentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Document not found"));
+
+        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document);
+
+        return getCreateDocumentResponse(document, response);
+
     }
 
     /**
@@ -81,16 +124,31 @@ public class DocumentService {
      *
      * @return список ответов с данными всех документов
      */
-    public List<CreateDocumentResponse> getAllUserDocuments(String email) {
-        Long userId = userService.findByEmail(email).orElseThrow(() -> new NotFoundException("No such user")).getId();
-        List<CreateDocumentResponse> list = documentRepository.findDocumentsBySignature(userId).stream()
-                .map(documentMapper::toCreateDocumentResponse)
-                .toList();
-        for (CreateDocumentResponse response : list) {
-            response.setBase64Content(minioService.getBase64DocumentByName(response.getId() + "_" + response.getTitle()));
+    public List<CreateDocumentResponse> getAllDocuments() {
+
+            return documentRepository.findAll().stream()
+                    .map(document -> {
+                        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document);
+
+                        return getCreateDocumentResponse(document, response);
+                    })
+                    .toList();
+
         }
-        return list;
+
+    private CreateDocumentResponse getCreateDocumentResponse(Document document, CreateDocumentResponse response) {
+        response.setDocumentVersions(document.getDocumentVersions().stream()
+                .map(version -> {
+                    CreateDocumentVersionResponse versionResponse = documentVersionMapper.toCreateDocumentVersionResponse(version);
+                    String base64Content = minioService.getBase64DocumentByName(version.getId() + "_" + version.getTitle());
+                    versionResponse.setBase64Content(base64Content);
+                    return versionResponse;
+                })
+                .toList());
+
+        return response;
     }
+
 
     /**
      * Удаляет документ по его идентификатору.
@@ -99,50 +157,63 @@ public class DocumentService {
      * @param id идентификатор документа
      */
     public void deleteDocument(Long id) {
-        Optional<Document> document = documentRepository.findById(id);
-        document.ifPresent(value -> minioService.deleteDocumentByName(value.getId() + "_" + value.getTitle()));
+        Document document = documentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Document not found"));
+        List<DocumentVersion> list = document.getDocumentVersions();
         documentRepository.deleteById(id);
+        for(DocumentVersion documentVersion : list) {
+            minioService.deleteDocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle());
+        }
     }
 
-    /**
-     * Обновляет данные существующего документа.
-     * Старое содержимое документа удаляется из MinIO, и загружается новое.
-     *
-     * @param id                    идентификатор документа
-     * @param createDocumentRequest запрос на обновление документа
-     * @return ответ с данными обновленного документа
-     * @throws RuntimeException если документ не найден
-     */
-    public CreateDocumentResponse updateDocument(Long id, CreateDocumentRequest createDocumentRequest) {
+
+    public CreateDocumentVersionResponse updateDocumentVersion(Long id, CreateDocumentVersionRequest createDocumentVersionRequest) {
         Document document = documentRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Document not found"));
-        minioService.deleteDocumentByName(document.getId() + "_" + document.getTitle());
-        document.setTitle(createDocumentRequest.getTitle());
-        document.setUser(getUser(createDocumentRequest.getUserId()));
-        document.setDocumentType(getDocumentType(createDocumentRequest.getDocumentTypeId()));
-        document.setDescription(createDocumentRequest.getDescription());
-        document.setVersion(createDocumentRequest.getVersion());
-        minioService.addDocument(id, createDocumentRequest);
-        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(documentRepository.save(document));
-        response.setBase64Content(createDocumentRequest.getBase64Content());
+
+                .orElseThrow(() -> new RuntimeException("Document not found"));
+
+        DocumentVersion documentVersion = documentVersionMapper.toDocumentVersion(createDocumentVersionRequest);
+        documentVersion.setVersionId((long)document.getDocumentVersions().size() + 1);
+        documentVersion.setCreatedAt(LocalDateTime.now());
+        documentVersion.setDocument(document);
+
+        CreateDocumentVersionResponse response = documentVersionMapper.toCreateDocumentVersionResponse(documentVersionRepository.save(documentVersion));
+
+        setValues(createDocumentVersionRequest.getValues(), documentVersion);
+
+        minioService.addDocument(documentVersion.getId(), createDocumentVersionRequest);
+        response.setBase64Content(createDocumentVersionRequest.getBase64Content());
+        response.setValues(createDocumentVersionRequest.getValues());
         return response;
+    }
+
+    private void setValues(List<SetValueRequest> values, DocumentVersion documentVersion) {
+        for (SetValueRequest newValue : values) {
+            Attribute attribute = attributeRepository.findByName(newValue.getAttributeName())
+                    .orElseThrow(() -> new RuntimeException("Attribute not found"));
+            Value value = new Value();
+            value.setAttribute(attribute);
+            value.setDocumentVersion(documentVersion);
+            value.setValue(newValue.getValue());
+            valueRepository.save(value);
+        }
     }
 
     /**
      * Добавляет подпись в документ.
      *
      * @param id           идентификатор документа
-     * @param createSignatureRequest подпись
      */
-    public void signDocument(Long id, CreateSignatureRequest createSignatureRequest) {
-        Document document = documentRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Document not found"));
-        List<Signature> signatures = document.getSignatures();
-        signatures.add(signatureMapper.toSignature(createSignatureRequest));
-        DocumentSignedEvent event = new DocumentSignedEvent(id, document.getUser().getId(), createSignatureRequest.getUserId(), createSignatureRequest.getPlaceholderTitle());
-        eventProducerService.sendDocumentSignedEvent(event);
-        document.setSignatures(signatures);
+    /*
+    public void signDocument(Long id, SignatureDto signatureDto) {
+        DocumentVersion documentVersion = documentVersionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Document version not found"));
+        List<Signature> signatures = documentVersion.getSignatures();
+        signatures.add(signatureMapper.toSignature(signatureDto));
+        documentVersion.setSignatures(signatures);
+
     }
+    */
 
     private User getUser(Long id) {
         return userService.findById(id).orElseThrow(() -> new NotFoundException("No such user"));

@@ -18,8 +18,8 @@ public class SignatureRequest {
     private User userTo;
 
     @ManyToOne
-    @JoinColumn(name = "document_id")
-    private Document document;
+    @JoinColumn(name = "document_version_id")
+    private DocumentVersion documentVersion;
 
     /**
      * Флаг, который обозначает была ли поставлена подпись.

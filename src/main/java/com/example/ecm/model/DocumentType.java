@@ -22,21 +22,26 @@ public class DocumentType {
      * Генерируется автоматически.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    Long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     /**
      * Название типа документа.
      * Это поле является обязательным и должно быть уникальным.
      */
     @Column(nullable = false, unique = true)
-    String name;
+    private String name;
 
     /**
      * Список атрибутов, связанных с типом документа.
      * Используется для хранения характеристик, которые могут быть применены к документам данного типа.
      */
     @JsonManagedReference
-    @OneToMany(mappedBy = "documentType", fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.REFRESH})
+    @JoinTable(
+            name = "document_types_attributes",
+            joinColumns = @JoinColumn(name = "id_document_type"),
+            inverseJoinColumns = @JoinColumn(name = "id_attribute")
+    )
     private List<Attribute> attributes;
 }

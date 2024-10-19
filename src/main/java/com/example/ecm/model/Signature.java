@@ -42,6 +42,6 @@ public class Signature {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "document_id", nullable = false)
-    private Document document;
+    @JoinColumn(name = "document_version_id", nullable = false)
+    private DocumentVersion documentVersion;
 }

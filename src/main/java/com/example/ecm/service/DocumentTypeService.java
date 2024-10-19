@@ -27,11 +27,6 @@ public class DocumentTypeService {
      */
     public CreateDocumentTypeResponse createDocumentType(CreateDocumentTypeRequest request) {
         DocumentType documentType =  documentTypeRepository.save(documentTypeMapper.toDocumentType(request));
-        List<Attribute> attributes = request.getAttributesIds().stream()
-                .map(id -> attributeRepository.findById(id)
-                        .orElseThrow(() -> new RuntimeException("Attribute not found")))
-                .toList();
-        documentType.setAttributes(attributes);
         return documentTypeMapper.toCreateDocumentTypeResponse(documentType);
     }
 
@@ -70,11 +65,7 @@ public class DocumentTypeService {
                 .orElseThrow(() -> new RuntimeException("Document Type not found"));
         documentType.setId(id);
         documentType.setName(request.getName());
-        List<Attribute> attributes = request.getAttributesIds().stream()
-                .map(aId -> attributeRepository.findById(aId)
-                        .orElseThrow(() -> new RuntimeException("Attribute not found")))
-                .toList();
-        documentType.setAttributes(attributes);
+
         return documentTypeMapper.toCreateDocumentTypeResponse(documentTypeRepository.save(documentType));
     }
 

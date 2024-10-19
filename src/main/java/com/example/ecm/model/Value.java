@@ -20,8 +20,8 @@ public class Value {
 
     @JsonIgnore
     @ManyToOne
-    @JoinColumn(name = "document_id")
-    private Document document;
+    @JoinColumn(name = "document_version_id")
+    private DocumentVersion documentVersion;
 
     @Column(nullable = false)
     private String value;

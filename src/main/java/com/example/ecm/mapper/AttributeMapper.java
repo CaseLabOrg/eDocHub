@@ -18,12 +18,10 @@ public class AttributeMapper {
      * Преобразует данные для создания или обновлени атрибута документа (AttributeRequest) в объект сущности Attribute.
      *
      * @param request      - запрос на создание атрибута документа.
-     * @param documentType - тип документа, необходимый для создания атрибута.
      * @return объект модели Attribute, содержащий данные из запроса.
      */
-    public Attribute toAttribute(CreateAttributeRequest request, DocumentType documentType) {
+    public Attribute toAttribute(CreateAttributeRequest request) {
         Attribute attribute = new Attribute();
-        attribute.setDocumentType(documentType);
         attribute.setName(request.getName());
         attribute.setRequired(request.getRequired());
         return attribute;
@@ -38,7 +36,6 @@ public class AttributeMapper {
     public CreateAttributeResponse toAttributeResponse(Attribute attribute) {
         CreateAttributeResponse createAttributeResponse = new CreateAttributeResponse();
         createAttributeResponse.setId(attribute.getId());
-        createAttributeResponse.setDocumentTypeName(attribute.getDocumentType().getName());
         createAttributeResponse.setName(attribute.getName());
         createAttributeResponse.setRequired(attribute.getRequired());
         return createAttributeResponse;
