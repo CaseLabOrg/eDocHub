@@ -27,5 +27,5 @@ public class SignatureRequest {
      * false - документ был отклонен
      * true - документ был подписан
      */
-    private Boolean approved;
+    private String status;
 }

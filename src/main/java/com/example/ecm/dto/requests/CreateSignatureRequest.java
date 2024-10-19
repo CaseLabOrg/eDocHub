@@ -21,7 +21,7 @@ public class CreateSignatureRequest {
      * Хэш подписи.
      * Хранит цифровую подпись в зашифрованном виде.
      */
-    private String hash;
+    private Integer hash;
 
     /**
      * Название окошка для подписи.
