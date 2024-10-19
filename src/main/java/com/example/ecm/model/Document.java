@@ -33,6 +33,6 @@ public class Document {
     private DocumentType documentType;
 
 
-    @OneToMany(mappedBy = "document", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.REFRESH})
+    @OneToMany(mappedBy = "document", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.REMOVE})
     private List<DocumentVersion> documentVersions = new ArrayList<>();
 }

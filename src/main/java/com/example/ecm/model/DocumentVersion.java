@@ -48,7 +48,7 @@ public class DocumentVersion {
     /**
      * Атрибуты документа, хранящиеся в виде карты, связывающей атрибуты с их значениями
      */
-    @OneToMany(mappedBy = "documentVersion")
+    @OneToMany(mappedBy = "documentVersion", cascade = {CascadeType.REMOVE})
     @MapKeyJoinColumn(name = "attribute_id")
     private Map<Attribute, Value> values = new HashMap<>();
 
