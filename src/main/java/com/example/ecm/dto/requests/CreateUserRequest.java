@@ -1,4 +1,4 @@
-package com.example.ecm.dto;
+package com.example.ecm.dto.requests;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

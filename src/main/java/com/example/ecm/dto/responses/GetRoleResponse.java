@@ -1,4 +1,4 @@
-package com.example.ecm.dto;
+package com.example.ecm.dto.responses;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -8,7 +8,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class RoleResponse {
+public class GetRoleResponse {
     private long id;
     private String name;
 }

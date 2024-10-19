@@ -1,7 +1,6 @@
 package com.example.ecm.service;
 
-import com.example.ecm.dto.CreateDocumentRequest;
-import com.example.ecm.dto.CreateDocumentVersionRequest;
+import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;

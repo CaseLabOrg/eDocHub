@@ -1,6 +1,6 @@
 package com.example.ecm.mapper;
 
-import com.example.ecm.dto.CreateSignatureRequest;
+import com.example.ecm.dto.requests.CreateSignatureRequest;
 import com.example.ecm.model.Signature;
 import org.springframework.stereotype.Component;
 

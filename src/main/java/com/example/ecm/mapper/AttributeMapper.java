@@ -1,9 +1,8 @@
 package com.example.ecm.mapper;
 
-import com.example.ecm.dto.CreateAttributeRequest;
-import com.example.ecm.dto.CreateAttributeResponse;
+import com.example.ecm.dto.requests.CreateAttributeRequest;
+import com.example.ecm.dto.responses.CreateAttributeResponse;
 import com.example.ecm.model.Attribute;
-import com.example.ecm.model.DocumentType;
 import org.springframework.stereotype.Component;
 
 /**

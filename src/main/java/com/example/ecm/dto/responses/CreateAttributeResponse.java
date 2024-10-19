@@ -1,4 +1,4 @@
-package com.example.ecm.dto;
+package com.example.ecm.dto.responses;
 
 import lombok.Getter;
 import lombok.Setter;

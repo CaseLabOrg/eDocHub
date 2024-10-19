@@ -1,7 +1,7 @@
 package com.example.ecm.service;
 
-import com.example.ecm.dto.CreateAttributeRequest;
-import com.example.ecm.dto.CreateAttributeResponse;
+import com.example.ecm.dto.requests.CreateAttributeRequest;
+import com.example.ecm.dto.responses.CreateAttributeResponse;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.mapper.AttributeMapper;
 import com.example.ecm.model.Attribute;

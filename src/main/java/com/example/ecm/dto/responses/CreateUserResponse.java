@@ -1,4 +1,4 @@
-package com.example.ecm.dto;
+package com.example.ecm.dto.responses;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -36,5 +36,5 @@ public class CreateUserResponse {
     /**
      * Множество ролей созданного пользователя.
      */
-    private Set<RoleResponse> roles;
+    private Set<GetRoleResponse> roles;
 }

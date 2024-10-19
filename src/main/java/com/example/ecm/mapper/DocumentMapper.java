@@ -1,7 +1,7 @@
 package com.example.ecm.mapper;
 
-import com.example.ecm.dto.CreateDocumentRequest;
-import com.example.ecm.dto.CreateDocumentResponse;
+import com.example.ecm.dto.requests.CreateDocumentRequest;
+import com.example.ecm.dto.responses.CreateDocumentResponse;
 import com.example.ecm.model.Document;
 import com.example.ecm.model.DocumentVersion;
 import lombok.RequiredArgsConstructor;

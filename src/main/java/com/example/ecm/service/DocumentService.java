@@ -1,34 +1,29 @@
 package com.example.ecm.service;
 
-import com.example.ecm.dto.*;
+import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
+import com.example.ecm.dto.requests.SetValueRequest;
+import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
 import com.example.ecm.exception.ServerException;
 import com.example.ecm.mapper.*;
 import com.example.ecm.model.*;
 import com.example.ecm.repository.*;
 
-import com.example.ecm.dto.CreateDocumentRequest;
-import com.example.ecm.dto.CreateDocumentResponse;
-import com.example.ecm.dto.CreateSignatureRequest;
+import com.example.ecm.dto.requests.CreateDocumentRequest;
+import com.example.ecm.dto.responses.CreateDocumentResponse;
 import com.example.ecm.exception.NotFoundException;
-import com.example.ecm.kafka.event.DocumentSignedEvent;
-import com.example.ecm.kafka.service.EventProducerService;
 import com.example.ecm.mapper.DocumentMapper;
 import com.example.ecm.mapper.SignatureMapper;
 import com.example.ecm.model.Document;
 import com.example.ecm.model.DocumentType;
-import com.example.ecm.model.Signature;
 import com.example.ecm.model.User;
 import com.example.ecm.repository.DocumentRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
 import lombok.RequiredArgsConstructor;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Сервис для работы с документами.

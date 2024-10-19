@@ -1,7 +1,7 @@
 package com.example.ecm.service;
 
-import com.example.ecm.dto.CreateDocumentTypeRequest;
-import com.example.ecm.dto.CreateDocumentTypeResponse;
+import com.example.ecm.dto.requests.CreateDocumentTypeRequest;
+import com.example.ecm.dto.responses.CreateDocumentTypeResponse;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.mapper.DocumentTypeMapper;
 import com.example.ecm.model.DocumentType;

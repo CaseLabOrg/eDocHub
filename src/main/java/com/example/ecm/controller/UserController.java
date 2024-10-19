@@ -1,12 +1,13 @@
 package com.example.ecm.controller;
 
-import com.example.ecm.dto.CreateUserRequest;
-import com.example.ecm.dto.CreateUserResponse;
+import com.example.ecm.dto.requests.CreateUserRequest;
+import com.example.ecm.dto.responses.CreateUserResponse;
+import com.example.ecm.dto.requests.PutRoleRequest;
 import com.example.ecm.service.UserService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -55,14 +56,16 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PutMapping("/{id}/role")
-    public ResponseEntity<CreateUserResponse> addRole(@PathVariable Long id, @NotNull(message = "role cannot be null") @RequestBody String roleName) {
-        return ResponseEntity.ok(userService.addRole(id, roleName));
+    public ResponseEntity<CreateUserResponse> addRole(@PathVariable Long id, @Valid @RequestBody PutRoleRequest role) {
+        return ResponseEntity.ok(userService.addRole(id, role));
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/{id}/role")
-    public ResponseEntity<CreateUserResponse> removeRole(@PathVariable Long id, @NotNull(message = "role cannot be null") @RequestBody String roleName) {
-        return ResponseEntity.ok(userService.removeRole(id, roleName));
+    public ResponseEntity<CreateUserResponse> removeRole(@PathVariable Long id, @Valid @RequestBody PutRoleRequest role) {
+        return ResponseEntity.ok(userService.removeRole(id, role));
     }
 
     /**

@@ -1,7 +1,7 @@
 package com.example.ecm.controller;
 
-import com.example.ecm.dto.CreateDocumentTypeRequest;
-import com.example.ecm.dto.CreateDocumentTypeResponse;
+import com.example.ecm.dto.requests.CreateDocumentTypeRequest;
+import com.example.ecm.dto.responses.CreateDocumentTypeResponse;
 import com.example.ecm.service.DocumentTypeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
