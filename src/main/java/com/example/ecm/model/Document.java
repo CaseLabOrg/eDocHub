@@ -4,11 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Класс-сущность, представляющий документ в системе.
@@ -36,6 +33,6 @@ public class Document {
     private DocumentType documentType;
 
 
-    @OneToMany(mappedBy = "document", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "document", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.REFRESH})
     private List<DocumentVersion> documentVersions = new ArrayList<>();
 }

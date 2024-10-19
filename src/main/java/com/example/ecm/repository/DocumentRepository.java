@@ -16,6 +16,6 @@ import java.util.List;
 public interface DocumentRepository extends JpaRepository<Document, Long> {
     List<Document> findAllByUserId(Long userId);
 
-    @Query("SELECT d FROM Document d LEFT JOIN SignatureRequest sr ON d.id = sr.document.id WHERE d.user.id = ?1 OR sr.userTo.id = ?1")
-    List<Document> findDocumentsBySignature(Long userId);
+   // @Query("SELECT d FROM Document d LEFT JOIN SignatureRequest sr ON d.id = sr.document.id WHERE d.user.id = ?1 OR sr.userTo.id = ?1")
+    //List<Document> findDocumentsBySignature(Long userId);
 }

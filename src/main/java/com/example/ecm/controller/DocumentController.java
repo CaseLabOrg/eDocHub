@@ -64,7 +64,7 @@ public class DocumentController {
      * @return Ответ без содержимого (No Content) после успешного удаления.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDocument(@Valid @RequestBody Long id) {
+    public ResponseEntity<Void> deleteDocument(@PathVariable Long id) {
         documentService.deleteDocument(id);
         return ResponseEntity.noContent().build();
     }
@@ -74,11 +74,11 @@ public class DocumentController {
      *
      * @return List<CreateDocumentTypeResponse>.
      */
-    /*
+
     @GetMapping
-    public List<CreateDocumentResponse> getAllDocument(Principal principal) {
-        return documentService.getAllUserDocuments(principal.getName());
-    }*/
+    public List<CreateDocumentResponse> getAllDocument() {
+        return documentService.getAllDocuments();
+    }
 
     /**
      * POST-метод для подписания документа по его ID.

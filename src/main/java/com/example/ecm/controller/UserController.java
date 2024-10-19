@@ -53,6 +53,16 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
+    @PutMapping("/{id}/role")
+    public ResponseEntity<CreateUserResponse> addRole(@PathVariable Long id, @RequestBody String roleName) {
+        return ResponseEntity.ok(userService.addRole(id, roleName));
+    }
+
+    @DeleteMapping("/{id}/role")
+    public ResponseEntity<CreateUserResponse> removeRole(@PathVariable Long id, @RequestBody String roleName) {
+        return ResponseEntity.ok(userService.removeRole(id, roleName));
+    }
+
     /**
      * Обновление данных пользователя по его ID на основе DTO.
      *

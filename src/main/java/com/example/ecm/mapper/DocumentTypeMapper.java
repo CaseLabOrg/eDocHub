@@ -1,19 +1,19 @@
 package com.example.ecm.mapper;
 
-import com.example.ecm.dto.CreateAttributeResponse;
 import com.example.ecm.dto.CreateDocumentTypeRequest;
 import com.example.ecm.dto.CreateDocumentTypeResponse;
 import com.example.ecm.model.DocumentType;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
-import java.util.Collections;
 
 /**
  * Компонент для маппинга данных между DTO (Data Transfer Objects) и сущностью DocumentType.
  * Используется для преобразования данных запросов и ответов в объекты модели DocumentType и обратно.
  */
 @Component
+@RequiredArgsConstructor
 public class DocumentTypeMapper {
+    private final AttributeMapper attributeMapper;
 
     /**
      * Преобразует запрос на создание типа документа (CreateDocumentTypeRequest) в объект сущности DocumentType.
@@ -37,20 +37,7 @@ public class DocumentTypeMapper {
         CreateDocumentTypeResponse createDocumentTypeResponse = new CreateDocumentTypeResponse();
         createDocumentTypeResponse.setId(documentType.getId());
         createDocumentTypeResponse.setName(documentType.getName());
-        createDocumentTypeResponse.setAttributes(
-                documentType.getAttributes() == null || documentType.getAttributes().isEmpty() ?
-                        Collections.emptyList() :
-                        documentType.getAttributes().stream()
-                                .map(attribute -> {
-                                    CreateAttributeResponse attributeResponse = new CreateAttributeResponse();
-                                    attributeResponse.setId(attribute.getId());
-                                    attributeResponse.setName(attribute.getName());
-                                    attributeResponse.setDocumentTypeName(documentType.getName());
-                                    attributeResponse.setRequired(attribute.getRequired());
-                                    return attributeResponse;
-                                })
-                                .toList()
-        );
+        createDocumentTypeResponse.setAttributes(documentType.getAttributes().stream().map(attributeMapper::toAttributeResponse).toList());
         return createDocumentTypeResponse;
     }
 }

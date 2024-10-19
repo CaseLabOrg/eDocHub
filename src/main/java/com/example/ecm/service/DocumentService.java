@@ -160,11 +160,10 @@ public class DocumentService {
         Document document = documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Document not found"));
         List<DocumentVersion> list = document.getDocumentVersions();
-
+        documentRepository.deleteById(id);
         for(DocumentVersion documentVersion : list) {
             minioService.deleteDocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle());
         }
-        documentRepository.deleteById(id);
     }
 
 

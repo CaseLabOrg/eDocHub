@@ -10,10 +10,15 @@ CREATE TABLE Document_Types(
                                constraint uniq_name UNIQUE(name)
 );
 
+CREATE TABLE Document_Types_Attributes(
+                               id_attribute BIGSERIAL,
+                               id_document_type BIGSERIAL,
+                               constraint Document_Types_Attributes_pk PRIMARY KEY(id_attribute, id_document_type)
+);
+
 
 CREATE TABLE Attributes(
                            id BIGSERIAL PRIMARY KEY,
-                           document_type_id INTEGER,
                            name VARCHAR(255),
                            required BOOLEAN
 );
@@ -23,11 +28,6 @@ CREATE TABLE Values(
                        attribute_id BIGINT,
                        document_version_id BIGINT,
                        value VARCHAR(255)
-);
-
-CREATE TABLE Document_Content(
-                                 id BIGSERIAL PRIMARY KEY,
-                                 content VARCHAR(255)
 );
 
 CREATE TABLE Users(

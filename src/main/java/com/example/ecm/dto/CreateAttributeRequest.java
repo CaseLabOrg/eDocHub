@@ -3,6 +3,8 @@ package com.example.ecm.dto;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 /**
  * DTO (Data Transfer Object) для создания или обновления атрибута документа.
  * Этот класс используется для передачи данных при создании или обновлении атрибута документа через REST API.
@@ -14,7 +16,7 @@ public class CreateAttributeRequest {
     /**
      * Название типа документа, к которому относится атрибут
      */
-    private String documentTypeName;
+    private List<String> documentTypesNames;
 
     /**
      * Имя атрибута, которое описывает его назначение

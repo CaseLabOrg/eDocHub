@@ -37,6 +37,11 @@ public class DocumentType {
      * Используется для хранения характеристик, которые могут быть применены к документам данного типа.
      */
     @JsonManagedReference
-    @OneToMany(mappedBy = "documentType", fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.REFRESH})
+    @JoinTable(
+            name = "document_types_attributes",
+            joinColumns = @JoinColumn(name = "id_document_type"),
+            inverseJoinColumns = @JoinColumn(name = "id_attribute")
+    )
     private List<Attribute> attributes;
 }
