@@ -3,6 +3,7 @@ package com.example.ecm.controller;
 import com.example.ecm.dto.CreateDocumentTypeRequest;
 import com.example.ecm.dto.CreateDocumentTypeResponse;
 import com.example.ecm.service.DocumentTypeService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,7 +31,7 @@ public class DocumentTypeController {
      * @return Ответ с данными созданного типа документа.
      */
     @PostMapping
-    public ResponseEntity<CreateDocumentTypeResponse> createDocumentType(@RequestBody CreateDocumentTypeRequest request) {
+    public ResponseEntity<CreateDocumentTypeResponse> createDocumentType(@Valid @RequestBody CreateDocumentTypeRequest request) {
         return ResponseEntity.ok(documentTypeService.createDocumentType(request));
     }
 
@@ -64,7 +65,7 @@ public class DocumentTypeController {
      */
     @PreAuthorize("hasAuthority('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<CreateDocumentTypeResponse> updateDocumentType(@PathVariable Long id, @RequestBody CreateDocumentTypeRequest request) {
+    public ResponseEntity<CreateDocumentTypeResponse> updateDocumentType(@PathVariable Long id, @Valid @RequestBody CreateDocumentTypeRequest request) {
         return ResponseEntity.ok(documentTypeService.updateDocumentType(id, request));
     }
 

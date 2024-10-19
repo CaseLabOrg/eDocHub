@@ -1,6 +1,7 @@
 package com.example.ecm.service;
 
 import com.example.ecm.dto.*;
+import com.example.ecm.exception.ServerException;
 import com.example.ecm.mapper.*;
 import com.example.ecm.model.*;
 import com.example.ecm.repository.*;
@@ -61,9 +62,9 @@ public class DocumentService {
      */
     public CreateDocumentResponse createDocument(CreateDocumentRequest createDocumentRequest) {
         User user = userRepository.findById(createDocumentRequest.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User with id: " + createDocumentRequest.getUserId() +" not found"));
         DocumentType documentType = documentTypeRepository.findById(createDocumentRequest.getDocumentTypeId())
-                .orElseThrow(() -> new RuntimeException("DocumentType not found"));
+                .orElseThrow(() -> new NotFoundException("Document type with id: " + createDocumentRequest.getDocumentTypeId() +" not found"));
         Document document = new Document();
         document.setUser(user);
         document.setDocumentType(documentType);
@@ -86,7 +87,7 @@ public class DocumentService {
         boolean success = minioService.addDocument(documentVersionSaved.getId(), createDocumentVersionRequest);
         if (!success) {
             documentRepository.deleteById(documentVersionSaved.getId());
-            throw new RuntimeException("Could not add document");
+            throw new ServerException("Could not add document");
         }
 
         List<CreateDocumentVersionResponse> documentVersions = new ArrayList<>();
@@ -110,7 +111,7 @@ public class DocumentService {
      */
     public CreateDocumentResponse getDocumentById(Long id) {
         Document document = documentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Document not found"));
+                .orElseThrow(() -> new NotFoundException("Document with id: " + id +" not found"));
 
         CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document);
 
@@ -158,9 +159,9 @@ public class DocumentService {
      */
     public void deleteDocument(Long id) {
         Document document = documentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Document not found"));
+                .orElseThrow(() -> new NotFoundException("Document with id: " + id +" not found"));
         List<DocumentVersion> list = document.getDocumentVersions();
-        documentRepository.deleteById(id);
+        documentRepository.delete(document);
         for(DocumentVersion documentVersion : list) {
             minioService.deleteDocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle());
         }
@@ -170,7 +171,7 @@ public class DocumentService {
     public CreateDocumentVersionResponse updateDocumentVersion(Long id, CreateDocumentVersionRequest createDocumentVersionRequest) {
         Document document = documentRepository.findById(id)
 
-                .orElseThrow(() -> new RuntimeException("Document not found"));
+                .orElseThrow(() -> new NotFoundException("Document with id: " + id +" not found"));
 
         DocumentVersion documentVersion = documentVersionMapper.toDocumentVersion(createDocumentVersionRequest);
         documentVersion.setVersionId((long)document.getDocumentVersions().size() + 1);
@@ -190,7 +191,7 @@ public class DocumentService {
     private void setValues(List<SetValueRequest> values, DocumentVersion documentVersion) {
         for (SetValueRequest newValue : values) {
             Attribute attribute = attributeRepository.findByName(newValue.getAttributeName())
-                    .orElseThrow(() -> new RuntimeException("Attribute not found"));
+                    .orElseThrow(() -> new NotFoundException("Attribute with name: " + newValue.getAttributeName() + " not found"));
             Value value = new Value();
             value.setAttribute(attribute);
             value.setDocumentVersion(documentVersion);

@@ -1,16 +1,9 @@
 package com.example.ecm.dto;
 
-import com.example.ecm.model.Attribute;
-import com.example.ecm.model.DocumentType;
-import com.example.ecm.model.User;
-import com.example.ecm.model.Value;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * DTO (Data Transfer Object) для ответа при создании или запросе документа.

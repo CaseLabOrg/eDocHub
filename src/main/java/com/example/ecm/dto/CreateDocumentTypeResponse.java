@@ -1,6 +1,5 @@
 package com.example.ecm.dto;
 
-import com.example.ecm.model.Attribute;
 import lombok.Getter;
 import lombok.Setter;
 

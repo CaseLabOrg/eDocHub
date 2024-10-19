@@ -51,7 +51,7 @@ public class AttributeService {
     public CreateAttributeResponse getAttributeById(Long id) {
         return attributeRepository.findById(id)
                 .map(attributeMapper::toAttributeResponse)
-                .orElseThrow(() -> new NotFoundException("Attribute not found"));
+                .orElseThrow(() -> new NotFoundException("Attribute with id: " + id + " not found"));
     }
 
     /**
@@ -74,7 +74,7 @@ public class AttributeService {
      */
     public CreateAttributeResponse updateAttribute(Long id, CreateAttributeRequest request) {
         Attribute attribute = attributeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Attribute not found"));
+                .orElseThrow(() -> new NotFoundException("Attribute with id: " + id + " not found"));
         List<DocumentType> documentTypes = documentTypeRepository.findDocumentTypesByNameIsIn(request.getDocumentTypesNames());
 
         attribute.setDocumentTypes(documentTypes);
@@ -89,6 +89,8 @@ public class AttributeService {
      * @param id идентификатор атрибута документа
      */
     public void deleteAttribute(Long id) {
-        attributeRepository.deleteById(id);
+        Attribute attribute = attributeRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Attribute with id: " + id + " not found"));
+        attributeRepository.delete(attribute);
     }
 }
