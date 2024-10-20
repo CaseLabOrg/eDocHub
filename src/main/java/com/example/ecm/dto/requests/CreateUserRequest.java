@@ -31,7 +31,7 @@ public class CreateUserRequest {
     /**
      * Email пользователя. Должен соответствовать формату email и не может быть null.
      */
-    @Email(message = "Email is not email")
+    @Email(message = "Email is not valid")
     @NotNull(message = "Email cannot be null")
     private String email;
 

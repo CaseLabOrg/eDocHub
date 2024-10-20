@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -43,5 +44,5 @@ public class DocumentType {
             joinColumns = @JoinColumn(name = "id_document_type"),
             inverseJoinColumns = @JoinColumn(name = "id_attribute")
     )
-    private List<Attribute> attributes;
+    private List<Attribute> attributes = new ArrayList<>();
 }
