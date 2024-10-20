@@ -33,7 +33,6 @@ public class AttributeService {
      */
     public CreateAttributeResponse createAttribute(CreateAttributeRequest request) {
         List<DocumentType> documentTypes = documentTypeRepository.findDocumentTypesByNameIsIn(request.getDocumentTypesNames());
-        if (documentTypes.isEmpty()) throw new NotFoundException("Document type not found");
 
         Attribute attribute = attributeMapper.toAttribute(request);
         attribute.getDocumentTypes().addAll(documentTypes);

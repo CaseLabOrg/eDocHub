@@ -40,6 +40,7 @@ public class CreateDocumentRequest {
         private String description;
 
 
+        @NotNull(message = "Values cannot be null, but can be blank")
         private List<SetValueRequest> values;
 
         /**

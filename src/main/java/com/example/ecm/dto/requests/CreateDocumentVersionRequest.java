@@ -1,6 +1,7 @@
 package com.example.ecm.dto.requests;
 
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -22,7 +23,7 @@ public class CreateDocumentVersionRequest {
      */
     private String description;
 
-
+    @NotNull(message = "Values cannot be null, but can be blank")
     private List<SetValueRequest> values;
 
     /**
