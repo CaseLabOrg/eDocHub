@@ -75,3 +75,13 @@ CREATE TABLE Document_Version(
                                  description VARCHAR(255),
                                  created_at TIMESTAMP
 );
+
+CREATE TABLE Votings (
+                         id BIGSERIAL PRIMARY KEY,
+                         document_version_id BIGINT,
+                         status VARCHAR(255) NOT NULL,
+                         approval_threshold FLOAT NOT NULL,
+                         current_approval_rate FLOAT,
+                         created_at TIMESTAMP NOT NULL,
+                         deadline TIMESTAMP NOT NULL,
+);
