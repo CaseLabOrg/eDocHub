@@ -53,7 +53,7 @@ CREATE TABLE Roles(
 CREATE TABLE Signatures(
                       id BIGSERIAL PRIMARY KEY,
                       hash INTEGER,
-                      placeholder_name VARCHAR(255),
+                      placeholder_title VARCHAR(255),
                       user_id BIGINT,
                       document_version_id BIGINT
 );
