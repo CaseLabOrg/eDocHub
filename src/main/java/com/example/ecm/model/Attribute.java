@@ -1,10 +1,13 @@
 package com.example.ecm.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Класс-сущность, представляющий атрибут документа.
@@ -23,9 +26,13 @@ public class Attribute {
 
     /** Тип документа, к которому относится атрибут */
     @JsonBackReference
-    @ManyToOne
-    @JoinColumn(name = "document_type_id")
-    private DocumentType documentType;
+    @ManyToMany
+    @JoinTable(
+            name = "document_types_attributes",
+            joinColumns = @JoinColumn(name = "id_attribute"),
+            inverseJoinColumns = @JoinColumn(name = "id_document_type")
+    )
+    private List<DocumentType> documentTypes = new ArrayList<>();
 
     /** Имя атрибута, которое описывает его назначение */
     @Column(nullable = false)

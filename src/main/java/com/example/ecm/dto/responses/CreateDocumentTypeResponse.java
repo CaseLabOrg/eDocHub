@@ -1,6 +1,5 @@
-package com.example.ecm.dto;
+package com.example.ecm.dto.responses;
 
-import com.example.ecm.model.Attribute;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,5 +27,5 @@ public class CreateDocumentTypeResponse {
      * Список атрибутов, связанных с данным типом документа.
      * Атрибуты определяют характеристики и поля для документов этого типа.
      */
-    private List<Attribute> attributes;
+    private List<CreateAttributeResponse> attributes;
 }

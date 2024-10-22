@@ -1,7 +1,10 @@
 package com.example.ecm.controller;
 
-import com.example.ecm.dto.*;
+import com.example.ecm.aop.Loggable;
+import com.example.ecm.dto.requests.CreateAttributeRequest;
+import com.example.ecm.dto.responses.CreateAttributeResponse;
 import com.example.ecm.service.AttributeService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/attributes")
 @RequiredArgsConstructor
+@Loggable
 public class AttributeController {
 
     private final AttributeService attributeService;
@@ -28,7 +32,7 @@ public class AttributeController {
      */
     @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping
-    public ResponseEntity<CreateAttributeResponse> createAttribute(@RequestBody CreateAttributeRequest request) {
+    public ResponseEntity<CreateAttributeResponse> createAttribute(@Valid @RequestBody CreateAttributeRequest request) {
         return ResponseEntity.ok(attributeService.createAttribute(request));
     }
 
@@ -62,7 +66,7 @@ public class AttributeController {
      */
     @PreAuthorize("hasAuthority('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<CreateAttributeResponse> updateAttribute(@PathVariable Long id, @RequestBody CreateAttributeRequest request) {
+    public ResponseEntity<CreateAttributeResponse> updateAttribute(@PathVariable Long id, @Valid @RequestBody CreateAttributeRequest request) {
         return ResponseEntity.ok(attributeService.updateAttribute(id, request));
     }
 

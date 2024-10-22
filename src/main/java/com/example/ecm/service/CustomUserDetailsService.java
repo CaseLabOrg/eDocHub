@@ -9,8 +9,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 @Component
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
@@ -20,7 +18,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         var user = userRepository.findByEmail(username).orElseThrow();
         return UserPrincipal.builder().id(user.getId())
                 .login(user.getEmail())
-                //.authorities(List.of(new SimpleGrantedAuthority(user.getRole())))
+                .authorities(user.getRoles().stream().map(r -> new SimpleGrantedAuthority(r.getName())).toList())
                 .password(user.getPassword()).build();
     }
 }

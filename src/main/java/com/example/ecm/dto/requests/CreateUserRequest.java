@@ -1,11 +1,10 @@
-package com.example.ecm.dto;
+package com.example.ecm.dto.requests;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Set;
 
 /**
  * Класс DTO для запроса на создание пользователя.
@@ -18,25 +17,28 @@ public class CreateUserRequest {
     /**
      * Имя пользователя. Не может быть null.
      */
-    @NotNull
+    @NotBlank(message = "Name cannot be blank")
+    @NotNull(message = "Name cannot be null")
     private String name;
 
     /**
      * Фамилия пользователя. Не может быть null.
      */
-    @NotNull
+    @NotBlank(message = "Surname cannot be blank")
+    @NotNull(message = "Surname cannot be null")
     private String surname;
 
     /**
      * Email пользователя. Должен соответствовать формату email и не может быть null.
      */
-    @NotNull
-    @Email
+    @Email(message = "Email is not valid")
+    @NotNull(message = "Email cannot be null")
     private String email;
 
     /**
      * Пароль пользователя. Не может быть null.
      */
-    @NotNull
+    @NotBlank(message = "Password cannot be blank")
+    @NotNull(message = "Password cannot be null")
     private String password;
 }

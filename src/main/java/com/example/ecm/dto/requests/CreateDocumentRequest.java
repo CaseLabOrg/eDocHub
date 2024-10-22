@@ -1,9 +1,11 @@
-package com.example.ecm.dto;
+package com.example.ecm.dto.requests;
 
-import com.example.ecm.model.DocumentType;
-import com.example.ecm.model.User;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 
 /**
  * DTO (Data Transfer Object) для создания нового документа.
@@ -16,16 +18,20 @@ public class CreateDocumentRequest {
         /**
          * Заголовок документа.
          */
+        @NotBlank(message = "Title cannot be blank")
+        @NotNull(message = "Title cannot be null")
         private String title;
 
         /**
          * Пользователь, который создает или загружает документ.
          */
+        @NotNull(message = "userId cannot be null")
         private Long userId;
 
         /**
          * Тип документа, определяющий его классификацию.
          */
+        @NotNull(message = "documentTypeId cannot be null")
         private Long documentTypeId;
 
         /**
@@ -33,11 +39,10 @@ public class CreateDocumentRequest {
          */
         private String description;
 
-        /**
-         * Версия документа.
-         * Поле для указания версии, может использоваться для контроля изменений.
-         */
-        private Integer version;
+
+        @NotNull(message = "Values cannot be null, but can be blank")
+        private List<SetValueRequest> values;
+
         /**
          * Содержание документа
          */

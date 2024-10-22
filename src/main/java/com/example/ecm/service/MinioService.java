@@ -1,6 +1,6 @@
 package com.example.ecm.service;
 
-import com.example.ecm.dto.CreateDocumentRequest;
+import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
@@ -51,15 +51,18 @@ public class MinioService {
      * @param createDocumentRequest запрос с данными документа
      * @return true, если загрузка прошла успешно, иначе false
      */
-    public boolean addDocument(Long id, CreateDocumentRequest createDocumentRequest) {
+    public boolean addDocument(Long id, CreateDocumentVersionRequest request) {
         try {
-            byte[] decodedBytes = Base64.getDecoder().decode(createDocumentRequest.getBase64Content());
-            String fileExtension = createDocumentRequest.getTitle().substring(createDocumentRequest.getTitle().lastIndexOf('.') + 1);
+            // Декодирование Base64-строки в байтовый массив
+            byte[] decodedBytes = Base64.getDecoder().decode(request.getBase64Content());
+            // Получение расширения файла
+            String fileExtension = request.getTitle().substring(request.getTitle().lastIndexOf('.') + 1);
+
 
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
-                            .object(id + "_" + createDocumentRequest.getTitle())
+                            .object(id + "_" + request.getTitle())
                             .stream(new ByteArrayInputStream(decodedBytes), decodedBytes.length, -1)
                             .contentType(extensionToMimeType.getOrDefault(fileExtension.toLowerCase(), "application/octet-stream"))
                             .build()

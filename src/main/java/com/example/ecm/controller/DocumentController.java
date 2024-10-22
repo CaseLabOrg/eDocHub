@@ -1,15 +1,17 @@
 package com.example.ecm.controller;
 
-import com.example.ecm.dto.CreateDocumentRequest;
-import com.example.ecm.dto.CreateDocumentResponse;
-import com.example.ecm.dto.CreateSignatureRequest;
+import com.example.ecm.aop.Loggable;
+import com.example.ecm.dto.requests.CreateDocumentRequest;
+import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
+import com.example.ecm.dto.responses.CreateDocumentResponse;
+import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
 import com.example.ecm.service.DocumentService;
+import com.example.ecm.service.SignatureService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
 
 /**
@@ -19,6 +21,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/documents")
+@Loggable
 public class DocumentController {
 
     // Экземпляр DocumentService для обработки бизнес-логики, связанной с документами.
@@ -46,6 +49,11 @@ public class DocumentController {
         return ResponseEntity.ok(documentService.getDocumentById(id));
     }
 
+    @GetMapping("/{documentId}/{versionId}")
+    private ResponseEntity<CreateDocumentVersionResponse> getDocumentVersion(@PathVariable Long documentId, @PathVariable Long versionId) {
+        return ResponseEntity.ok(documentService.getDocumentVersionById(documentId, versionId));
+    }
+
     /**
      * PUT-метод для обновления существующего документа по его ID.
      *
@@ -54,8 +62,8 @@ public class DocumentController {
      * @return Ответ с обновленными данными документа.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<CreateDocumentResponse> updateDocument(@PathVariable Long id, @Valid @RequestBody CreateDocumentRequest document) {
-        return ResponseEntity.ok(documentService.updateDocument(id, document));
+    public ResponseEntity<CreateDocumentVersionResponse> updateDocument(@PathVariable Long id, @Valid @RequestBody CreateDocumentVersionRequest document) {
+        return ResponseEntity.ok(documentService.updateDocumentVersion(id, document));
     }
 
     /**
@@ -65,7 +73,7 @@ public class DocumentController {
      * @return Ответ без содержимого (No Content) после успешного удаления.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDocument(@Valid @RequestBody Long id) {
+    public ResponseEntity<Void> deleteDocument(@PathVariable Long id) {
         documentService.deleteDocument(id);
         return ResponseEntity.noContent().build();
     }
@@ -75,19 +83,9 @@ public class DocumentController {
      *
      * @return List<CreateDocumentTypeResponse>.
      */
-    @GetMapping
-    public List<CreateDocumentResponse> getAllDocument(Principal principal) {
-        return documentService.getAllUserDocuments(principal.getName());
-    }
 
-    /**
-     * POST-метод для подписания документа по его ID.
-     *
-     * @param id Идентификатор документа, который нужно подписать.
-     * @param signature Объект запроса, содержащий данные подписи.
-     */
-    @PostMapping("/{id}")
-    public void signDocument(@PathVariable Long id, @RequestBody CreateSignatureRequest signature) {
-        documentService.signDocument(id, signature);
+    @GetMapping
+    public ResponseEntity<List<CreateDocumentResponse>> getAllDocument() {
+        return ResponseEntity.ok(documentService.getAllDocuments());
     }
 }

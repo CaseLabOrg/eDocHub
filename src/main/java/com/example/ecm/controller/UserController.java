@@ -1,10 +1,14 @@
 package com.example.ecm.controller;
 
-import com.example.ecm.dto.CreateUserRequest;
-import com.example.ecm.dto.CreateUserResponse;
+import com.example.ecm.aop.Loggable;
+import com.example.ecm.dto.requests.CreateUserRequest;
+import com.example.ecm.dto.responses.CreateUserResponse;
+import com.example.ecm.dto.requests.PutRoleRequest;
 import com.example.ecm.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
+@Loggable
 public class UserController {
 
     private final UserService userService;
@@ -26,7 +31,7 @@ public class UserController {
      * @return DTO с данными созданного пользователя
      */
     @PostMapping
-    public ResponseEntity<CreateUserResponse> createUser(@RequestBody CreateUserRequest createUserRequest) {
+    public ResponseEntity<CreateUserResponse> createUser(@Valid @RequestBody CreateUserRequest createUserRequest) {
         CreateUserResponse userResponse = userService.createUser(createUserRequest);
         return ResponseEntity.ok(userResponse);
     }
@@ -53,6 +58,18 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PutMapping("/{id}/role")
+    public ResponseEntity<CreateUserResponse> addRole(@PathVariable Long id, @Valid @RequestBody PutRoleRequest role) {
+        return ResponseEntity.ok(userService.addRole(id, role));
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @DeleteMapping("/{id}/role")
+    public ResponseEntity<CreateUserResponse> removeRole(@PathVariable Long id, @Valid @RequestBody PutRoleRequest role) {
+        return ResponseEntity.ok(userService.removeRole(id, role));
+    }
+
     /**
      * Обновление данных пользователя по его ID на основе DTO.
      *
@@ -61,7 +78,7 @@ public class UserController {
      * @return Обновленный пользователь в виде DTO
      */
     @PutMapping("/{id}")
-    public ResponseEntity<CreateUserResponse> updateUser(@PathVariable Long id, @RequestBody CreateUserRequest updateUserRequest) {
+    public ResponseEntity<CreateUserResponse> updateUser(@PathVariable Long id, @Valid @RequestBody CreateUserRequest updateUserRequest) {
         CreateUserResponse updatedUser = userService.updateUser(id, updateUserRequest);
         return ResponseEntity.ok(updatedUser);
     }

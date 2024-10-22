@@ -1,36 +1,33 @@
 CREATE TABLE Documents(
                           id BIGSERIAL PRIMARY KEY,
-                          title VARCHAR(255),
                           user_id BIGINT,
-                          type_id BIGINT,
-                          description VARCHAR(255),
-                          created_at DATE,
-                          version INTEGER
+                          type_id BIGINT
 );
 
 CREATE TABLE Document_Types(
                                id BIGSERIAL PRIMARY KEY,
-                               name VARCHAR(255)
+                               name VARCHAR(255),
+                               constraint uniq_name UNIQUE(name)
+);
+
+CREATE TABLE Document_Types_Attributes(
+                               id_attribute BIGSERIAL,
+                               id_document_type BIGSERIAL,
+                               constraint Document_Types_Attributes_pk PRIMARY KEY(id_attribute, id_document_type)
 );
 
 
 CREATE TABLE Attributes(
                            id BIGSERIAL PRIMARY KEY,
-                           document_type_id INTEGER,
                            name VARCHAR(255),
                            required BOOLEAN
 );
 
 CREATE TABLE Values(
                        id BIGSERIAL PRIMARY KEY,
-                       attribute_id INTEGER,
-                       document_id INTEGER,
+                       attribute_id BIGINT,
+                       document_version_id BIGINT,
                        value VARCHAR(255)
-);
-
-CREATE TABLE Document_Content(
-                                 id BIGSERIAL PRIMARY KEY,
-                                 content VARCHAR(255)
 );
 
 CREATE TABLE Users(
@@ -55,15 +52,36 @@ CREATE TABLE Roles(
 
 CREATE TABLE Signatures(
                       id BIGSERIAL PRIMARY KEY,
-                      hash VARCHAR(255),
-                      placeholder_name VARCHAR(255),
+                      hash INTEGER,
+                      placeholder_title VARCHAR(255),
                       user_id BIGINT,
-                      document_id BIGINT
+                      document_version_id BIGINT
 );
 
 CREATE TABLE Signature_Requests(
                            id BIGSERIAL PRIMARY KEY,
                            user_id_to BIGINT,
-                           document_id BIGINT,
-                           approved BOOLEAN
+                           voting_id BIGINT,
+                           document_version_id BIGINT,
+                           status VARCHAR(255)
+);
+
+
+CREATE TABLE Document_Version(
+                                 id BIGSERIAL PRIMARY KEY,
+                                 version_id BIGINT,
+                                 document_id BIGINT,
+                                 title VARCHAR(255),
+                                 description VARCHAR(255),
+                                 created_at TIMESTAMP
+);
+
+CREATE TABLE Votings (
+                         id BIGSERIAL PRIMARY KEY,
+                         document_version_id BIGINT,
+                         status VARCHAR(255) NOT NULL,
+                         approval_threshold FLOAT NOT NULL,
+                         current_approval_rate FLOAT,
+                         created_at TIMESTAMP NOT NULL,
+                         deadline TIMESTAMP NOT NULL
 );

@@ -4,11 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Класс-сущность, представляющий документ в системе.
@@ -24,11 +21,8 @@ public class Document {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Заголовок документа, обязательное поле */
-    @Column(name = "title", nullable = false)
-    private String title;
-
     /** Пользователь, который создал документ */
+
     @ManyToOne()
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -38,24 +32,7 @@ public class Document {
     @JoinColumn(name = "type_id", nullable = false)
     private DocumentType documentType;
 
-    /** Описание документа */
-    @Column(name = "description")
-    private String description;
 
-    /** Дата и время создания документа, обязательное поле */
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime created_at;
-
-    /** Версия документа, обязательное поле */
-    @Column(name = "version", nullable = false)
-    private Integer version;
-
-    /** Атрибуты документа, хранящиеся в виде карты, связывающей атрибуты с их значениями */
-    @OneToMany(mappedBy = "document")
-    @MapKeyJoinColumn(name = "attribute_id")
-    private Map<Attribute, Value> values = new HashMap<>();
-
-    /** Подписи документа */
-    @OneToMany(mappedBy = "document", fetch = FetchType.LAZY)
-    private List<Signature> signatures = new ArrayList<>();
+    @OneToMany(mappedBy = "document", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.REMOVE})
+    private List<DocumentVersion> documentVersions = new ArrayList<>();
 }

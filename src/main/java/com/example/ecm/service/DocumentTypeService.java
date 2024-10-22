@@ -1,11 +1,10 @@
 package com.example.ecm.service;
 
-import com.example.ecm.dto.CreateDocumentTypeRequest;
-import com.example.ecm.dto.CreateDocumentTypeResponse;
+import com.example.ecm.dto.requests.CreateDocumentTypeRequest;
+import com.example.ecm.dto.responses.CreateDocumentTypeResponse;
+import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.mapper.DocumentTypeMapper;
-import com.example.ecm.model.Attribute;
 import com.example.ecm.model.DocumentType;
-import com.example.ecm.repository.AttributeRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,7 +16,6 @@ import java.util.List;
 public class DocumentTypeService {
     private final DocumentTypeRepository documentTypeRepository;
     private final DocumentTypeMapper documentTypeMapper;
-    private final AttributeRepository attributeRepository;
 
     /**
      * Создает новый тип документа.
@@ -27,11 +25,6 @@ public class DocumentTypeService {
      */
     public CreateDocumentTypeResponse createDocumentType(CreateDocumentTypeRequest request) {
         DocumentType documentType =  documentTypeRepository.save(documentTypeMapper.toDocumentType(request));
-        List<Attribute> attributes = request.getAttributesIds().stream()
-                .map(id -> attributeRepository.findById(id)
-                        .orElseThrow(() -> new RuntimeException("Attribute not found")))
-                .toList();
-        documentType.setAttributes(attributes);
         return documentTypeMapper.toCreateDocumentTypeResponse(documentType);
     }
 
@@ -44,7 +37,7 @@ public class DocumentTypeService {
     public CreateDocumentTypeResponse getDocumentTypeById(Long id) {
         return documentTypeRepository.findById(id)
                 .map(documentTypeMapper::toCreateDocumentTypeResponse)
-                .orElseThrow(() -> new RuntimeException("Document Type not found"));
+                .orElseThrow(() -> new NotFoundException("Document with id: " + id +" not found"));
     }
 
     /**
@@ -67,14 +60,10 @@ public class DocumentTypeService {
      */
     public CreateDocumentTypeResponse updateDocumentType(Long id, CreateDocumentTypeRequest request) {
         DocumentType documentType = documentTypeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Document Type not found"));
+                .orElseThrow(() -> new NotFoundException("Document with id: " + id +" not found"));
         documentType.setId(id);
         documentType.setName(request.getName());
-        List<Attribute> attributes = request.getAttributesIds().stream()
-                .map(aId -> attributeRepository.findById(aId)
-                        .orElseThrow(() -> new RuntimeException("Attribute not found")))
-                .toList();
-        documentType.setAttributes(attributes);
+
         return documentTypeMapper.toCreateDocumentTypeResponse(documentTypeRepository.save(documentType));
     }
 
@@ -84,6 +73,8 @@ public class DocumentTypeService {
      * @param id идентификатор типа документа
      */
     public void deleteDocumentType(Long id) {
-        documentTypeRepository.deleteById(id);
+        DocumentType documentType = documentTypeRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Document with id: " + id +" not found"));
+        documentTypeRepository.delete(documentType);
     }
 }

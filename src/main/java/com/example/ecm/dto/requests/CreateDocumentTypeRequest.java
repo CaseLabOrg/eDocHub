@@ -1,10 +1,9 @@
-package com.example.ecm.dto;
+package com.example.ecm.dto.requests;
 
-import com.example.ecm.model.Attribute;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.List;
 
 /**
  * DTO (Data Transfer Object) для запроса на создание типа документа.
@@ -17,11 +16,7 @@ public class CreateDocumentTypeRequest {
     /**
      * Название типа документа.
      */
+    @NotBlank(message = "Name cannot be blank")
+    @NotNull(message = "Name cannot be null")
     private String name;
-
-    /**
-     * Список атрибутов, связанных с данным типом документа.
-     * Атрибуты определяют специфические поля и характеристики для документов этого типа.
-     */
-    private List<Long> attributesIds;
 }

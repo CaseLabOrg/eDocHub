@@ -1,9 +1,11 @@
 package com.example.ecm.service;
 
-import com.example.ecm.dto.CreateUserRequest;
-import com.example.ecm.dto.CreateUserResponse;
+import com.example.ecm.dto.requests.CreateUserRequest;
+import com.example.ecm.dto.responses.CreateUserResponse;
+import com.example.ecm.dto.requests.PutRoleRequest;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.mapper.UserMapper;
+import com.example.ecm.model.Role;
 import com.example.ecm.model.User;
 import com.example.ecm.repository.RoleRepository;
 import com.example.ecm.repository.UserRepository;
@@ -38,7 +40,7 @@ public class UserService {
     @Transactional
     public CreateUserResponse createUser(CreateUserRequest createUserRequest) {
         User user = userMapper.toUser(createUserRequest);
-        user.setRoles(Set.of(roleRepository.findByName("USER").orElseThrow(() -> new NotFoundException("No USER role"))));
+        user.setRoles(Set.of(roleRepository.findByName("USER").orElseThrow(() -> new NotFoundException("Role with name: USER not found"))));
         user.setPassword(encoder.encode(createUserRequest.getPassword()));
         User savedUser = userRepository.save(user);
 
@@ -53,7 +55,21 @@ public class UserService {
      */
     public CreateUserResponse getUserById(Long id) {
         return userRepository.findById(id)
-                .map(userMapper::toCreateUserResponse).orElseThrow(() -> new NotFoundException("No such user"));
+                .map(userMapper::toCreateUserResponse).orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
+    }
+
+    public CreateUserResponse addRole(Long id, PutRoleRequest request) {
+        Role role = roleRepository.findByName(request.getName().toUpperCase()).orElseThrow(() -> new NotFoundException("Role with name: " + request.getName().toUpperCase() + " not found"));
+        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
+        user.getRoles().add(role);
+        return userMapper.toCreateUserResponse(userRepository.save(user));
+    }
+
+    public CreateUserResponse removeRole(Long id, PutRoleRequest request) {
+        Role role = roleRepository.findByName(request.getName().toUpperCase()).orElseThrow(() -> new NotFoundException("Role with name: " + request.getName().toUpperCase() + " not found"));
+        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
+        user.getRoles().remove(role);
+        return userMapper.toCreateUserResponse(userRepository.save(user));
     }
 
     /**
@@ -75,7 +91,7 @@ public class UserService {
      * @return Обновленный объект пользователя в виде DTO
      */
     public CreateUserResponse updateUser(Long id, CreateUserRequest updateUserRequest) {
-        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("No such user"));
+        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
         user.setName(updateUserRequest.getName());
         user.setSurname(updateUserRequest.getSurname());
         user.setEmail(updateUserRequest.getEmail());
@@ -91,7 +107,8 @@ public class UserService {
      * @param id Идентификатор пользователя
      */
     public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
+        userRepository.delete(user);
     }
 
     /**

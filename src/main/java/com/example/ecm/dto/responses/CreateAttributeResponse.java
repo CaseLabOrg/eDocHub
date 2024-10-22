@@ -1,4 +1,4 @@
-package com.example.ecm.dto;
+package com.example.ecm.dto.responses;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -16,10 +16,6 @@ public class CreateAttributeResponse {
      * Уникальный идентификатор атрибута
      */
     private Long id;
-    /**
-     * Название типа документа, к которому относится атрибут
-     */
-    private String documentTypeName;
 
     /**
      * Имя атрибута, которое описывает его назначение
