@@ -1,5 +1,6 @@
 package com.example.ecm.controller;
 
+import com.example.ecm.aop.Loggable;
 import com.example.ecm.dto.requests.LoginRequest;
 import com.example.ecm.dto.responses.LoginResponse;
 import com.example.ecm.service.AuthService;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth")
+@Loggable
 public class AuthController {
 
     private final AuthService serviceAuth;
