@@ -1,18 +1,19 @@
 package com.example.ecm.service;
 
+import com.example.ecm.dto.requests.CreateSignatureRequest;
 import com.example.ecm.dto.requests.CreateSignatureRequestRequest;
 import com.example.ecm.dto.responses.CreateSignatureRequestResponse;
+import com.example.ecm.dto.responses.GetSignatureResponse;
 import com.example.ecm.exception.ForbiddenException;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.mapper.SignatureMapper;
 import com.example.ecm.model.*;
-import com.example.ecm.repository.DocumentRepository;
-import com.example.ecm.repository.DocumentVersionRepository;
-import com.example.ecm.repository.SignatureRequestRepository;
-import com.example.ecm.repository.UserRepository;
+import com.example.ecm.repository.*;
 import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -21,10 +22,12 @@ public class SignatureService {
     private final SignatureRequestRepository signatureRequestRepository;
     private final DocumentRepository documentRepository;
     private final DocumentVersionRepository documentVersionRepository;
+    private final SignatureRepository signatureRepository;
     private final UserRepository userRepository;
     private final SignatureMapper signatureMapper;
 
-    public CreateSignatureRequestResponse sendToSign(Long id, CreateSignatureRequestRequest request, UserPrincipal currentUser) {
+    public CreateSignatureRequestResponse sendToSign(CreateSignatureRequestRequest request, UserPrincipal currentUser) {
+        Long id = request.getDocumentId();
         Document document = documentRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Document with id: " + id +" not found"));
 
@@ -42,6 +45,8 @@ public class SignatureService {
 
         documentVersion.getSignatures().add(signature);
 
+        signatureRepository.save(signature);
+
         documentVersionRepository.save(documentVersion);
 
         SignatureRequest signatureRequest = new SignatureRequest();
@@ -54,4 +59,37 @@ public class SignatureService {
         return signatureMapper.toCreateSignatureRequestResponse(signatureRequest);
     }
 
+    public GetSignatureResponse sign(CreateSignatureRequest request, UserPrincipal currentUser) {
+        List<SignatureRequest> requests = signatureRequestRepository.findAllByUserToId(currentUser.getId());
+        if (requests.isEmpty()) {
+            throw new NotFoundException("You have nothing to sign");
+        }
+
+        SignatureRequest signRequest = requests.stream()
+                .filter(r -> r.getId().equals(request.getSignatureRequestId()))
+                .findFirst().orElseThrow(() -> new NotFoundException("SignatureRequest with id: " + request.getSignatureRequestId() +" not found"));
+
+        signRequest.setStatus(request.getStatus());
+
+        Signature signature = new Signature();
+        signature.setUser(signRequest.getUserTo());
+        signature.setPlaceholderTitle(request.getPlaceholderTitle());
+        signature.setDocumentVersion(signRequest.getDocumentVersion());
+        signature.setHash(signRequest.getUserTo().hashCode());
+
+        signature = signatureRepository.save(signature);
+
+        return signatureMapper.toGetSignatureResponse(signature);
+    }
+
+    public List<CreateSignatureRequestResponse> getAllSignatureRequests() {
+        return signatureRequestRepository.findAll()
+                .stream().map(signatureMapper::toCreateSignatureRequestResponse).toList();
+    }
+
+    public CreateSignatureRequestResponse getSignatureRequestById(Long id) {
+        return signatureRequestRepository.findById(id).map(signatureMapper::toCreateSignatureRequestResponse)
+                .orElseThrow(() -> new NotFoundException("SignatureRequest with id: " + id +" not found"));
+
+    }
 }
