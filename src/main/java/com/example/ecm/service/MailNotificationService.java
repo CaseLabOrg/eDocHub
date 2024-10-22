@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 /**
@@ -24,6 +25,7 @@ public class MailNotificationService {
      * @param userId        идентификатор пользователя, которому отправляется уведомление.
      * @param documentTitle название документа, который нужно подписать.
      */
+    @Async
     public void notifyUserSignature(Long userId, String documentTitle){
         String subject = "Подпишите документ";
         String text = String.format("Вам пришел документ \"%s\" на подпись", documentTitle);

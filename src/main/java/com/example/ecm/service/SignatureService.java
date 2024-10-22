@@ -28,6 +28,7 @@ public class SignatureService {
     private final UserRepository userRepository;
     private final SignatureMapper signatureMapper;
     private final EventProducerService eventProducerService;
+    private final MailNotificationService mailNotificationService;
 
     public CreateSignatureRequestResponse sendToSign(CreateSignatureRequestRequest request, UserPrincipal currentUser) {
         Long id = request.getDocumentId();
@@ -52,12 +53,15 @@ public class SignatureService {
 
         documentVersionRepository.save(documentVersion);
 
+        mailNotificationService.notifyUserSignature(request.getUserIdTo(), documentVersion.getTitle());
+
         SignatureRequest signatureRequest = new SignatureRequest();
         signatureRequest.setUserTo(user);
         signatureRequest.setDocumentVersion(documentVersion);
         signatureRequest.setStatus("PENDING");
 
         signatureRequest = signatureRequestRepository.save(signatureRequest);
+
 
         return signatureMapper.toCreateSignatureRequestResponse(signatureRequest);
     }
