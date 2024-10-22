@@ -89,7 +89,7 @@ CREATE TABLE Votings (
 CREATE TABLE Comments (
                          id BIGSERIAL PRIMARY KEY,
                          document_id BIGINT,
-                         user_id BIGINT,
-                         comment TEXT NOT NULL,
+                         author_id BIGINT,
+                         content TEXT NOT NULL,
                          created_at TIMESTAMP NOT NULL
 );

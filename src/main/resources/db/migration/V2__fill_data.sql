@@ -22,4 +22,4 @@ INSERT INTO document_version(version_id,  document_id, title, description, creat
 
 INSERT INTO signatures(hash, placeholder_title, user_id, document_version_id) VALUES (1322131231, 'testPlaceholder', 1, 1);
 
-INSERT INTO comments(document_id, user_id, comment, created_at) VALUES (1, 1, 'Test comment', '2024-12-12T23:59:59.425Z');
+INSERT INTO comments(document_id, author_id, content, created_at) VALUES (1, 1, 'Test comment', '2024-12-12T23:59:59.425Z');
