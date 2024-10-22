@@ -45,12 +45,12 @@ public class DocumentController {
      * @return Ответ с данными документа.
      */
     @GetMapping("/{id}")
-    private ResponseEntity<CreateDocumentResponse> getDocument(@PathVariable Long id) {
+    public ResponseEntity<CreateDocumentResponse> getDocument(@PathVariable Long id) {
         return ResponseEntity.ok(documentService.getDocumentById(id));
     }
 
     @GetMapping("/{documentId}/{versionId}")
-    private ResponseEntity<CreateDocumentVersionResponse> getDocumentVersion(@PathVariable Long documentId, @PathVariable Long versionId) {
+    public ResponseEntity<CreateDocumentVersionResponse> getDocumentVersion(@PathVariable Long documentId, @PathVariable Long versionId) {
         return ResponseEntity.ok(documentService.getDocumentVersionById(documentId, versionId));
     }
 

@@ -31,15 +31,14 @@ public class SignatureService {
     private final MailNotificationService mailNotificationService;
 
     public CreateSignatureRequestResponse sendToSign(CreateSignatureRequestRequest request, UserPrincipal currentUser) {
-        Long id = request.getDocumentId();
-        Document document = documentRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Document with id: " + id +" not found"));
+        Document document = documentRepository.findById(request.getDocumentId())
+                .orElseThrow(() -> new NotFoundException("Document with id: " + request.getDocumentId() +" not found"));
 
         DocumentVersion documentVersion = document.getDocumentVersions().stream()
                 .filter(v -> v.getVersionId().equals(request.getDocumentVersionId()))
-                .findFirst().orElseThrow(() -> new NotFoundException("Document version with id: " + id +" not found"));
+                .findFirst().orElseThrow(() -> new NotFoundException("Document version with id: " + request.getDocumentVersionId() +" not found"));
 
-        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
+        User user = userRepository.findById(request.getUserIdTo()).orElseThrow(() -> new NotFoundException("User with id: " + request.getUserIdTo() + " not found"));
 
         if (!currentUser.getId().equals(document.getUser().getId()) || !currentUser.isAdmin()) {
             throw new ForbiddenException("You have no permission to send this document");
