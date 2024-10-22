@@ -12,7 +12,6 @@ import com.example.ecm.dto.requests.CreateDocumentRequest;
 import com.example.ecm.dto.responses.CreateDocumentResponse;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.mapper.DocumentMapper;
-import com.example.ecm.mapper.SignatureMapper;
 import com.example.ecm.model.Document;
 import com.example.ecm.model.DocumentType;
 import com.example.ecm.model.User;
@@ -42,10 +41,6 @@ public class DocumentService {
     private final DocumentVersionRepository documentVersionRepository;
     private final AttributeRepository attributeRepository;
     private final ValueRepository valueRepository;
-    private final SignatureMapper signatureMapper;
-
-    private final UserService userService;
-
 
     /**
      * Создает новый документ.
@@ -193,29 +188,5 @@ public class DocumentService {
             value.setValue(newValue.getValue());
             valueRepository.save(value);
         }
-    }
-
-    /**
-     * Добавляет подпись в документ.
-     *
-     * @param id           идентификатор документа
-     */
-    /*
-    public void signDocument(Long id, SignatureDto signatureDto) {
-        DocumentVersion documentVersion = documentVersionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Document version not found"));
-        List<Signature> signatures = documentVersion.getSignatures();
-        signatures.add(signatureMapper.toSignature(signatureDto));
-        documentVersion.setSignatures(signatures);
-
-    }
-    */
-
-    private User getUser(Long id) {
-        return userService.findById(id).orElseThrow(() -> new NotFoundException("No such user"));
-    }
-
-    private DocumentType getDocumentType(Long id) {
-        return documentTypeRepository.findById(id).orElseThrow(() -> new NotFoundException("No such document type"));
     }
 }

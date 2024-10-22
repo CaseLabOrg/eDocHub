@@ -27,7 +27,7 @@ public class Signature {
 
     /** Подпись, хранящаяся в виде хэша */
     @Column(name = "hash", nullable = false)
-    private String hash;
+    private Integer hash;
 
     /**
      * Название окошка для подписи;

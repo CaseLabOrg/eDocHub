@@ -33,5 +33,5 @@ public class CreateDocumentVersionResponse {
 
     private String base64Content;
 
-    //private List<SignatureDto> signatures;
+    private List<GetSignatureResponse> signatures;
 }

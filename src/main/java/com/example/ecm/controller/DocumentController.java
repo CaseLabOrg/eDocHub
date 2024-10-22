@@ -5,6 +5,7 @@ import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
 import com.example.ecm.dto.responses.CreateDocumentResponse;
 import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
 import com.example.ecm.service.DocumentService;
+import com.example.ecm.service.SignatureService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -77,20 +78,7 @@ public class DocumentController {
      */
 
     @GetMapping
-    public List<CreateDocumentResponse> getAllDocument() {
-        return documentService.getAllDocuments();
+    public ResponseEntity<List<CreateDocumentResponse>> getAllDocument() {
+        return ResponseEntity.ok(documentService.getAllDocuments());
     }
-
-    /**
-     * POST-метод для подписания документа по его ID.
-     *
-     * @param id Идентификатор документа, который нужно подписать.
-     * @param signature Объект запроса, содержащий данные подписи.
-     */
-    /*
-    @PostMapping("/{id}")
-    public void signDocument(@PathVariable Long id, @RequestBody CreateSignatureRequest signature) {
-        documentService.signDocument(id, signature);
-    }
-    */
 }

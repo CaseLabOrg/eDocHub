@@ -30,9 +30,9 @@ public class DocumentVersionMapper {
         response.setId(documentVersion.getId());
         response.setVersionId(documentVersion.getVersionId());
         response.setCreatedAt(documentVersion.getCreatedAt());
-        //response.setSignatures(documentVersion.getSignatures().stream()
-         //       .map(signatureMapper::fromSignature)
-        //        .toList());
+        response.setSignatures(documentVersion.getSignatures().stream()
+                .map(signatureMapper::toGetSignatureResponse)
+                .toList());
         response.setValues(documentVersion.getValues().entrySet().stream()
                 .map(entry -> {
                     SetValueRequest setValueRequest = new SetValueRequest();
