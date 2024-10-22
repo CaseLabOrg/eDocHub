@@ -2,17 +2,13 @@ package com.example.ecm.controller;
 
 import com.example.ecm.dto.requests.CreateDocumentRequest;
 import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
-import com.example.ecm.dto.requests.CreateSignatureRequestRequest;
 import com.example.ecm.dto.responses.CreateDocumentResponse;
 import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
-import com.example.ecm.dto.responses.CreateSignatureRequestResponse;
-import com.example.ecm.security.UserPrincipal;
 import com.example.ecm.service.DocumentService;
 import com.example.ecm.service.SignatureService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,7 +24,6 @@ public class DocumentController {
 
     // Экземпляр DocumentService для обработки бизнес-логики, связанной с документами.
     private final DocumentService documentService;
-    private final SignatureService signatureService;
 
     /**
      * POST-метод для создания нового документа.
@@ -85,16 +80,5 @@ public class DocumentController {
     @GetMapping
     public ResponseEntity<List<CreateDocumentResponse>> getAllDocument() {
         return ResponseEntity.ok(documentService.getAllDocuments());
-    }
-
-    /**
-     * POST-метод для подписания документа по его ID.
-     *
-     * @param id Идентификатор документа, который нужно подписать.
-     */
-
-    @PostMapping("/{id}/send")
-    public ResponseEntity<CreateSignatureRequestResponse> sendToSign(@PathVariable Long id, @RequestBody CreateSignatureRequestRequest signatureRequest, @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return ResponseEntity.ok(signatureService.sendToSign(id, signatureRequest, userPrincipal));
     }
 }
