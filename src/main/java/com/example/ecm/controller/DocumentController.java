@@ -1,5 +1,6 @@
 package com.example.ecm.controller;
 
+import com.example.ecm.aop.Loggable;
 import com.example.ecm.dto.requests.CreateDocumentRequest;
 import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
 import com.example.ecm.dto.responses.CreateDocumentResponse;
@@ -19,6 +20,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/documents")
+@Loggable
 public class DocumentController {
 
     // Экземпляр DocumentService для обработки бизнес-логики, связанной с документами.

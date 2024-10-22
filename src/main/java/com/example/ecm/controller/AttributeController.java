@@ -1,5 +1,6 @@
 package com.example.ecm.controller;
 
+import com.example.ecm.aop.Loggable;
 import com.example.ecm.dto.requests.CreateAttributeRequest;
 import com.example.ecm.dto.responses.CreateAttributeResponse;
 import com.example.ecm.service.AttributeService;
@@ -18,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/attributes")
 @RequiredArgsConstructor
+@Loggable
 public class AttributeController {
 
     private final AttributeService attributeService;

@@ -1,5 +1,6 @@
 package com.example.ecm.controller;
 
+import com.example.ecm.aop.Loggable;
 import com.example.ecm.dto.requests.CreateUserRequest;
 import com.example.ecm.dto.responses.CreateUserResponse;
 import com.example.ecm.dto.requests.PutRoleRequest;
@@ -18,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
+@Loggable
 public class UserController {
 
     private final UserService userService;
