@@ -18,14 +18,12 @@ public class SignatureRequest {
     private User userTo;
 
     @ManyToOne
+    @JoinColumn(name = "voting_id")
+    private Voting voting;
+
+    @ManyToOne
     @JoinColumn(name = "document_version_id")
     private DocumentVersion documentVersion;
 
-    /**
-     * Флаг, который обозначает была ли поставлена подпись.
-     * null - заявка пока не была обработана
-     * false - документ был отклонен
-     * true - документ был подписан
-     */
     private String status;
 }

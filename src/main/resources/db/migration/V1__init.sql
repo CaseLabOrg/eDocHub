@@ -61,7 +61,7 @@ CREATE TABLE Signatures(
 CREATE TABLE Signature_Requests(
                            id BIGSERIAL PRIMARY KEY,
                            user_id_to BIGINT,
-                           selection_id BIGINT,
+                           voting_id BIGINT,
                            document_version_id BIGINT,
                            status VARCHAR(255)
 );
@@ -74,4 +74,14 @@ CREATE TABLE Document_Version(
                                  title VARCHAR(255),
                                  description VARCHAR(255),
                                  created_at TIMESTAMP
+);
+
+CREATE TABLE Votings (
+                         id BIGSERIAL PRIMARY KEY,
+                         document_version_id BIGINT,
+                         status VARCHAR(255) NOT NULL,
+                         approval_threshold FLOAT NOT NULL,
+                         current_approval_rate FLOAT,
+                         created_at TIMESTAMP NOT NULL,
+                         deadline TIMESTAMP NOT NULL
 );
