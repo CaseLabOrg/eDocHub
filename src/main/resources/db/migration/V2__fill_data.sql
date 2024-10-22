@@ -10,7 +10,7 @@ INSERT INTO documents(user_id, type_id) VALUES (1, 1);
 
 INSERT INTO values(attribute_id, document_version_id, value) VALUES (2,1, '52');
 
-INSERT INTO signatures(hash, placeholder_name, user_id) VALUES ('lkj41k4k1','section1', 1);
+INSERT INTO signatures(hash, placeholder_name, user_id) VALUES (1322131231,'section1', 1);
 
 INSERT INTO roles(name) VALUES ('ADMIN');
 INSERT INTO roles(name) VALUES ('USER');
@@ -22,4 +22,4 @@ INSERT INTO Document_Types_Attributes VALUES (2, 1);
 
 INSERT INTO document_version(version_id,  document_id, title, description) VALUES (1, 1, 'hw.txt', 'test');
 
-INSERT INTO signatures(hash, placeholder_name, user_id, document_version_id) VALUES ('testHash', 'testPlaceholder', 1, 1);
+INSERT INTO signatures(hash, placeholder_name, user_id, document_version_id) VALUES (1322131231, 'testPlaceholder', 1, 1);

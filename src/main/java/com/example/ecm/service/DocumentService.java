@@ -1,11 +1,8 @@
 package com.example.ecm.service;
 
 import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
-import com.example.ecm.dto.requests.CreateSignatureRequestRequest;
 import com.example.ecm.dto.requests.SetValueRequest;
 import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
-import com.example.ecm.dto.responses.CreateSignatureRequestResponse;
-import com.example.ecm.exception.ForbiddenException;
 import com.example.ecm.exception.ServerException;
 import com.example.ecm.mapper.*;
 import com.example.ecm.model.*;
@@ -15,13 +12,11 @@ import com.example.ecm.dto.requests.CreateDocumentRequest;
 import com.example.ecm.dto.responses.CreateDocumentResponse;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.mapper.DocumentMapper;
-import com.example.ecm.mapper.SignatureMapper;
 import com.example.ecm.model.Document;
 import com.example.ecm.model.DocumentType;
 import com.example.ecm.model.User;
 import com.example.ecm.repository.DocumentRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
-import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -46,11 +41,6 @@ public class DocumentService {
     private final DocumentVersionRepository documentVersionRepository;
     private final AttributeRepository attributeRepository;
     private final ValueRepository valueRepository;
-    private final SignatureRequestRepository signatureRequestRepository;
-    private final SignatureMapper signatureMapper;
-
-    private final UserService userService;
-
 
     /**
      * Создает новый документ.
@@ -198,50 +188,5 @@ public class DocumentService {
             value.setValue(newValue.getValue());
             valueRepository.save(value);
         }
-    }
-
-    /**
-     * Добавляет подпись в документ.
-     *
-     * @param id           идентификатор документа
-     */
-
-    public CreateSignatureRequestResponse sendToSign(Long id, CreateSignatureRequestRequest request, UserPrincipal currentUser) {
-        Document document = documentRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Document with id: " + id +" not found"));
-
-        DocumentVersion documentVersion = document.getDocumentVersions().stream()
-                .filter(v -> v.getVersionId().equals(request.getDocumentVersionId()))
-                .findFirst().orElseThrow(() -> new NotFoundException("Document version with id: " + id +" not found"));
-
-        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
-
-        if (!currentUser.getId().equals(document.getUser().getId()) || !currentUser.isAdmin()) {
-            throw new ForbiddenException("You have no permission to send this document");
-        }
-
-        Signature signature = signatureMapper.toSignature(document, documentVersion);
-
-        documentVersion.getSignatures().add(signature);
-
-        documentVersionRepository.save(documentVersion);
-
-        SignatureRequest signatureRequest = new SignatureRequest();
-        signatureRequest.setUserTo(user);
-        signatureRequest.setDocumentVersion(documentVersion);
-        signatureRequest.setStatus("PENDING");
-
-        signatureRequest = signatureRequestRepository.save(signatureRequest);
-
-        return signatureMapper.toCreateSignatureRequestResponse(signatureRequest);
-    }
-
-
-    private User getUser(Long id) {
-        return userService.findById(id).orElseThrow(() -> new NotFoundException("No such user"));
-    }
-
-    private DocumentType getDocumentType(Long id) {
-        return documentTypeRepository.findById(id).orElseThrow(() -> new NotFoundException("No such document type"));
     }
 }
