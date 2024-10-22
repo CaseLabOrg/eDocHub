@@ -1,15 +1,18 @@
 package com.example.ecm.controller;
 
 import com.example.ecm.aop.Loggable;
+import com.example.ecm.dto.requests.AddCommentRequest;
 import com.example.ecm.dto.requests.CreateDocumentRequest;
 import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
+import com.example.ecm.dto.responses.AddCommentResponse;
 import com.example.ecm.dto.responses.CreateDocumentResponse;
 import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
+import com.example.ecm.security.UserPrincipal;
 import com.example.ecm.service.DocumentService;
-import com.example.ecm.service.SignatureService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -83,9 +86,13 @@ public class DocumentController {
      *
      * @return List<CreateDocumentTypeResponse>.
      */
-
     @GetMapping
     public ResponseEntity<List<CreateDocumentResponse>> getAllDocument() {
         return ResponseEntity.ok(documentService.getAllDocuments());
+    }
+
+    @PostMapping("/{id}/comment")
+    public ResponseEntity<AddCommentResponse> addComment(@RequestParam Long id, @Valid @RequestBody AddCommentRequest createCommentRequest, @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return ResponseEntity.ok(documentService.addComment(id, createCommentRequest, userPrincipal));
     }
 }
