@@ -40,7 +40,7 @@ public class SignatureService {
 
         User user = userRepository.findById(request.getUserIdTo()).orElseThrow(() -> new NotFoundException("User with id: " + request.getUserIdTo() + " not found"));
 
-        if (!currentUser.getId().equals(document.getUser().getId()) || !currentUser.isAdmin()) {
+        if (!currentUser.getId().equals(document.getUser().getId()) && !currentUser.isAdmin()) {
             throw new ForbiddenException("You have no permission to send this document");
         }
 
