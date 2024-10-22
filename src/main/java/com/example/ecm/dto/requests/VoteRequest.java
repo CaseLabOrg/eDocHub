@@ -1,16 +1,16 @@
 package com.example.ecm.dto.requests;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class CreateSignatureRequestRequest {
-    @NotNull(message = "userIdTo cannot be null")
-    private Long userIdTo;
+public class VoteRequest {
+
+    @NotBlank(message = "decision cannot be blank")
+    private String decision;
     @NotNull(message = "documentVersionId cannot be null")
     private Long documentVersionId;
-    @NotNull(message = "documentId cannot be null")
-    private Long documentId;
 }

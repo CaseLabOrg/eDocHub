@@ -1,10 +1,12 @@
 package com.example.ecm.controller;
 
+import com.example.ecm.aop.Loggable;
 import com.example.ecm.dto.requests.CreateDocumentRequest;
 import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
 import com.example.ecm.dto.responses.CreateDocumentResponse;
 import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
 import com.example.ecm.service.DocumentService;
+import com.example.ecm.service.SignatureService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/documents")
+@Loggable
 public class DocumentController {
 
     // Экземпляр DocumentService для обработки бизнес-логики, связанной с документами.
@@ -44,6 +47,11 @@ public class DocumentController {
     @GetMapping("/{id}")
     private ResponseEntity<CreateDocumentResponse> getDocument(@PathVariable Long id) {
         return ResponseEntity.ok(documentService.getDocumentById(id));
+    }
+
+    @GetMapping("/{documentId}/{versionId}")
+    private ResponseEntity<CreateDocumentVersionResponse> getDocumentVersion(@PathVariable Long documentId, @PathVariable Long versionId) {
+        return ResponseEntity.ok(documentService.getDocumentVersionById(documentId, versionId));
     }
 
     /**
@@ -77,20 +85,7 @@ public class DocumentController {
      */
 
     @GetMapping
-    public List<CreateDocumentResponse> getAllDocument() {
-        return documentService.getAllDocuments();
+    public ResponseEntity<List<CreateDocumentResponse>> getAllDocument() {
+        return ResponseEntity.ok(documentService.getAllDocuments());
     }
-
-    /**
-     * POST-метод для подписания документа по его ID.
-     *
-     * @param id Идентификатор документа, который нужно подписать.
-     * @param signature Объект запроса, содержащий данные подписи.
-     */
-    /*
-    @PostMapping("/{id}")
-    public void signDocument(@PathVariable Long id, @RequestBody CreateSignatureRequest signature) {
-        documentService.signDocument(id, signature);
-    }
-    */
 }

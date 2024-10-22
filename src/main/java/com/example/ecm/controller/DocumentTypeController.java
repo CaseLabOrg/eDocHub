@@ -1,5 +1,6 @@
 package com.example.ecm.controller;
 
+import com.example.ecm.aop.Loggable;
 import com.example.ecm.dto.requests.CreateDocumentTypeRequest;
 import com.example.ecm.dto.responses.CreateDocumentTypeResponse;
 import com.example.ecm.service.DocumentTypeService;
@@ -18,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/document-types")
 @RequiredArgsConstructor
+@Loggable
 public class DocumentTypeController {
 
     // Экземпляр DocumentTypeService для выполнения бизнес-логики, связанной с типами документов.

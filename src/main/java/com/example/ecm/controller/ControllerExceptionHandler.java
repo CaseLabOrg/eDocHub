@@ -1,5 +1,6 @@
 package com.example.ecm.controller;
 
+import com.example.ecm.exception.ForbiddenException;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.exception.ServerException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -42,5 +43,10 @@ public class ControllerExceptionHandler {
     @ExceptionHandler(ServerException.class)
     public ResponseEntity<String> handleServerException(ServerException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<String> handleForbiddenException(ServerException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.FORBIDDEN);
     }
 }
