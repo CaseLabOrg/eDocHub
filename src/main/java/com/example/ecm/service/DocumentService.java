@@ -106,6 +106,16 @@ public class DocumentService {
         CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document);
 
         return getCreateDocumentResponse(document, response);
+    }
+
+    public CreateDocumentVersionResponse getDocumentVersionById(Long documentId, Long versionId) {
+        DocumentVersion documentVersion = documentVersionRepository.findByDocumentIdAndVersionId(documentId, versionId)
+                .orElseThrow(() -> new NotFoundException("Document Version with id: " + versionId + " or Document id " + documentId + " not found"));
+
+        CreateDocumentVersionResponse response = documentVersionMapper.toCreateDocumentVersionResponse(documentVersion);
+        String base64Content = minioService.getBase64DocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle());
+        response.setBase64Content(base64Content);
+        return response;
 
     }
 

@@ -33,16 +33,19 @@ public class VotingService {
 
     private final VotingRepository votingRepository;
     private final VotingMapper votingMapper;
-    private final DocumentVersionRepository documentServiceRepository;
+    private final DocumentService documentService;
     @Qualifier("votingFinisherScheduler")
     private final ScheduledExecutorService votingFinisherScheduler;
     private final DocumentRepository documentRepository;
     private final UserRepository userRepository;
     private final SignatureRequestRepository signatureRequestRepository;
+    private final DocumentVersionRepository documentVersionRepository;
 
     public StartVotingResponse startVoting(StartVotingRequest startVotingRequest) {
-        DocumentVersion documentVersion = documentServiceRepository.findById(startVotingRequest.getDocumentVersionId())
-                .orElseThrow(() -> new NotFoundException("Document version with id: " + startVotingRequest.getDocumentVersionId() +" not found"));
+        DocumentVersion documentVersion = documentVersionRepository.findByDocumentIdAndVersionId(startVotingRequest.getDocumentId(), startVotingRequest.getDocumentVersionId())
+                .orElseThrow(() -> new NotFoundException("Document Version with id: " + startVotingRequest.getDocumentId() + " or Document id " + startVotingRequest.getDocumentVersionId() + " not found"));
+        String base64Content = documentService.getDocumentVersionById(startVotingRequest.getDocumentId(), startVotingRequest.getDocumentVersionId()).getBase64Content();
+
 
         List<SignatureRequest> signatureRequests = sendAllParticipantsToVote(startVotingRequest);
         Voting voting = votingMapper.toVoting(startVotingRequest, documentVersion, "ACTIVE");
@@ -53,7 +56,7 @@ public class VotingService {
         votingFinisherScheduler.schedule(() -> completeVoting(voting.getId()),
                 Duration.between(LocalDateTime.now(), voting.getDeadline()).getSeconds(), TimeUnit.SECONDS);
 
-        return votingMapper.toStartVotingResponse(voting);
+        return votingMapper.toStartVotingResponse(voting, base64Content);
     }
 
     @Scheduled(initialDelay = 1, fixedRate = 1, timeUnit = TimeUnit.DAYS)

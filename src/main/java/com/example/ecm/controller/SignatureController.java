@@ -1,5 +1,6 @@
 package com.example.ecm.controller;
 
+import com.example.ecm.aop.Loggable;
 import com.example.ecm.dto.requests.CreateSignatureRequest;
 import com.example.ecm.dto.requests.CreateSignatureRequestRequest;
 import com.example.ecm.dto.requests.StartVotingRequest;
@@ -20,6 +21,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/sign")
+@Loggable
 public class SignatureController {
 
     private final VotingService votingService;

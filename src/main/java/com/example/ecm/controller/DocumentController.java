@@ -49,6 +49,11 @@ public class DocumentController {
         return ResponseEntity.ok(documentService.getDocumentById(id));
     }
 
+    @GetMapping("/{documentId}/{versionId}")
+    private ResponseEntity<CreateDocumentVersionResponse> getDocumentVersion(@PathVariable Long documentId, @PathVariable Long versionId) {
+        return ResponseEntity.ok(documentService.getDocumentVersionById(documentId, versionId));
+    }
+
     /**
      * PUT-метод для обновления существующего документа по его ID.
      *

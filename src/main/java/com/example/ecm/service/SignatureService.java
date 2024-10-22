@@ -6,6 +6,8 @@ import com.example.ecm.dto.responses.CreateSignatureRequestResponse;
 import com.example.ecm.dto.responses.GetSignatureResponse;
 import com.example.ecm.exception.ForbiddenException;
 import com.example.ecm.exception.NotFoundException;
+import com.example.ecm.kafka.event.DocumentSignedEvent;
+import com.example.ecm.kafka.service.EventProducerService;
 import com.example.ecm.mapper.SignatureMapper;
 import com.example.ecm.model.*;
 import com.example.ecm.repository.*;
@@ -25,6 +27,7 @@ public class SignatureService {
     private final SignatureRepository signatureRepository;
     private final UserRepository userRepository;
     private final SignatureMapper signatureMapper;
+    private final EventProducerService eventProducerService;
 
     public CreateSignatureRequestResponse sendToSign(CreateSignatureRequestRequest request, UserPrincipal currentUser) {
         Long id = request.getDocumentId();
@@ -66,8 +69,8 @@ public class SignatureService {
         }
 
         SignatureRequest signRequest = requests.stream()
-                .filter(r -> r.getId().equals(id))
-                .findFirst().orElseThrow(() -> new NotFoundException("SignatureRequest with id: " + id +" not found"));
+                .filter(r -> r.getId().equals(id) && r.getStatus().equals("PENDING"))
+                .findFirst().orElseThrow(() -> new NotFoundException("SignatureRequest with id: " + id + " not found or no longer active"));
 
         signRequest.setStatus(request.getStatus());
 
@@ -76,6 +79,9 @@ public class SignatureService {
         signature.setPlaceholderTitle(request.getPlaceholderTitle());
         signature.setDocumentVersion(signRequest.getDocumentVersion());
         signature.setHash(signRequest.getUserTo().hashCode());
+
+        DocumentSignedEvent event = new DocumentSignedEvent(id, currentUser.getId(), signRequest.getUserTo().getId(), request.getPlaceholderTitle());
+        eventProducerService.sendDocumentSignedEvent(event);
 
         signature = signatureRepository.save(signature);
 
@@ -89,7 +95,7 @@ public class SignatureService {
 
     public CreateSignatureRequestResponse getSignatureRequestById(Long id) {
         return signatureRequestRepository.findById(id).map(signatureMapper::toCreateSignatureRequestResponse)
-                .orElseThrow(() -> new NotFoundException("SignatureRequest with id: " + id +" not found"));
+                .orElseThrow(() -> new NotFoundException("SignatureRequest with id: " + id + " not found"));
 
     }
 }

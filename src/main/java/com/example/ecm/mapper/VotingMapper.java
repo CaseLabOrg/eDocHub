@@ -1,6 +1,7 @@
 package com.example.ecm.mapper;
 
 import com.example.ecm.dto.requests.StartVotingRequest;
+import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
 import com.example.ecm.dto.responses.StartVotingResponse;
 import com.example.ecm.model.DocumentVersion;
 import com.example.ecm.model.Voting;
@@ -25,10 +26,12 @@ public class VotingMapper {
         return voting;
     }
 
-    public StartVotingResponse toStartVotingResponse(Voting voting) {
+    public StartVotingResponse toStartVotingResponse(Voting voting, String base64Content) {
         StartVotingResponse response = new StartVotingResponse();
         response.setParticipants(voting.getSignatureRequests().stream().map(r -> userMapper.toCreateUserResponse(r.getUserTo())).toList());
-        response.setDocumentVersion(documentVersionMapper.toCreateDocumentVersionResponse(voting.getDocumentVersion()));
+        CreateDocumentVersionResponse documentVersionResponse = documentVersionMapper.toCreateDocumentVersionResponse(voting.getDocumentVersion());
+        documentVersionResponse.setBase64Content(base64Content);
+        response.setDocumentVersion(documentVersionResponse);
         response.setDeadline(voting.getDeadline());
         response.setApprovalThreshold(voting.getApprovalThreshold());
         response.setStatus(voting.getStatus());
