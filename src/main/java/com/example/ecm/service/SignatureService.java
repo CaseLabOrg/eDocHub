@@ -59,15 +59,15 @@ public class SignatureService {
         return signatureMapper.toCreateSignatureRequestResponse(signatureRequest);
     }
 
-    public GetSignatureResponse sign(CreateSignatureRequest request, UserPrincipal currentUser) {
+    public GetSignatureResponse sign(Long id, CreateSignatureRequest request, UserPrincipal currentUser) {
         List<SignatureRequest> requests = signatureRequestRepository.findAllByUserToId(currentUser.getId());
         if (requests.isEmpty()) {
             throw new NotFoundException("You have nothing to sign");
         }
 
         SignatureRequest signRequest = requests.stream()
-                .filter(r -> r.getId().equals(request.getSignatureRequestId()))
-                .findFirst().orElseThrow(() -> new NotFoundException("SignatureRequest with id: " + request.getSignatureRequestId() +" not found"));
+                .filter(r -> r.getId().equals(id))
+                .findFirst().orElseThrow(() -> new NotFoundException("SignatureRequest with id: " + id +" not found"));
 
         signRequest.setStatus(request.getStatus());
 

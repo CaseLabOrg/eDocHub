@@ -1,5 +1,7 @@
 package com.example.ecm.dto.requests;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,7 +18,8 @@ public class CreateSignatureRequest {
      * Используется для идентификации подписи, если в документе много подписей.
      */
     private String placeholderTitle;
-    private String status;
 
-    private Long signatureRequestId;
+    @NotNull(message = "Status cannot be null")
+    @NotBlank(message = "Status cannot be blank")
+    private String status;
 }

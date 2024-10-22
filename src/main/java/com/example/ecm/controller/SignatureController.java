@@ -41,8 +41,8 @@ public class SignatureController {
     }
 
     @PostMapping("/{id}")
-    public ResponseEntity<GetSignatureResponse> sendToSign(@Valid @RequestBody CreateSignatureRequest request, @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return ResponseEntity.ok(signatureService.sign(request, userPrincipal));
+    public ResponseEntity<GetSignatureResponse> sendToSign(@PathVariable Long id, @Valid @RequestBody CreateSignatureRequest request, @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return ResponseEntity.ok(signatureService.sign(id, request, userPrincipal));
     }
 
     @PostMapping("/voting")

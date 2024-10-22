@@ -50,6 +50,7 @@ public class SignatureMapper {
 
     public CreateSignatureRequestResponse toCreateSignatureRequestResponse(SignatureRequest signatureRequest) {
         CreateSignatureRequestResponse response = new CreateSignatureRequestResponse();
+        response.setId(signatureRequest.getId());
         response.setUserTo(userMapper.toCreateUserResponse(signatureRequest.getUserTo()));
         response.setDocumentVersionId(signatureRequest.getDocumentVersion().getId());
         return response;
