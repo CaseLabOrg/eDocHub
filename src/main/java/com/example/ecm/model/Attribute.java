@@ -40,4 +40,5 @@ public class Attribute {
 
     /** Флаг, указывающий, является ли данный атрибут обязательным для заполнения */
     private Boolean required;
+
 }
