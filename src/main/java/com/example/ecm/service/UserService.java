@@ -1,5 +1,6 @@
 package com.example.ecm.service;
 
+import com.example.ecm.dto.patch_requests.PatchUserRequest;
 import com.example.ecm.dto.requests.CreateUserRequest;
 import com.example.ecm.dto.responses.CreateUserResponse;
 import com.example.ecm.dto.requests.PutRoleRequest;
@@ -122,6 +123,34 @@ public class UserService {
 
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
+    }
+
+    /**
+     * Частичное обновление пользователя
+     * @param id идентификатор пользователя
+     * @param request запрос на частичное обновление пользователя
+     * @return ответ с данными обновленного пользователя
+     */
+    public CreateUserResponse patchUser(Long id, PatchUserRequest request) {
+        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
+        if (request.getName() != null) {
+            user.setName(request.getName());
+        }
+
+        if (request.getSurname() != null){
+            user.setSurname(request.getSurname());
+        }
+
+        if (request.getEmail() != null) {
+            user.setEmail(request.getEmail());
+        }
+
+        if (request.getPassword() != null) {
+            user.setPassword(encoder.encode(request.getPassword()));
+        }
+
+        User updatedUser = userRepository.save(user);
+        return userMapper.toCreateUserResponse(updatedUser);
     }
 }
 
