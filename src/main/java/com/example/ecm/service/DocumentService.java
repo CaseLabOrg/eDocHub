@@ -1,5 +1,6 @@
 package com.example.ecm.service;
 
+import com.example.ecm.dto.patch_requests.PatchDocumentVersionRequest;
 import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
 import com.example.ecm.dto.requests.SetValueRequest;
 import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
@@ -52,9 +53,9 @@ public class DocumentService {
      */
     public CreateDocumentResponse createDocument(CreateDocumentRequest createDocumentRequest) {
         User user = userRepository.findById(createDocumentRequest.getUserId())
-                .orElseThrow(() -> new NotFoundException("User with id: " + createDocumentRequest.getUserId() +" not found"));
+                .orElseThrow(() -> new NotFoundException("User with id: " + createDocumentRequest.getUserId() + " not found"));
         DocumentType documentType = documentTypeRepository.findById(createDocumentRequest.getDocumentTypeId())
-                .orElseThrow(() -> new NotFoundException("Document type with id: " + createDocumentRequest.getDocumentTypeId() +" not found"));
+                .orElseThrow(() -> new NotFoundException("Document type with id: " + createDocumentRequest.getDocumentTypeId() + " not found"));
         Document document = new Document();
         document.setUser(user);
         document.setDocumentType(documentType);
@@ -101,7 +102,7 @@ public class DocumentService {
      */
     public CreateDocumentResponse getDocumentById(Long id) {
         Document document = documentRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Document with id: " + id +" not found"));
+                .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
 
         CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document);
 
@@ -127,15 +128,15 @@ public class DocumentService {
      */
     public List<CreateDocumentResponse> getAllDocuments() {
 
-            return documentRepository.findAll().stream()
-                    .map(document -> {
-                        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document);
+        return documentRepository.findAll().stream()
+                .map(document -> {
+                    CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document);
 
-                        return getCreateDocumentResponse(document, response);
-                    })
-                    .toList();
+                    return getCreateDocumentResponse(document, response);
+                })
+                .toList();
 
-        }
+    }
 
     private CreateDocumentResponse getCreateDocumentResponse(Document document, CreateDocumentResponse response) {
         response.setDocumentVersions(document.getDocumentVersions().stream()
@@ -159,22 +160,34 @@ public class DocumentService {
      */
     public void deleteDocument(Long id) {
         Document document = documentRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Document with id: " + id +" not found"));
+                .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
         List<DocumentVersion> list = document.getDocumentVersions();
         documentRepository.delete(document);
-        for(DocumentVersion documentVersion : list) {
+        for (DocumentVersion documentVersion : list) {
             minioService.deleteDocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle());
         }
     }
 
-
+    /**
+     * Создает новую версию документа и сохраняет её в базе данных.
+     *
+     * <p>Метод находит документ по указанному ID, создает новую версию документа,
+     * задает ей порядковый номер, время создания и связь с документом. Далее версия
+     * сохраняется в репозитории версий документов. Также сохраняются значения атрибутов
+     * для этой версии и добавляется файл документа в MinIO.</p>
+     *
+     * @param id                           идентификатор документа, для которого создается новая версия
+     * @param createDocumentVersionRequest объект {@link CreateDocumentVersionRequest}, содержащий информацию о новой версии
+     * @return объект {@link CreateDocumentVersionResponse}, содержащий данные о созданной версии
+     * @throws NotFoundException если документ с указанным ID не найден
+     */
     public CreateDocumentVersionResponse updateDocumentVersion(Long id, CreateDocumentVersionRequest createDocumentVersionRequest) {
         Document document = documentRepository.findById(id)
 
-                .orElseThrow(() -> new NotFoundException("Document with id: " + id +" not found"));
+                .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
 
         DocumentVersion documentVersion = documentVersionMapper.toDocumentVersion(createDocumentVersionRequest);
-        documentVersion.setVersionId((long)document.getDocumentVersions().size() + 1);
+        documentVersion.setVersionId((long) document.getDocumentVersions().size() + 1);
         documentVersion.setCreatedAt(LocalDateTime.now());
         documentVersion.setDocument(document);
 
@@ -188,6 +201,16 @@ public class DocumentService {
         return response;
     }
 
+    /**
+     * Сохраняет или обновляет значения атрибутов для указанной версии документа.
+     *
+     * <p>Метод проходит по списку значений атрибутов, находит соответствующие атрибуты в репозитории
+     * и связывает их с версией документа. Новые значения атрибутов сохраняются в базе данных.</p>
+     *
+     * @param values          список значений атрибутов для обновления
+     * @param documentVersion версия документа, для которой устанавливаются значения атрибутов
+     * @throws NotFoundException если атрибут с указанным именем не найден
+     */
     private void setValues(List<SetValueRequest> values, DocumentVersion documentVersion) {
         for (SetValueRequest newValue : values) {
             Attribute attribute = attributeRepository.findByName(newValue.getAttributeName())
@@ -198,5 +221,40 @@ public class DocumentService {
             value.setValue(newValue.getValue());
             valueRepository.save(value);
         }
+    }
+
+
+    /**
+     * Частично обновляет существующую версию документа на основе переданных изменений.
+     *
+     * <p>Метод находит версию документа по её ID и обновляет только те поля, которые переданы
+     * в объекте {@link PatchDocumentVersionRequest}. Если передано новое содержимое (Base64),
+     * оно загружается в MinIO, а старое удаляется. Также могут быть обновлены значения атрибутов.</p>
+     *
+     * @param id      идентификатор версии документа, которую требуется обновить
+     * @param request объект {@link PatchDocumentVersionRequest}, содержащий данные для частичного обновления версии
+     * @return объект {@link CreateDocumentVersionResponse}, содержащий обновленные данные о версии документа
+     * @throws NotFoundException если версия документа с указанным ID не найдена
+     */
+    public CreateDocumentVersionResponse patchDocumentVersion(Long id, PatchDocumentVersionRequest request) {
+        DocumentVersion documentVersion = documentVersionRepository.findById(id).orElseThrow(() -> new NotFoundException("Document Version with id: " + id + " not found"));
+
+        if (request.getDescription() != null) {
+            documentVersion.setDescription(request.getDescription());
+        }
+        if (request.getTitle() != null) {
+            minioService.deleteDocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle());
+            documentVersion.setTitle(request.getTitle());
+            minioService.addDocument(documentVersion.getId(), documentVersionMapper.toCreateDocumentVersionRequest(documentVersion));
+        }
+        if (request.getBase64Content() != null) {
+            minioService.deleteDocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle());
+            minioService.addDocument(documentVersion.getId(), documentVersionMapper.toCreateDocumentVersionRequest(documentVersion));
+        }
+        if (request.getValues() != null) {
+            setValues(request.getValues(), documentVersion);
+        }
+
+        return documentVersionMapper.toCreateDocumentVersionResponse(documentVersionRepository.save(documentVersion));
     }
 }

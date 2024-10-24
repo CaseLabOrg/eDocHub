@@ -1,12 +1,12 @@
 package com.example.ecm.controller;
 
 import com.example.ecm.aop.Loggable;
+import com.example.ecm.dto.patch_requests.PatchDocumentVersionRequest;
 import com.example.ecm.dto.requests.CreateDocumentRequest;
 import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
 import com.example.ecm.dto.responses.CreateDocumentResponse;
 import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
 import com.example.ecm.service.DocumentService;
-import com.example.ecm.service.SignatureService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -57,7 +57,7 @@ public class DocumentController {
     /**
      * PUT-метод для обновления существующего документа по его ID.
      *
-     * @param id Идентификатор документа, который нужно обновить.
+     * @param id       Идентификатор документа, который нужно обновить.
      * @param document Объект запроса, содержащий обновленные данные документа.
      * @return Ответ с обновленными данными документа.
      */
@@ -87,5 +87,22 @@ public class DocumentController {
     @GetMapping
     public ResponseEntity<List<CreateDocumentResponse>> getAllDocument() {
         return ResponseEntity.ok(documentService.getAllDocuments());
+    }
+
+    /**
+     * Обновляет указанную версию документа с предоставленными изменениями.
+     *
+     * <p>Этот метод обрабатывает PATCH-запросы для обновления версии документа.
+     * Принимает ID документа и тело запроса с полями для обновления,
+     * и возвращает обновленную версию документа.</p>
+     *
+     * @param id      идентификатор документа, который требуется обновить
+     * @param request объект {@link PatchDocumentVersionRequest}, содержащий данные для обновления версии документа
+     * @return объект {@link ResponseEntity}, содержащий обновленную версию документа в ответе
+     */
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<CreateDocumentVersionResponse> patchDocumentType(@PathVariable Long id, @Valid @RequestBody PatchDocumentVersionRequest request) {
+        return ResponseEntity.ok(documentService.patchDocumentVersion(id, request));
     }
 }
