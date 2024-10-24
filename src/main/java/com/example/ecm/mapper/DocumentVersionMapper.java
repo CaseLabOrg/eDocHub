@@ -45,12 +45,12 @@ public class DocumentVersionMapper {
         return response;
     }
 
-    public CreateDocumentVersionRequest toCreateDocumentVersionRequest(DocumentVersion documentVersion) {
+    public CreateDocumentVersionRequest toCreateDocumentVersionRequest(DocumentVersion documentVersion, String base64Content) {
         CreateDocumentVersionRequest request = new CreateDocumentVersionRequest();
 
         request.setDescription(documentVersion.getDescription());
         request.setTitle(documentVersion.getTitle());
-
+        request.setBase64Content(base64Content);
         request.setValues(documentVersion.getValues().entrySet().stream()
                 .map(entry -> {
                     SetValueRequest setValueRequest = new SetValueRequest();

@@ -239,22 +239,27 @@ public class DocumentService {
     public CreateDocumentVersionResponse patchDocumentVersion(Long id, PatchDocumentVersionRequest request) {
         DocumentVersion documentVersion = documentVersionRepository.findById(id).orElseThrow(() -> new NotFoundException("Document Version with id: " + id + " not found"));
 
+
         if (request.getDescription() != null) {
             documentVersion.setDescription(request.getDescription());
         }
         if (request.getTitle() != null) {
+            CreateDocumentVersionRequest requestDocumentVersion = documentVersionMapper.toCreateDocumentVersionRequest(documentVersion, minioService.getBase64DocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle()));
             minioService.deleteDocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle());
             documentVersion.setTitle(request.getTitle());
-            minioService.addDocument(documentVersion.getId(), documentVersionMapper.toCreateDocumentVersionRequest(documentVersion));
+            requestDocumentVersion.setTitle(documentVersion.getTitle());
+            minioService.addDocument(documentVersion.getId(), requestDocumentVersion);
         }
         if (request.getBase64Content() != null) {
             minioService.deleteDocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle());
-            minioService.addDocument(documentVersion.getId(), documentVersionMapper.toCreateDocumentVersionRequest(documentVersion));
+            minioService.addDocument(documentVersion.getId(), documentVersionMapper.toCreateDocumentVersionRequest(documentVersion, request.getBase64Content()));
         }
         if (request.getValues() != null) {
             setValues(request.getValues(), documentVersion);
         }
+        CreateDocumentVersionResponse response = documentVersionMapper.toCreateDocumentVersionResponse(documentVersionRepository.save(documentVersion));
+        response.setBase64Content(minioService.getBase64DocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle()));
 
-        return documentVersionMapper.toCreateDocumentVersionResponse(documentVersionRepository.save(documentVersion));
+        return response;
     }
 }
