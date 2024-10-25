@@ -18,11 +18,15 @@ import com.example.ecm.model.User;
 import com.example.ecm.repository.DocumentRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Сервис для работы с документами.
@@ -52,9 +56,9 @@ public class DocumentService {
      */
     public CreateDocumentResponse createDocument(CreateDocumentRequest createDocumentRequest) {
         User user = userRepository.findById(createDocumentRequest.getUserId())
-                .orElseThrow(() -> new NotFoundException("User with id: " + createDocumentRequest.getUserId() +" not found"));
+                .orElseThrow(() -> new NotFoundException("User with id: " + createDocumentRequest.getUserId() + " not found"));
         DocumentType documentType = documentTypeRepository.findById(createDocumentRequest.getDocumentTypeId())
-                .orElseThrow(() -> new NotFoundException("Document type with id: " + createDocumentRequest.getDocumentTypeId() +" not found"));
+                .orElseThrow(() -> new NotFoundException("Document type with id: " + createDocumentRequest.getDocumentTypeId() + " not found"));
         Document document = new Document();
         document.setUser(user);
         document.setDocumentType(documentType);
@@ -101,7 +105,7 @@ public class DocumentService {
      */
     public CreateDocumentResponse getDocumentById(Long id) {
         Document document = documentRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Document with id: " + id +" not found"));
+                .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
 
         CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document);
 
@@ -127,15 +131,15 @@ public class DocumentService {
      */
     public List<CreateDocumentResponse> getAllDocuments() {
 
-            return documentRepository.findAll().stream()
-                    .map(document -> {
-                        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document);
+        return documentRepository.findAll().stream()
+                .map(document -> {
+                    CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document);
 
-                        return getCreateDocumentResponse(document, response);
-                    })
-                    .toList();
+                    return getCreateDocumentResponse(document, response);
+                })
+                .toList();
 
-        }
+    }
 
     private CreateDocumentResponse getCreateDocumentResponse(Document document, CreateDocumentResponse response) {
         response.setDocumentVersions(document.getDocumentVersions().stream()
@@ -159,10 +163,10 @@ public class DocumentService {
      */
     public void deleteDocument(Long id) {
         Document document = documentRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Document with id: " + id +" not found"));
+                .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
         List<DocumentVersion> list = document.getDocumentVersions();
         documentRepository.delete(document);
-        for(DocumentVersion documentVersion : list) {
+        for (DocumentVersion documentVersion : list) {
             minioService.deleteDocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle());
         }
     }
@@ -171,10 +175,10 @@ public class DocumentService {
     public CreateDocumentVersionResponse updateDocumentVersion(Long id, CreateDocumentVersionRequest createDocumentVersionRequest) {
         Document document = documentRepository.findById(id)
 
-                .orElseThrow(() -> new NotFoundException("Document with id: " + id +" not found"));
+                .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
 
         DocumentVersion documentVersion = documentVersionMapper.toDocumentVersion(createDocumentVersionRequest);
-        documentVersion.setVersionId((long)document.getDocumentVersions().size() + 1);
+        documentVersion.setVersionId((long) document.getDocumentVersions().size() + 1);
         documentVersion.setCreatedAt(LocalDateTime.now());
         documentVersion.setDocument(document);
 
@@ -199,4 +203,38 @@ public class DocumentService {
             valueRepository.save(value);
         }
     }
+
+    /**
+     * Получает постраничный список документов, отсортированных по последним версиям документов.
+     * Метод находит последние версии для каждого документа, сортирует их по дате создания и применяет пагинацию.
+     *
+     * @param page          номер страницы для получения, начиная с 0.
+     * @param size          количество документов на странице.
+     * @param sortDirection направление сортировки (например, "ASC" для по возрастанию или "DESC" для по убыванию).
+     * @param sortBy        поле, по которому производится сортировка документов (в текущей реализации сортировка выполняется по дате создания).
+     * @return {@link Page}, содержащая объекты {@link CreateDocumentResponse}, представляющие документы.
+     */
+
+    public Page<CreateDocumentResponse> getAllDocuments(int page, int size, String sortDirection, String sortBy) {
+        List<DocumentVersion> latestVersions = documentVersionRepository.findLatestDocumentVersions();
+
+        latestVersions.sort(Comparator.comparing(DocumentVersion::getCreatedAt)
+                .reversed());
+
+        List<Long> documentIds = latestVersions.stream()
+                .map(version -> version.getDocument().getId())
+                .distinct()
+                .collect(Collectors.toList());
+
+        int start = page * size;
+        int end = Math.min(start + size, latestVersions.size());
+
+        List<CreateDocumentResponse> responses = documentRepository.findAllById(documentIds.subList(start, end)).stream()
+                .map(document -> documentMapper.toCreateDocumentResponse(document))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(responses, PageRequest.of(page, size), latestVersions.size());
+    }
+
+
 }

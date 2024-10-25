@@ -9,6 +9,7 @@ import com.example.ecm.service.DocumentService;
 import com.example.ecm.service.SignatureService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -57,7 +58,7 @@ public class DocumentController {
     /**
      * PUT-метод для обновления существующего документа по его ID.
      *
-     * @param id Идентификатор документа, который нужно обновить.
+     * @param id       Идентификатор документа, который нужно обновить.
      * @param document Объект запроса, содержащий обновленные данные документа.
      * @return Ответ с обновленными данными документа.
      */
@@ -84,8 +85,29 @@ public class DocumentController {
      * @return List<CreateDocumentTypeResponse>.
      */
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<CreateDocumentResponse>> getAllDocument() {
         return ResponseEntity.ok(documentService.getAllDocuments());
+    }
+
+    /**
+     * Получает постраничный список файлов с возможностью сортировки.
+     * Метод принимает параметры запроса для указания страницы, размера страницы, направления и поля сортировки,
+     * и возвращает страницу с объектами {@link CreateDocumentResponse}.
+     *
+     * @param page          номер страницы, который нужно получить, по умолчанию 0.
+     * @param size          количество элементов на странице, по умолчанию 10.
+     * @param sortDirection направление сортировки (например, "asc" для по возрастанию или "desc" для по убыванию), по умолчанию "desc".
+     * @param sortBy        поле, по которому выполняется сортировка, по умолчанию "createdAt".
+     * @return объект {@link Page} с документами в формате {@link CreateDocumentResponse}.
+     */
+    @GetMapping
+    public Page<CreateDocumentResponse> getAllFiles(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "desc") String sortDirection,
+            @RequestParam(defaultValue = "createdAt") String sortBy) {
+
+        return documentService.getAllDocuments(page, size, sortDirection, sortBy);
     }
 }
