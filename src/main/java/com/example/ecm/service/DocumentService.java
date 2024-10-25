@@ -22,13 +22,17 @@ import com.example.ecm.repository.DocumentRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
 import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 /**
  * Сервис для работы с документами.
@@ -259,6 +263,40 @@ public class DocumentService {
     }
 
     /**
+     * Получает постраничный список документов, отсортированных по последним версиям документов.
+     * Метод находит последние версии для каждого документа, сортирует их по дате создания и применяет пагинацию.
+     *
+     * @param page          номер страницы для получения, начиная с 0.
+     * @param size          количество документов на странице.
+     * @param sortDirection направление сортировки (например, "ASC" для по возрастанию или "DESC" для по убыванию).
+     * @param sortBy        поле, по которому производится сортировка документов (в текущей реализации сортировка выполняется по дате создания).
+     * @return {@link Page}, содержащая объекты {@link CreateDocumentResponse}, представляющие документы.
+     */
+
+    public Page<CreateDocumentResponse> getAllDocuments(int page, int size, String sortDirection, String sortBy) {
+        List<DocumentVersion> latestVersions = documentVersionRepository.findLatestDocumentVersions();
+
+        latestVersions.sort(Comparator.comparing(DocumentVersion::getCreatedAt)
+                .reversed());
+
+        List<Long> documentIds = latestVersions.stream()
+                .map(version -> version.getDocument().getId())
+                .distinct()
+                .collect(Collectors.toList());
+
+        int start = page * size;
+        int end = Math.min(start + size, latestVersions.size());
+
+        List<CreateDocumentResponse> responses = documentRepository.findAllById(documentIds.subList(start, end)).stream()
+                .map(document -> documentMapper.toCreateDocumentResponse(document))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(responses, PageRequest.of(page, size), latestVersions.size());
+    }
+
+
+
+    /**
      * Частично обновляет существующую версию документа на основе переданных изменений.
      *
      * <p>Метод находит версию документа по её ID и обновляет только те поля, которые переданы
@@ -297,7 +335,7 @@ public class DocumentService {
         return response;
 
     }
-  
+
     public AddCommentResponse addComment(Long id, AddCommentRequest addCommentRequest, UserPrincipal userPrincipal) {
         Comment comment = commentMapper.toComment(addCommentRequest);
         Document document = documentRepository.findById(id)
