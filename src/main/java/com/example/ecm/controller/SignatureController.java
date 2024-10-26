@@ -4,6 +4,7 @@ import com.example.ecm.aop.Loggable;
 import com.example.ecm.dto.requests.CreateSignatureRequest;
 import com.example.ecm.dto.requests.CreateSignatureRequestRequest;
 import com.example.ecm.dto.requests.StartVotingRequest;
+import com.example.ecm.dto.responses.CancelVotingResponse;
 import com.example.ecm.dto.responses.CreateSignatureRequestResponse;
 import com.example.ecm.dto.responses.GetSignatureResponse;
 import com.example.ecm.dto.responses.StartVotingResponse;
@@ -50,6 +51,11 @@ public class SignatureController {
     @PostMapping("/voting")
     public ResponseEntity<StartVotingResponse> startVoting(@Valid @RequestBody StartVotingRequest request) {
         return ResponseEntity.ok(votingService.startVoting(request));
+    }
+
+    @PutMapping("/voting/{votingId}/cancel")
+    public ResponseEntity<CancelVotingResponse>  cancelVoting(@PathVariable Long votingId) {
+        return ResponseEntity.ok(votingService.cancelVoting(votingId));
     }
 
 }

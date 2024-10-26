@@ -1,6 +1,7 @@
 package com.example.ecm.mapper;
 
 import com.example.ecm.dto.requests.StartVotingRequest;
+import com.example.ecm.dto.responses.CancelVotingResponse;
 import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
 import com.example.ecm.dto.responses.StartVotingResponse;
 import com.example.ecm.model.DocumentVersion;
@@ -36,6 +37,13 @@ public class VotingMapper {
         response.setApprovalThreshold(voting.getApprovalThreshold());
         response.setStatus(voting.getStatus());
 
+        return response;
+    }
+
+    public CancelVotingResponse toCancelVotingResponse(Voting voting) {
+        CancelVotingResponse response = new CancelVotingResponse();
+        response.setId(voting.getId());
+        response.setStatus(voting.getStatus());
         return response;
     }
 }
