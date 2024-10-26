@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -76,5 +77,9 @@ public class DocumentTypeService {
         DocumentType documentType = documentTypeRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Document with id: " + id +" not found"));
         documentTypeRepository.delete(documentType);
+    }
+
+    public Optional<DocumentType> findById(Long id) {
+        return documentTypeRepository.findById(id);
     }
 }

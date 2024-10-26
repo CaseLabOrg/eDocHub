@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Сервис для работы с атрибутами документов.
@@ -91,5 +92,9 @@ public class AttributeService {
         Attribute attribute = attributeRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Attribute with id: " + id + " not found"));
         attributeRepository.delete(attribute);
+    }
+
+    public Optional<Attribute> findAttributeByName(String name) {
+        return attributeRepository.findByName(name);
     }
 }
