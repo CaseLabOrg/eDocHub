@@ -16,17 +16,12 @@ import com.example.ecm.repository.SignatureRequestRepository;
 import com.example.ecm.repository.UserRepository;
 import com.example.ecm.repository.VotingRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -35,27 +30,22 @@ public class VotingService {
     private final VotingRepository votingRepository;
     private final VotingMapper votingMapper;
     private final DocumentService documentService;
-    @Qualifier("votingFinisherScheduler")
-    private final ScheduledExecutorService votingFinisherScheduler;
     private final DocumentRepository documentRepository;
     private final UserRepository userRepository;
     private final SignatureRequestRepository signatureRequestRepository;
     private final DocumentVersionRepository documentVersionRepository;
+    private final MailNotificationService mailNotificationService;
 
     public StartVotingResponse startVoting(StartVotingRequest startVotingRequest) {
         DocumentVersion documentVersion = documentVersionRepository.findByDocumentIdAndVersionId(startVotingRequest.getDocumentId(), startVotingRequest.getDocumentVersionId())
                 .orElseThrow(() -> new NotFoundException("Document Version with id: " + startVotingRequest.getDocumentId() + " or Document id " + startVotingRequest.getDocumentVersionId() + " not found"));
         String base64Content = documentService.getDocumentVersionById(startVotingRequest.getDocumentId(), startVotingRequest.getDocumentVersionId()).getBase64Content();
 
-
         List<SignatureRequest> signatureRequests = sendAllParticipantsToVote(startVotingRequest);
         Voting voting = votingMapper.toVoting(startVotingRequest, documentVersion, "ACTIVE");
         signatureRequests.forEach(r -> r.setVoting(voting));
         voting.setSignatureRequests(signatureRequests);
         votingRepository.save(voting);
-
-        votingFinisherScheduler.schedule(() -> completeVoting(voting.getId()),
-                Duration.between(LocalDate.now(), voting.getDeadline()).getSeconds(), TimeUnit.SECONDS);
 
         return votingMapper.toStartVotingResponse(voting, base64Content);
     }
@@ -68,15 +58,23 @@ public class VotingService {
                     .filter(signatureRequest -> signatureRequest.getStatus().equals("FOR"))
                     .count();
             voting.setCurrentApprovalRate(all / (float) inFavor);
+
+            if (LocalDateTime.now().isAfter(voting.getDeadline().atStartOfDay())) {
+                voting.setStatus("COMPLETED");
+                notifyParticipants(voting);
+            }
+
             votingRepository.save(voting);
         });
     }
 
-    private void completeVoting(Long votingId) {
-        Voting voting = votingRepository.findById(votingId)
-                .orElseThrow(() -> new NotFoundException("Voting with id: " + votingId + " not found"));
-        voting.setStatus("COMPLETED");
-        votingRepository.save(voting);
+    private void notifyParticipants(Voting voting) {
+        for (SignatureRequest signatureRequest : voting.getSignatureRequests()) {
+            String text = "Голосование завершилось. Благодарим за участие! Поддержало: %s%%, необходимо для принятия: %s%%."
+                    .formatted(voting.getCurrentApprovalRate(), voting.getApprovalThreshold());
+
+            mailNotificationService.send(signatureRequest.getUserTo().getEmail(), "Результаты голосования", text);
+        }
     }
 
     private SignatureRequest sendToVote(Long id, CreateSignatureRequestRequest request) {
