@@ -8,7 +8,7 @@ import com.example.ecm.model.Voting;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Component
 @RequiredArgsConstructor
@@ -21,7 +21,7 @@ public class VotingMapper {
         voting.setDocumentVersion(documentVersion);
         voting.setApprovalThreshold(request.getApprovalThreshold());
         voting.setDeadline(request.getDeadline());
-        voting.setCreatedAt(LocalDateTime.now());
+        voting.setCreatedAt(LocalDate.now());
         voting.setStatus(status);
         return voting;
     }
