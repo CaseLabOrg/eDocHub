@@ -156,4 +156,8 @@ public class AttributeService {
 
         return attributeMapper.toAttributeResponse(attributeRepository.save(attribute));
     }
+
+    public Optional<Attribute> findAttributeByName(String name) {
+        return attributeRepository.findByName(name);
+    }
 }
