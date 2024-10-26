@@ -101,4 +101,8 @@ public class AttributeService {
     public Optional<Attribute> findAttributeByName(String name) {
         return attributeRepository.findByName(name);
     }
+
+    public Optional<Attribute> findAttributeByName(String name) {
+        return attributeRepository.findByName(name);
+    }
 }

@@ -86,4 +86,8 @@ public class DocumentTypeService {
     public Optional<DocumentType> findById(Long id) {
         return documentTypeRepository.findById(id);
     }
+
+    public Optional<DocumentType> findById(Long id) {
+        return documentTypeRepository.findById(id);
+    }
 }
