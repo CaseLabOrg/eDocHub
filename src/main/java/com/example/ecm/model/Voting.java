@@ -12,7 +12,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Getter
@@ -41,9 +41,9 @@ public class Voting {
     private Float currentApprovalRate;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDate createdAt;
 
     @Column(nullable = false)
-    private LocalDateTime deadline;
+    private LocalDate deadline;
 
 }
