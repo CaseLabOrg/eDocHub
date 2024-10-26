@@ -2,7 +2,7 @@ package com.example.ecm.dto.responses;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -14,7 +14,7 @@ public class StartVotingResponse {
 
     private Float approvalThreshold;
 
-    private LocalDateTime deadline;
+    private LocalDate deadline;
 
     private String status;
 }

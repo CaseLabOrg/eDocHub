@@ -21,6 +21,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,12 +55,12 @@ public class VotingService {
         votingRepository.save(voting);
 
         votingFinisherScheduler.schedule(() -> completeVoting(voting.getId()),
-                Duration.between(LocalDateTime.now(), voting.getDeadline()).getSeconds(), TimeUnit.SECONDS);
+                Duration.between(LocalDate.now(), voting.getDeadline()).getSeconds(), TimeUnit.SECONDS);
 
         return votingMapper.toStartVotingResponse(voting, base64Content);
     }
 
-    @Scheduled(initialDelay = 1, fixedRate = 1, timeUnit = TimeUnit.DAYS)
+    @Scheduled(cron = "@daily")
     private void activeVotingsResultUpdate() {
         votingRepository.findByStatus("ACTIVE").forEach(voting -> {
             int all = voting.getSignatureRequests().size();
