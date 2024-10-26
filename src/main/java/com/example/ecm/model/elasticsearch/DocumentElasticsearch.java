@@ -7,6 +7,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
+import java.time.OffsetDateTime;
 import java.util.Map;
 
 /**
@@ -18,14 +19,10 @@ import java.util.Map;
 public class DocumentElasticsearch {
 
     @Id
-    @Field(name = "id", type = FieldType.Text)
     private String id;
 
     @Field(type = FieldType.Long)
     private Long userId;
-
-    @Field(type = FieldType.Long)
-    private Long documentVersionId;
 
     @Field(type = FieldType.Long)
     private Long documentTypeId;
@@ -36,15 +33,9 @@ public class DocumentElasticsearch {
     @Field(type = FieldType.Text)
     private String description;
 
-    @Field(type = FieldType.Text)
-    private String content;
-
     @Field(type = FieldType.Date)
     private String createdAt;
 
     @Field(type = FieldType.Object)
     private Map<String, String> values;
-
-    @Field(type = FieldType.Boolean)
-    private Boolean isAlive;
 }

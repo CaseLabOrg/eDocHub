@@ -1,18 +1,13 @@
 package com.example.ecm.service;
 
 import com.example.ecm.mapper.DocumentMapper;
+import com.example.ecm.model.Document;
 import com.example.ecm.model.elasticsearch.DocumentElasticsearch;
-import com.example.ecm.parser.Base64Manager;
-import com.example.ecm.parser.DocumentManager;
-import com.example.ecm.parser.DocumentParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.Fuzziness;
@@ -24,10 +19,7 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.xcontent.XContentType;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,32 +28,29 @@ import java.util.regex.Pattern;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class SearchService {
 
-    private static final String INDEX_DOCUMENTS = "documents";
+    private final static String INDEX_DOCUMENTS = "documents";
 
     private final ObjectMapper mapper;
     private final RestHighLevelClient client;
     private final DocumentMapper documentMapper;
     private final UserService userService;
     private final DocumentTypeService documentTypeService;
-    private final DocumentManager documentManager;
-    private final Base64Manager base64Manager;
-    private final DocumentParser documentParser;
 
-    public void addIndexDocumentElasticsearch(DocumentElasticsearch document, String base64Content, Long documentVersionId) {
+    public SearchService(ObjectMapper mapper, RestHighLevelClient client, DocumentMapper documentMapper, UserService userService, DocumentTypeService documentTypeService) {
+        this.mapper = mapper;
+        this.client = client;
+        this.documentMapper = documentMapper;
+        this.userService = userService;
+        this.documentTypeService = documentTypeService;
+    }
 
-        document.setDocumentVersionId(documentVersionId);
-        String fullFilename = document.getId() + "." + base64Manager.getFileExtensionFromBase64(base64Content);
+    public void addIndexDocumentElasticsearch(DocumentElasticsearch document) {
+
         try {
-
-            documentManager.saveFileFromBase64(base64Manager.removeMetadataPrefix(base64Content), fullFilename);
-            String content = documentParser.parse(documentManager.getAbsolutePath() + "/" + fullFilename);
-            document.setContent(content);
-
             IndexRequest indexRequest = new IndexRequest(INDEX_DOCUMENTS)
-                    .id(document.getId())
+                    .id(String.valueOf(document.getId()))
                     .source(mapper.writeValueAsString(document), XContentType.JSON);
 
             client.index(indexRequest, RequestOptions.DEFAULT);
@@ -70,19 +59,11 @@ public class SearchService {
             log.info("Successfully indexed document with ID: " + document.getId());
 
         } catch (IOException e) {
-            log.error("Failed to index document: " + e.getMessage());
-        } catch (Exception ex) {
-            log.error(ex.getMessage());
-        } finally {
-            if (documentManager.deleteFile(fullFilename))
-                log.info("Success delete: " + fullFilename);
-            else
-                log.error("Not deleted: " + fullFilename);
+            log.error("Failed to index document: " + e.getMessage(), e);
         }
-
     }
 
-    public List<DocumentElasticsearch> search(String searchString, List<String> attributes, List<String> documentTypes) throws Exception {
+    public List<Document> search(String searchString, List<String> attributes, List<String> documentTypes) throws Exception {
 
         SearchRequest searchRequest = new SearchRequest(INDEX_DOCUMENTS);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
@@ -100,18 +81,8 @@ public class SearchService {
             request.must(valuesQuery);
         }
 
-        if (searchString != null) {
-            if (searchString.length() < 4) {
-                String wildcardQuery = "*" + searchString + "*";
-                request.should(QueryBuilders.wildcardQuery("title", wildcardQuery))
-                        .should(QueryBuilders.wildcardQuery("description", wildcardQuery))
-                        .should(QueryBuilders.wildcardQuery("content", wildcardQuery));
-            } else {
-                request.must(QueryBuilders.multiMatchQuery(searchString, "title", "description", "content")
-                        .fuzziness(Fuzziness.AUTO));
-            }
-        } else {
-            request.must(QueryBuilders.matchAllQuery());
+        if (searchString != null && !searchString.isEmpty()) {
+            request.must(QueryBuilders.multiMatchQuery(searchString, "title", "description").fuzziness(Fuzziness.AUTO));
         }
 
         searchSourceBuilder.query(request);
@@ -125,19 +96,19 @@ public class SearchService {
             documents.add(document);
         }
 
-//        List<Document> docs = new ArrayList<>();
-//        for (DocumentElasticsearch de : documents) {
-//            docs.add(
-//                    documentMapper.toDocument(
-//                            de,
-//                            userService.findById(de.getUserId()).get(),
-//                            documentTypeService.findById(de.getDocumentTypeId()).get(),
-//                            de.getValues().entrySet()
-//                    )
-//            );
-//        }
+        List<Document> docs = new ArrayList<>();
+        for (DocumentElasticsearch de : documents) {
+            docs.add(
+                    documentMapper.toDocument(
+                            de,
+                            userService.findById(de.getUserId()).get(),
+                            documentTypeService.findById(de.getDocumentTypeId()).get(),
+                            de.getValues().entrySet()
+                    )
+            );
+        }
 
-        return documents;
+        return docs;
     }
 
 

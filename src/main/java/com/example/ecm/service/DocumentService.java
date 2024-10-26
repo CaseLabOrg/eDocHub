@@ -15,11 +15,12 @@ import com.example.ecm.mapper.SignatureMapper;
 import com.example.ecm.model.Document;
 import com.example.ecm.model.DocumentType;
 import com.example.ecm.model.User;
-import com.example.ecm.parser.Base64Manager;
+import com.example.ecm.repository.*;
 import com.example.ecm.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +44,6 @@ public class DocumentService {
     private final ValueRepository valueRepository;
     private final SignatureMapper signatureMapper;
     private final SearchService searchService;
-    private final Base64Manager base64Manager;
 
     private final UserService userService;
 
@@ -79,7 +79,7 @@ public class DocumentService {
 
         createDocumentVersionRequest.setDescription(documentVersion.getDescription());
         createDocumentVersionRequest.setTitle(documentVersion.getTitle());
-        createDocumentVersionRequest.setBase64Content(base64Manager.removeMetadataPrefix(createDocumentRequest.getBase64Content()));
+        createDocumentVersionRequest.setBase64Content(createDocumentRequest.getBase64Content());
 
         boolean success = minioService.addDocument(documentVersionSaved.getId(), createDocumentVersionRequest);
         if (!success) {
@@ -93,12 +93,9 @@ public class DocumentService {
         createDocumentVersionResponse.setValues(createDocumentRequest.getValues());
         documentVersions.add(createDocumentVersionResponse);
 
+
         // There add to elastic
-        searchService.addIndexDocumentElasticsearch(
-                DocumentMapper.toDocumentElasticsearch(createDocumentRequest),
-                createDocumentRequest.getBase64Content(),
-                documentVersionSaved.getId()
-        );
+        searchService.addIndexDocumentElasticsearch(DocumentMapper.toDocumentElasticsearch(createDocumentRequest));
 
         CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(documentSaved);
         response.setDocumentVersions(documentVersions);
