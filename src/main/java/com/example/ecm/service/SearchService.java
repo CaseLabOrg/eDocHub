@@ -1,18 +1,13 @@
 package com.example.ecm.service;
 
 import com.example.ecm.mapper.DocumentMapper;
+import com.example.ecm.model.Document;
 import com.example.ecm.model.elasticsearch.DocumentElasticsearch;
-import com.example.ecm.parser.Base64Manager;
-import com.example.ecm.parser.DocumentManager;
-import com.example.ecm.parser.DocumentParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.Fuzziness;
@@ -24,10 +19,7 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.xcontent.XContentType;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,34 +28,29 @@ import java.util.regex.Pattern;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class SearchService {
 
-    private static final String INDEX_DOCUMENTS = "documents";
+    private final static String INDEX_DOCUMENTS = "documents";
 
     private final ObjectMapper mapper;
     private final RestHighLevelClient client;
     private final DocumentMapper documentMapper;
     private final UserService userService;
     private final DocumentTypeService documentTypeService;
-    private final DocumentManager documentManager;
-    private final Base64Manager base64Manager;
-    private final DocumentParser documentParser;
 
-    public void addIndexDocumentElasticsearch(DocumentElasticsearch document, String base64Content, Long documentVersionId) {
+    public SearchService(ObjectMapper mapper, RestHighLevelClient client, DocumentMapper documentMapper, UserService userService, DocumentTypeService documentTypeService) {
+        this.mapper = mapper;
+        this.client = client;
+        this.documentMapper = documentMapper;
+        this.userService = userService;
+        this.documentTypeService = documentTypeService;
+    }
 
-        document.setDocumentVersionId(documentVersionId);
-        document.setIsAlive(true);
+    public void addIndexDocumentElasticsearch(DocumentElasticsearch document) {
 
-        String fullFilename = document.getId() + "." + base64Manager.getFileExtensionFromBase64(base64Content);
         try {
-
-            documentManager.saveFileFromBase64(base64Manager.removeMetadataPrefix(base64Content), fullFilename);
-            String content = documentParser.parse(documentManager.getAbsolutePath() + "/" + fullFilename);
-            document.setContent(content);
-
             IndexRequest indexRequest = new IndexRequest(INDEX_DOCUMENTS)
-                    .id(document.getId())
+                    .id(String.valueOf(document.getId()))
                     .source(mapper.writeValueAsString(document), XContentType.JSON);
 
             client.index(indexRequest, RequestOptions.DEFAULT);
@@ -72,126 +59,30 @@ public class SearchService {
             log.info("Successfully indexed document with ID: " + document.getId());
 
         } catch (IOException e) {
-            log.error("Failed to index document: " + e.getMessage());
-        } catch (Exception ex) {
-            log.error(ex.getMessage());
-        } finally {
-            if (documentManager.deleteFile(fullFilename))
-                log.info("Success delete: " + fullFilename);
-            else
-                log.error("Not deleted: " + fullFilename);
-        }
-
-    }
-
-
-    /**
-     * Updates a document in the specified index by ID.
-     *
-     * @param documentId The ID of the document to update.
-     * @param updatedFields A map of the fields and values to update.
-     * @throws IOException If there's an error with the update.
-     */
-    public void updateDocument(String documentId, Map<String, Object> updatedFields) throws IOException {
-        UpdateRequest updateRequest = new UpdateRequest(INDEX_DOCUMENTS, documentId);
-
-        updateRequest.doc(updatedFields, XContentType.JSON);
-
-        UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
-
-        if (updateResponse.getResult().name().equalsIgnoreCase("UPDATED")) {
-            log.info("Document " + documentId + " updated successfully.");
-        } else {
-            log.error("Document " + documentId + " was not updated. Status: " + updateResponse.getResult());
+            log.error("Failed to index document: " + e.getMessage(), e);
         }
     }
 
-
-    /**
-     * Searches for a document by documentVersionId and returns it as a DocumentElasticsearch object.
-     *
-     * @param documentVersionId The documentVersionId to search for.
-     * @return A DocumentElasticsearch object matching the documentVersionId, or null if not found.
-     * @throws IOException If there's an error during the search.
-     */
-    public DocumentElasticsearch searchByDocumentVersionId(long documentVersionId) throws IOException {
-
-        SearchRequest searchRequest = new SearchRequest(INDEX_DOCUMENTS);
-        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-
-        searchSourceBuilder.query(QueryBuilders.termQuery("documentVersionId", documentVersionId));
-        searchRequest.source(searchSourceBuilder);
-
-        SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
-
-        SearchHit[] searchHits = searchResponse.getHits().getHits();
-        if (searchHits.length > 0) {
-            return mapper.readValue(searchHits[0].getSourceAsString(), DocumentElasticsearch.class);
-        } else {
-            return null;
-        }
-    }
-
-    public void deleteByDocumentVersionId(long documentVersionId) throws IOException {
-        DocumentElasticsearch documentElasticsearch = searchByDocumentVersionId(documentVersionId);
-        updateDocument(documentElasticsearch.getId(), Map.of("isAlive", Boolean.FALSE));
-    }
-
-    public void recoverByDocumentVersionId(long documentVersionId) throws IOException {
-        DocumentElasticsearch documentElasticsearch = searchByDocumentVersionId(documentVersionId);
-        updateDocument(documentElasticsearch.getId(), Map.of("isAlive", Boolean.TRUE));
-    }
-
-    public List<DocumentElasticsearch> search(String searchString, List<String> attributes, List<String> documentTypes) throws Exception {
+    public List<Document> search(String searchString, List<String> attributes, List<String> documentTypes) throws Exception {
 
         SearchRequest searchRequest = new SearchRequest(INDEX_DOCUMENTS);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder request = QueryBuilders.boolQuery();
 
-        BoolQueryBuilder isAliveQuery = QueryBuilders.boolQuery()
-                .should(QueryBuilders.termQuery("isAlive", true))
-                .should(QueryBuilders.boolQuery().mustNot(QueryBuilders.existsQuery("isAlive")));
-
-        request.must(isAliveQuery);
-
         if (attributes != null && !attributes.isEmpty()) {
             BoolQueryBuilder valuesQuery = QueryBuilders.boolQuery();
+
             for (String attribute : attributes) {
                 valuesQuery.should(QueryBuilders.multiMatchQuery(attribute)
                         .field("values.*")
                         .fuzziness(Fuzziness.AUTO));
             }
+
             request.must(valuesQuery);
         }
 
-        if (searchString != null) {
-            List<QueryBuilder> strictQueries = parseStrictTerms(searchString);
-            for (QueryBuilder strictQuery : strictQueries) {
-                request.must(strictQuery);  // Exact matches must be present
-            }
-
-            List<String> notInTerms = parseNotInQuery(searchString);
-            for (String excludeTerm : notInTerms) {
-                request.mustNot(QueryBuilders.multiMatchQuery(excludeTerm, "title", "description", "content"));
-            }
-
-            String[] words = searchString.split(" ");
-            for (String word : words) {
-                word = word.trim();
-                if (!word.startsWith("\"") && !word.startsWith("!")) {
-                    if (word.length() < 4) {
-                        String wildcardQuery = "*" + word + "*";
-                        request.should(QueryBuilders.wildcardQuery("title", wildcardQuery))
-                                .should(QueryBuilders.wildcardQuery("description", wildcardQuery))
-                                .should(QueryBuilders.wildcardQuery("content", wildcardQuery));
-                    } else {
-                        request.should(QueryBuilders.multiMatchQuery(word, "title", "description", "content")
-                                .fuzziness(Fuzziness.AUTO));
-                    }
-                }
-            }
-        } else {
-            request.must(QueryBuilders.matchAllQuery());
+        if (searchString != null && !searchString.isEmpty()) {
+            request.must(QueryBuilders.multiMatchQuery(searchString, "title", "description").fuzziness(Fuzziness.AUTO));
         }
 
         searchSourceBuilder.query(request);
@@ -205,11 +96,20 @@ public class SearchService {
             documents.add(document);
         }
 
-        return documents;
+        List<Document> docs = new ArrayList<>();
+        for (DocumentElasticsearch de : documents) {
+            docs.add(
+                    documentMapper.toDocument(
+                            de,
+                            userService.findById(de.getUserId()).get(),
+                            documentTypeService.findById(de.getDocumentTypeId()).get(),
+                            de.getValues().entrySet()
+                    )
+            );
+        }
+
+        return docs;
     }
-
-
-
 
 
     private List<QueryBuilder> parseStrictTerms(String searchString) {
