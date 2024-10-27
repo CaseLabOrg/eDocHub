@@ -2,14 +2,18 @@ package com.example.ecm.controller;
 
 import com.example.ecm.aop.Loggable;
 import com.example.ecm.dto.patch_requests.PatchDocumentVersionRequest;
+import com.example.ecm.dto.requests.AddCommentRequest;
 import com.example.ecm.dto.requests.CreateDocumentRequest;
 import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
+import com.example.ecm.dto.responses.AddCommentResponse;
 import com.example.ecm.dto.responses.CreateDocumentResponse;
 import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
+import com.example.ecm.security.UserPrincipal;
 import com.example.ecm.service.DocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -45,12 +49,12 @@ public class DocumentController {
      * @return Ответ с данными документа.
      */
     @GetMapping("/{id}")
-    private ResponseEntity<CreateDocumentResponse> getDocument(@PathVariable Long id) {
+    public ResponseEntity<CreateDocumentResponse> getDocument(@PathVariable Long id) {
         return ResponseEntity.ok(documentService.getDocumentById(id));
     }
 
     @GetMapping("/{documentId}/{versionId}")
-    private ResponseEntity<CreateDocumentVersionResponse> getDocumentVersion(@PathVariable Long documentId, @PathVariable Long versionId) {
+    public ResponseEntity<CreateDocumentVersionResponse> getDocumentVersion(@PathVariable Long documentId, @PathVariable Long versionId) {
         return ResponseEntity.ok(documentService.getDocumentVersionById(documentId, versionId));
     }
 
@@ -83,7 +87,6 @@ public class DocumentController {
      *
      * @return List<CreateDocumentTypeResponse>.
      */
-
     @GetMapping
     public ResponseEntity<List<CreateDocumentResponse>> getAllDocument() {
         return ResponseEntity.ok(documentService.getAllDocuments());
@@ -104,5 +107,9 @@ public class DocumentController {
     @PatchMapping("/{id}")
     public ResponseEntity<CreateDocumentVersionResponse> patchDocumentType(@PathVariable Long id, @Valid @RequestBody PatchDocumentVersionRequest request) {
         return ResponseEntity.ok(documentService.patchDocumentVersion(id, request));
+      
+    @PostMapping("/{id}/comment")
+    public ResponseEntity<AddCommentResponse> addComment(@RequestParam Long id, @Valid @RequestBody AddCommentRequest createCommentRequest, @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return ResponseEntity.ok(documentService.addComment(id, createCommentRequest, userPrincipal));
     }
 }
