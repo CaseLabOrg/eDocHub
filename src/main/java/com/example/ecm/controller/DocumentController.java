@@ -107,7 +107,8 @@ public class DocumentController {
     @PatchMapping("/{id}")
     public ResponseEntity<CreateDocumentVersionResponse> patchDocumentType(@PathVariable Long id, @Valid @RequestBody PatchDocumentVersionRequest request) {
         return ResponseEntity.ok(documentService.patchDocumentVersion(id, request));
-      
+    }
+
     @PostMapping("/{id}/comment")
     public ResponseEntity<AddCommentResponse> addComment(@RequestParam Long id, @Valid @RequestBody AddCommentRequest createCommentRequest, @AuthenticationPrincipal UserPrincipal userPrincipal) {
         return ResponseEntity.ok(documentService.addComment(id, createCommentRequest, userPrincipal));
