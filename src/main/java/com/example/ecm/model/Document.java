@@ -37,4 +37,6 @@ public class Document {
 
     @OneToMany(mappedBy = "document", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.REMOVE})
     private List<Comment> comments = new ArrayList<>();
+
+    private Boolean isAlive;
 }

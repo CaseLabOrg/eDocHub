@@ -44,8 +44,8 @@ public class AttributeController {
      * @return Ответ с данными атрибута документа.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<CreateAttributeResponse> getAttributeById(@PathVariable Long id) {
-        return ResponseEntity.ok(attributeService.getAttributeById(id));
+    public ResponseEntity<CreateAttributeResponse> getAttributeById(@PathVariable Long id, @RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
+        return ResponseEntity.ok(attributeService.getAttributeById(id, showOnlyAlive));
     }
 
     /**
@@ -54,8 +54,8 @@ public class AttributeController {
      * @return Список всех атрибутов документов.
      */
     @GetMapping
-    public List<CreateAttributeResponse> getAllAttributes() {
-        return attributeService.getAllAttributes();
+    public List<CreateAttributeResponse> getAllAttributes(@RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
+        return attributeService.getAllAttributes(showOnlyAlive);
     }
 
     /**

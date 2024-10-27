@@ -16,7 +16,7 @@ public class CommentMapper {
     public Comment toComment(AddCommentRequest request) {
         Comment comment = new Comment();
         comment.setContent(request.getContent());
-        comment.setCreated_at(LocalDateTime.now());
+        comment.setCreatedAt(LocalDateTime.now());
         return comment;
     }
 
@@ -24,7 +24,7 @@ public class CommentMapper {
         AddCommentResponse response = new AddCommentResponse();
         response.setId(comment.getId());
         response.setAuthor(userMapper.toCreateUserResponse(comment.getAuthor()));
-        response.setCreatedAt(comment.getCreated_at());
+        response.setCreatedAt(comment.getCreatedAt());
         response.setContent(comment.getContent());
         return response;
     }
