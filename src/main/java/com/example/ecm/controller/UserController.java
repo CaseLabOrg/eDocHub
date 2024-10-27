@@ -1,6 +1,7 @@
 package com.example.ecm.controller;
 
 import com.example.ecm.aop.Loggable;
+import com.example.ecm.dto.patch_requests.PatchUserRequest;
 import com.example.ecm.dto.requests.CreateUserRequest;
 import com.example.ecm.dto.responses.CreateUserResponse;
 import com.example.ecm.dto.requests.PutRoleRequest;
@@ -93,5 +94,22 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Обрабатывает частичное обновление пользователя.
+     * <p>
+     * Метод принимает идентификатор пользователя и данные для частичного обновления,
+     * переданные в запросе. Только те поля, которые указаны в запросе, будут обновлены.
+     * Остальные поля пользователя останутся без изменений.
+     *
+     * @param id      идентификатор пользователя, который необходимо обновить
+     * @param request объект {@link PatchUserRequest}, содержащий поля для частичного обновления
+     * @return {@link ResponseEntity} с данными обновлённого пользователя в формате {@link CreateUserResponse}
+     */
+    @PatchMapping("/{id}")
+    public ResponseEntity<CreateUserResponse> patchUser(@PathVariable Long id, @Valid @RequestBody PatchUserRequest request) {
+        CreateUserResponse response = userService.patchUser(id, request);
+        return ResponseEntity.ok(response);
     }
 }

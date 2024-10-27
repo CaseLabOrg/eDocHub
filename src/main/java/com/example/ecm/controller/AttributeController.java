@@ -1,6 +1,7 @@
 package com.example.ecm.controller;
 
 import com.example.ecm.aop.Loggable;
+import com.example.ecm.dto.patch_requests.PatchAttributeRequest;
 import com.example.ecm.dto.requests.CreateAttributeRequest;
 import com.example.ecm.dto.responses.CreateAttributeResponse;
 import com.example.ecm.service.AttributeService;
@@ -81,5 +82,23 @@ public class AttributeController {
     public ResponseEntity<Void> deleteAttribute(@PathVariable Long id) {
         attributeService.deleteAttribute(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Обрабатывает частичное обновление атрибута документа.
+     * <p>
+     * Метод принимает идентификатор атрибута и данные для частичного обновления,
+     * переданные в запросе. Только те поля, которые указаны в запросе, будут обновлены.
+     * Остальные поля атрибута останутся без изменений.
+     *
+     * @param id      идентификатор атрибута, который необходимо обновить
+     * @param request объект {@link PatchAttributeRequest}, содержащий поля для частичного обновления
+     * @return {@link ResponseEntity} с данными обновлённого атрибута в формате {@link CreateAttributeResponse}
+     */
+    @PatchMapping("/{id}")
+
+    public ResponseEntity<CreateAttributeResponse> patchAttribute(@PathVariable Long id, @RequestBody PatchAttributeRequest request) {
+        CreateAttributeResponse response = attributeService.patchAttribute(id, request);
+        return ResponseEntity.ok(response);
     }
 }

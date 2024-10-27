@@ -1,5 +1,6 @@
 package com.example.ecm.service;
 
+import com.example.ecm.dto.patch_requests.PatchAttributeRequest;
 import com.example.ecm.dto.requests.CreateAttributeRequest;
 import com.example.ecm.dto.responses.CreateAttributeResponse;
 import com.example.ecm.exception.NotFoundException;
@@ -67,7 +68,7 @@ public class AttributeService {
     /**
      * Обновляет атрибут документа по идентификатору.
      *
-     * @param id идентификатор атрибута документа
+     * @param id      идентификатор атрибута документа
      * @param request запрос на обновление атрибута документа
      * @return ответ с данными обновленного атрибута документа
      */
@@ -91,5 +92,32 @@ public class AttributeService {
         Attribute attribute = attributeRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Attribute with id: " + id + " not found"));
         attributeRepository.delete(attribute);
+    }
+
+    /**
+     * Частичное обновление атрибута документа по идентификатору.
+     *
+     * @param id      идентификатор атрибута документа
+     * @param request запрос на частичное обновление атрибута документа
+     * @return ответ с данными обновленного атрибута документа
+     */
+
+    public CreateAttributeResponse patchAttribute(Long id, PatchAttributeRequest request) {
+        Attribute attribute = attributeRepository.findById(id).orElseThrow(() -> new NotFoundException("Attribute with id: " + id + " not found"));
+        if (request.getName() != null) {
+            attribute.setName(request.getName());
+        }
+
+        if (request.getRequired() != null) {
+            attribute.setRequired(request.getRequired());
+        }
+
+        if (request.getDocumentTypesNames() != null && !request.getDocumentTypesNames().isEmpty()) {
+            List<DocumentType> documentTypes = documentTypeRepository.findDocumentTypesByNameIsIn(request.getDocumentTypesNames());
+            attribute.setDocumentTypes(documentTypes);
+        }
+
+
+        return attributeMapper.toAttributeResponse(attributeRepository.save(attribute));
     }
 }

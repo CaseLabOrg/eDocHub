@@ -1,6 +1,7 @@
 package com.example.ecm.controller;
 
 import com.example.ecm.aop.Loggable;
+import com.example.ecm.dto.patch_requests.PatchDocumentTypeRequest;
 import com.example.ecm.dto.requests.CreateDocumentTypeRequest;
 import com.example.ecm.dto.responses.CreateDocumentTypeResponse;
 import com.example.ecm.service.DocumentTypeService;
@@ -82,5 +83,22 @@ public class DocumentTypeController {
     public ResponseEntity<Void> deleteDocumentTypeById(@PathVariable Long id) {
         documentTypeService.deleteDocumentType(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Обновляет указанный тип документа с предоставленными изменениями.
+     *
+     * <p>Этот метод обрабатывает PATCH-запросы для обновления типа документа.
+     * Принимает ID типа документа и тело запроса с полями для обновления,
+     * и возвращает обновленный тип документа.</p>
+     *
+     * @param id      идентификатор типа документа, который требуется обновить
+     * @param request объект {@link PatchDocumentTypeRequest}, содержащий данные для обновления типа документа
+     * @return объект {@link ResponseEntity}, содержащий обновленный тип документа в ответе
+     */
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<CreateDocumentTypeResponse> patchDocumentType(@PathVariable Long id, @Valid @RequestBody PatchDocumentTypeRequest request) {
+        return ResponseEntity.ok(documentTypeService.patchDocumentType(id, request));
     }
 }
