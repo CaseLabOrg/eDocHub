@@ -132,7 +132,16 @@ public class UserService {
         User user = userRepository.findById(id)
                 .filter(User::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
-        userRepository.delete(user);
+        user.setIsAlive(false);
+        userRepository.save(user);
+    }
+
+    public void recoverUser(Long id) {
+        User user = userRepository.findById(id)
+                .filter(u -> !u.getIsAlive())
+                .orElseThrow(() -> new NotFoundException("Deleted User with id: " + id + " not found"));
+        user.setIsAlive(true);
+        userRepository.save(user);
     }
 
     /**
