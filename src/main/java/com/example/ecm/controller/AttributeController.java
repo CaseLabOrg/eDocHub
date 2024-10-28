@@ -84,6 +84,13 @@ public class AttributeController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PatchMapping("/{id}/recover")
+    public ResponseEntity<Void> recoverAttribute(@PathVariable Long id) {
+        attributeService.recoverAttribute(id);
+        return ResponseEntity.noContent().build();
+    }
+
     /**
      * Обрабатывает частичное обновление атрибута документа.
      * <p>
@@ -96,7 +103,6 @@ public class AttributeController {
      * @return {@link ResponseEntity} с данными обновлённого атрибута в формате {@link CreateAttributeResponse}
      */
     @PatchMapping("/{id}")
-
     public ResponseEntity<CreateAttributeResponse> patchAttribute(@PathVariable Long id, @RequestBody PatchAttributeRequest request) {
         CreateAttributeResponse response = attributeService.patchAttribute(id, request);
         return ResponseEntity.ok(response);

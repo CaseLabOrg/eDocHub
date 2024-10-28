@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -35,10 +37,16 @@ public class DocumentTypeService {
      * @param id идентификатор типа документа
      * @return ответ с данными типа документа
      */
-    public CreateDocumentTypeResponse getDocumentTypeById(Long id) {
-        return documentTypeRepository.findById(id)
+    public CreateDocumentTypeResponse getDocumentTypeById(Long id, Boolean showOnlyAlive) {
+        Optional<DocumentType> documentType = documentTypeRepository.findById(id);
+
+        if (showOnlyAlive) {
+            documentType = documentType.filter(DocumentType::getIsAlive);
+        }
+
+        return documentType
                 .map(documentTypeMapper::toCreateDocumentTypeResponse)
-                .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
+                .orElseThrow(() -> new NotFoundException("DocumentType with id: " + id + " not found"));
     }
 
     /**
@@ -46,8 +54,13 @@ public class DocumentTypeService {
      *
      * @return список ответов с данными всех типов документов
      */
-    public List<CreateDocumentTypeResponse> getAllDocumentTypes() {
-        return documentTypeRepository.findAll().stream()
+    public List<CreateDocumentTypeResponse> getAllDocumentTypes(Boolean showOnlyAlive) {
+        Stream<DocumentType> documentTypeStream = documentTypeRepository.findAll().stream();
+        if (showOnlyAlive) {
+            documentTypeStream = documentTypeStream.filter(DocumentType::getIsAlive);
+        }
+
+        return documentTypeStream
                 .map(documentTypeMapper::toCreateDocumentTypeResponse)
                 .toList();
     }
@@ -61,7 +74,8 @@ public class DocumentTypeService {
      */
     public CreateDocumentTypeResponse updateDocumentType(Long id, CreateDocumentTypeRequest request) {
         DocumentType documentType = documentTypeRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
+                .filter(DocumentType::getIsAlive)
+                .orElseThrow(() -> new NotFoundException("DocumentType with id: " + id + " not found"));
         documentType.setId(id);
         documentType.setName(request.getName());
 
@@ -75,8 +89,18 @@ public class DocumentTypeService {
      */
     public void deleteDocumentType(Long id) {
         DocumentType documentType = documentTypeRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
-        documentTypeRepository.delete(documentType);
+                .filter(DocumentType::getIsAlive)
+                .orElseThrow(() -> new NotFoundException("DocumentType with id: " + id + " not found"));
+        documentType.setIsAlive(false);
+        documentTypeRepository.save(documentType);
+    }
+
+    public void recoverDocumentType(Long id) {
+        DocumentType documentType = documentTypeRepository.findById(id)
+                .filter(t -> !t.getIsAlive())
+                .orElseThrow(() -> new NotFoundException("Deleted DocumentType with id: " + id + " not found"));
+        documentType.setIsAlive(true);
+        documentTypeRepository.save(documentType);
     }
 
     /**
@@ -92,7 +116,9 @@ public class DocumentTypeService {
      * @throws NotFoundException если тип документа с указанным ID не найден
      */
     public CreateDocumentTypeResponse patchDocumentType(Long id, PatchDocumentTypeRequest request) {
-        DocumentType documentType = documentTypeRepository.findById(id).orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
+        DocumentType documentType = documentTypeRepository.findById(id)
+                .filter(DocumentType::getIsAlive)
+                .orElseThrow(() -> new NotFoundException("DocumentType with id: " + id + " not found"));
 
         if (request.getName() != null) {
             documentType.setName(request.getName());
