@@ -49,13 +49,17 @@ public class DocumentController {
      * @return Ответ с данными документа.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<CreateDocumentResponse> getDocument(@PathVariable Long id) {
-        return ResponseEntity.ok(documentService.getDocumentById(id));
+    public ResponseEntity<CreateDocumentResponse> getDocument(@PathVariable Long id,
+                                                              @RequestParam(defaultValue = "true") Boolean showOnlyAlive,
+                                                              @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return ResponseEntity.ok(documentService.getDocumentById(id, showOnlyAlive, userPrincipal));
     }
 
     @GetMapping("/{documentId}/{versionId}")
-    public ResponseEntity<CreateDocumentVersionResponse> getDocumentVersion(@PathVariable Long documentId, @PathVariable Long versionId) {
-        return ResponseEntity.ok(documentService.getDocumentVersionById(documentId, versionId));
+    public ResponseEntity<CreateDocumentVersionResponse> getDocumentVersion(@PathVariable Long documentId,
+                                                                            @PathVariable Long versionId,
+                                                                            @RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
+        return ResponseEntity.ok(documentService.getDocumentVersionById(documentId, versionId, showOnlyAlive));
     }
 
     /**
@@ -82,14 +86,20 @@ public class DocumentController {
         return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping("/{id}/recover")
+    public ResponseEntity<Void> recoverDocument(@PathVariable Long id) {
+        documentService.recoverDocument(id);
+        return ResponseEntity.noContent().build();
+    }
+
     /**
      * GET-ALL-метод для удаления документа по его ID.
      *
      * @return List<CreateDocumentTypeResponse>.
      */
     @GetMapping
-    public ResponseEntity<List<CreateDocumentResponse>> getAllDocument() {
-        return ResponseEntity.ok(documentService.getAllDocuments());
+    public ResponseEntity<List<CreateDocumentResponse>> getAllDocument(@RequestParam(defaultValue = "true") Boolean showOnlyAlive, @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return ResponseEntity.ok(documentService.getAllDocuments(showOnlyAlive, userPrincipal));
     }
 
     /**
@@ -110,7 +120,8 @@ public class DocumentController {
     }
 
     @PostMapping("/{id}/comment")
-    public ResponseEntity<AddCommentResponse> addComment(@RequestParam Long id, @Valid @RequestBody AddCommentRequest createCommentRequest, @AuthenticationPrincipal UserPrincipal userPrincipal) {
+    public ResponseEntity<AddCommentResponse> addComment(@RequestParam Long id, @Valid @RequestBody AddCommentRequest createCommentRequest,
+                                                         @AuthenticationPrincipal UserPrincipal userPrincipal) {
         return ResponseEntity.ok(documentService.addComment(id, createCommentRequest, userPrincipal));
     }
 }

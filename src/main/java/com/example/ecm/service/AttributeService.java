@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Сервис для работы с атрибутами документов.
@@ -33,7 +35,7 @@ public class AttributeService {
      * @return ответ с данными созданного атрибута документа
      */
     public CreateAttributeResponse createAttribute(CreateAttributeRequest request) {
-        List<DocumentType> documentTypes = documentTypeRepository.findDocumentTypesByNameIsIn(request.getDocumentTypesNames());
+        List<DocumentType> documentTypes = documentTypeRepository.findDocumentTypesByIdIsIn(request.getDocumentTypesIds());
 
         Attribute attribute = attributeMapper.toAttribute(request);
         attribute.getDocumentTypes().addAll(documentTypes);
@@ -48,8 +50,14 @@ public class AttributeService {
      * @param id идентификатор атрибута документа
      * @return ответ с данными атрибута документа
      */
-    public CreateAttributeResponse getAttributeById(Long id) {
-        return attributeRepository.findById(id)
+    public CreateAttributeResponse getAttributeById(Long id, Boolean showOnlyALive) {
+        Optional<Attribute> attribute = attributeRepository.findById(id);
+
+        if (showOnlyALive) {
+            attribute = attribute.filter(Attribute::getIsAlive);
+        }
+
+        return attribute
                 .map(attributeMapper::toAttributeResponse)
                 .orElseThrow(() -> new NotFoundException("Attribute with id: " + id + " not found"));
     }
@@ -59,8 +67,14 @@ public class AttributeService {
      *
      * @return список ответов с данными всех атрибутов документов
      */
-    public List<CreateAttributeResponse> getAllAttributes() {
-        return attributeRepository.findAll().stream()
+    public List<CreateAttributeResponse> getAllAttributes(Boolean showOnlyALive) {
+        Stream<Attribute> attributeStream = attributeRepository.findAll().stream();
+
+        if (showOnlyALive) {
+            attributeStream = attributeStream.filter(Attribute::getIsAlive);
+        }
+
+        return attributeStream
                 .map(attributeMapper::toAttributeResponse)
                 .toList();
     }
@@ -74,8 +88,9 @@ public class AttributeService {
      */
     public CreateAttributeResponse updateAttribute(Long id, CreateAttributeRequest request) {
         Attribute attribute = attributeRepository.findById(id)
+                .filter(Attribute::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("Attribute with id: " + id + " not found"));
-        List<DocumentType> documentTypes = documentTypeRepository.findDocumentTypesByNameIsIn(request.getDocumentTypesNames());
+        List<DocumentType> documentTypes = documentTypeRepository.findDocumentTypesByIdIsIn(request.getDocumentTypesIds());
 
         attribute.setDocumentTypes(documentTypes);
         attribute.setName(request.getName());
@@ -90,8 +105,18 @@ public class AttributeService {
      */
     public void deleteAttribute(Long id) {
         Attribute attribute = attributeRepository.findById(id)
+                .filter(Attribute::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("Attribute with id: " + id + " not found"));
-        attributeRepository.delete(attribute);
+        attribute.setIsAlive(false);
+        attributeRepository.save(attribute);
+    }
+
+    public void recoverAttribute(Long id) {
+        Attribute attribute = attributeRepository.findById(id)
+                .filter(attr -> !attr.getIsAlive())
+                .orElseThrow(() -> new NotFoundException("Deleted Attribute with id: " + id + " not found"));
+        attribute.setIsAlive(true);
+        attributeRepository.save(attribute);
     }
 
     /**
@@ -103,7 +128,9 @@ public class AttributeService {
      */
 
     public CreateAttributeResponse patchAttribute(Long id, PatchAttributeRequest request) {
-        Attribute attribute = attributeRepository.findById(id).orElseThrow(() -> new NotFoundException("Attribute with id: " + id + " not found"));
+        Attribute attribute = attributeRepository.findById(id)
+                .filter(Attribute::getIsAlive)
+                .orElseThrow(() -> new NotFoundException("Attribute with id: " + id + " not found"));
         if (request.getName() != null) {
             attribute.setName(request.getName());
         }
@@ -112,8 +139,8 @@ public class AttributeService {
             attribute.setRequired(request.getRequired());
         }
 
-        if (request.getDocumentTypesNames() != null && !request.getDocumentTypesNames().isEmpty()) {
-            List<DocumentType> documentTypes = documentTypeRepository.findDocumentTypesByNameIsIn(request.getDocumentTypesNames());
+        if (request.getDocumentTypesIds() != null && !request.getDocumentTypesIds().isEmpty()) {
+            List<DocumentType> documentTypes = documentTypeRepository.findDocumentTypesByIdIsIn(request.getDocumentTypesIds());
             attribute.setDocumentTypes(documentTypes);
         }
 

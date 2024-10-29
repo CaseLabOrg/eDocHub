@@ -45,8 +45,9 @@ public class DocumentTypeController {
      * @return Ответ с данными типа документа.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<CreateDocumentTypeResponse> getDocumentTypeById(@PathVariable Long id) {
-        return ResponseEntity.ok(documentTypeService.getDocumentTypeById(id));
+    public ResponseEntity<CreateDocumentTypeResponse> getDocumentTypeById(@PathVariable Long id,
+                                                                          @RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
+        return ResponseEntity.ok(documentTypeService.getDocumentTypeById(id, showOnlyAlive));
     }
 
     /**
@@ -55,8 +56,8 @@ public class DocumentTypeController {
      * @return Список всех типов документов.
      */
     @GetMapping
-    public List<CreateDocumentTypeResponse> getAllDocumentTypes() {
-        return documentTypeService.getAllDocumentTypes();
+    public List<CreateDocumentTypeResponse> getAllDocumentTypes(@RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
+        return documentTypeService.getAllDocumentTypes(showOnlyAlive);
     }
 
     /**
@@ -82,6 +83,13 @@ public class DocumentTypeController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteDocumentTypeById(@PathVariable Long id) {
         documentTypeService.deleteDocumentType(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PatchMapping("/{id}/recover")
+    public ResponseEntity<Void> recoverAttribute(@PathVariable Long id) {
+        documentTypeService.recoverDocumentType(id);
         return ResponseEntity.noContent().build();
     }
 

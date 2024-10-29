@@ -23,6 +23,7 @@ public class AttributeMapper {
         Attribute attribute = new Attribute();
         attribute.setName(request.getName());
         attribute.setRequired(request.getRequired());
+        attribute.setIsAlive(true);
         return attribute;
     }
 

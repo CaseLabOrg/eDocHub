@@ -40,7 +40,7 @@ public class VotingService {
     public StartVotingResponse startVoting(StartVotingRequest startVotingRequest) {
         DocumentVersion documentVersion = documentVersionRepository.findByDocumentIdAndVersionId(startVotingRequest.getDocumentId(), startVotingRequest.getDocumentVersionId())
                 .orElseThrow(() -> new NotFoundException("Document Version with id: " + startVotingRequest.getDocumentId() + " or Document id " + startVotingRequest.getDocumentVersionId() + " not found"));
-        String base64Content = documentService.getDocumentVersionById(startVotingRequest.getDocumentId(), startVotingRequest.getDocumentVersionId()).getBase64Content();
+        String base64Content = documentService.getDocumentVersionById(startVotingRequest.getDocumentId(), startVotingRequest.getDocumentVersionId(), true).getBase64Content();
 
         List<SignatureRequest> signatureRequests = sendAllParticipantsToVote(startVotingRequest);
         Voting voting = votingMapper.toVoting(startVotingRequest, documentVersion, "ACTIVE");
