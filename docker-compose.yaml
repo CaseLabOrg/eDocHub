@@ -10,10 +10,6 @@ services:
       POSTGRES_PASSWORD: 123
     ports:
       - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      retries: 5
 
   minio:
     image: quay.io/minio/minio:RELEASE.2024-10-13T13-34-11Z
@@ -32,22 +28,16 @@ services:
   elasticsearch:
     image: elasticsearch:8.10.1
     environment:
-      - discovery.type=single-node
-      - ELASTIC_PASSWORD=F8x6X_xkjA105DiuWTxC
-      - "http.port=10200"
-      - "transport.port=10300"
-      - "xpack.security.enabled=false"
-      - "xpack.security.transport.ssl.enabled=false"
-      - "xpack.security.http.ssl.enabled=false"
+      discovery.type: "single-node"
+      ELASTIC_PASSWORD: "F8x6X_xkjA105DiuWTxC"
+      http.port: "10200"
+      transport.port: "10300"
+      xpack.security.enabled: "false"
+      xpack.security.transport.ssl.enabled: "false"
+      xpack.security.http.ssl.enabled: "false"
     ports:
       - "10200:10200"
       - "10300:10300"
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:10200/_cat/health || exit 1" ]
-      interval: 20s   # Интервал между проверками
-      timeout: 10s    # Таймаут для каждой проверки
-      retries: 10     # Количество попыток
-      start_period: 40s  # Период перед началом проверок
 
   zookeeper:
     image: wurstmeister/zookeeper:latest
@@ -68,23 +58,12 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
       KAFKA_LISTENERS: INSIDE://0.0.0.0:9093,OUTSIDE://0.0.0.0:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
-    depends_on:
-      - zookeeper
 
   app:
     image: ecm
     build:
       context: .
       dockerfile: Dockerfile
-    depends_on:
-      postgres:
-        condition: service_healthy
-      elasticsearch:
-        condition: service_healthy
-      minio:
-        condition: service_started
-      kafka:
-        condition: service_started
     ports:
       - "8080:8080"
     environment:
