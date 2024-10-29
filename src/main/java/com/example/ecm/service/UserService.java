@@ -1,5 +1,6 @@
 package com.example.ecm.service;
 
+import com.example.ecm.dto.patch_requests.PatchUserRequest;
 import com.example.ecm.dto.requests.CreateUserRequest;
 import com.example.ecm.dto.responses.CreateUserResponse;
 import com.example.ecm.dto.requests.PutRoleRequest;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * Сервис для выполнения операций с пользователями, включая создание, получение,
@@ -53,21 +55,33 @@ public class UserService {
      * @param id Идентификатор пользователя
      * @return Optional с объектом пользователя, если найден
      */
-    public CreateUserResponse getUserById(Long id) {
-        return userRepository.findById(id)
-                .map(userMapper::toCreateUserResponse).orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
+    public CreateUserResponse getUserById(Long id, Boolean showOnlyALive) {
+
+        Optional<User> attribute = userRepository.findById(id);
+
+        if (showOnlyALive) {
+            attribute = attribute.filter(User::getIsAlive);
+        }
+
+        return attribute
+                .map(userMapper::toCreateUserResponse)
+                .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
     }
 
     public CreateUserResponse addRole(Long id, PutRoleRequest request) {
         Role role = roleRepository.findByName(request.getName().toUpperCase()).orElseThrow(() -> new NotFoundException("Role with name: " + request.getName().toUpperCase() + " not found"));
-        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
+        User user = userRepository.findById(id)
+                .filter(User::getIsAlive)
+                .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
         user.getRoles().add(role);
         return userMapper.toCreateUserResponse(userRepository.save(user));
     }
 
     public CreateUserResponse removeRole(Long id, PutRoleRequest request) {
         Role role = roleRepository.findByName(request.getName().toUpperCase()).orElseThrow(() -> new NotFoundException("Role with name: " + request.getName().toUpperCase() + " not found"));
-        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
+        User user = userRepository.findById(id)
+                .filter(User::getIsAlive)
+                .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
         user.getRoles().remove(role);
         return userMapper.toCreateUserResponse(userRepository.save(user));
     }
@@ -77,8 +91,14 @@ public class UserService {
      *
      * @return Список DTO с данными пользователей
      */
-    public List<CreateUserResponse> getAllUsers() {
-        return userRepository.findAll().stream()
+    public List<CreateUserResponse> getAllUsers(Boolean showOnlyALive) {
+        Stream<User> userStream = userRepository.findAll().stream();
+
+        if (showOnlyALive) {
+            userStream = userStream.filter(User::getIsAlive);
+        }
+
+        return userStream
                 .map(userMapper::toCreateUserResponse)
                 .toList();
     }
@@ -91,7 +111,9 @@ public class UserService {
      * @return Обновленный объект пользователя в виде DTO
      */
     public CreateUserResponse updateUser(Long id, CreateUserRequest updateUserRequest) {
-        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
+        User user = userRepository.findById(id)
+                .filter(User::getIsAlive)
+                .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
         user.setName(updateUserRequest.getName());
         user.setSurname(updateUserRequest.getSurname());
         user.setEmail(updateUserRequest.getEmail());
@@ -107,8 +129,19 @@ public class UserService {
      * @param id Идентификатор пользователя
      */
     public void deleteUser(Long id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
-        userRepository.delete(user);
+        User user = userRepository.findById(id)
+                .filter(User::getIsAlive)
+                .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
+        user.setIsAlive(false);
+        userRepository.save(user);
+    }
+
+    public void recoverUser(Long id) {
+        User user = userRepository.findById(id)
+                .filter(u -> !u.getIsAlive())
+                .orElseThrow(() -> new NotFoundException("Deleted User with id: " + id + " not found"));
+        user.setIsAlive(true);
+        userRepository.save(user);
     }
 
     /**
@@ -122,6 +155,36 @@ public class UserService {
 
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
+    }
+
+    /**
+     * Частичное обновление пользователя
+     * @param id идентификатор пользователя
+     * @param request запрос на частичное обновление пользователя
+     * @return ответ с данными обновленного пользователя
+     */
+    public CreateUserResponse patchUser(Long id, PatchUserRequest request) {
+        User user = userRepository.findById(id)
+                .filter(User::getIsAlive)
+                .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
+        if (request.getName() != null) {
+            user.setName(request.getName());
+        }
+
+        if (request.getSurname() != null){
+            user.setSurname(request.getSurname());
+        }
+
+        if (request.getEmail() != null) {
+            user.setEmail(request.getEmail());
+        }
+
+        if (request.getPassword() != null) {
+            user.setPassword(encoder.encode(request.getPassword()));
+        }
+
+        User updatedUser = userRepository.save(user);
+        return userMapper.toCreateUserResponse(updatedUser);
     }
 }
 

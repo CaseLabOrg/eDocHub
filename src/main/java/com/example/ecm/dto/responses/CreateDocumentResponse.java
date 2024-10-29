@@ -29,4 +29,6 @@ public class CreateDocumentResponse {
     private CreateDocumentTypeResponse documentType;
 
     private List<CreateDocumentVersionResponse> documentVersions;
+
+    private List<AddCommentResponse> comments;
 }

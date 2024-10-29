@@ -29,6 +29,7 @@ public class UserMapper {
         user.setName(request.getName());
         user.setSurname(request.getSurname());
         user.setEmail(request.getEmail());
+        user.setIsAlive(true);
         return user;
     }
 

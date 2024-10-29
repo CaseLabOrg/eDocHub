@@ -1,13 +1,19 @@
 package com.example.ecm.controller;
 
+import com.example.ecm.aop.Loggable;
+import com.example.ecm.dto.patch_requests.PatchDocumentVersionRequest;
+import com.example.ecm.dto.requests.AddCommentRequest;
 import com.example.ecm.dto.requests.CreateDocumentRequest;
 import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
+import com.example.ecm.dto.responses.AddCommentResponse;
 import com.example.ecm.dto.responses.CreateDocumentResponse;
 import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
+import com.example.ecm.security.UserPrincipal;
 import com.example.ecm.service.DocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +25,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/documents")
+@Loggable
 public class DocumentController {
 
     // Экземпляр DocumentService для обработки бизнес-логики, связанной с документами.
@@ -42,14 +49,23 @@ public class DocumentController {
      * @return Ответ с данными документа.
      */
     @GetMapping("/{id}")
-    private ResponseEntity<CreateDocumentResponse> getDocument(@PathVariable Long id) {
-        return ResponseEntity.ok(documentService.getDocumentById(id));
+    public ResponseEntity<CreateDocumentResponse> getDocument(@PathVariable Long id,
+                                                              @RequestParam(defaultValue = "true") Boolean showOnlyAlive,
+                                                              @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return ResponseEntity.ok(documentService.getDocumentById(id, showOnlyAlive, userPrincipal));
+    }
+
+    @GetMapping("/{documentId}/{versionId}")
+    public ResponseEntity<CreateDocumentVersionResponse> getDocumentVersion(@PathVariable Long documentId,
+                                                                            @PathVariable Long versionId,
+                                                                            @RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
+        return ResponseEntity.ok(documentService.getDocumentVersionById(documentId, versionId, showOnlyAlive));
     }
 
     /**
      * PUT-метод для обновления существующего документа по его ID.
      *
-     * @param id Идентификатор документа, который нужно обновить.
+     * @param id       Идентификатор документа, который нужно обновить.
      * @param document Объект запроса, содержащий обновленные данные документа.
      * @return Ответ с обновленными данными документа.
      */
@@ -70,27 +86,42 @@ public class DocumentController {
         return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping("/{id}/recover")
+    public ResponseEntity<Void> recoverDocument(@PathVariable Long id) {
+        documentService.recoverDocument(id);
+        return ResponseEntity.noContent().build();
+    }
+
     /**
      * GET-ALL-метод для удаления документа по его ID.
      *
      * @return List<CreateDocumentTypeResponse>.
      */
-
     @GetMapping
-    public List<CreateDocumentResponse> getAllDocument() {
-        return documentService.getAllDocuments();
+    public ResponseEntity<List<CreateDocumentResponse>> getAllDocument(@RequestParam(defaultValue = "true") Boolean showOnlyAlive, @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return ResponseEntity.ok(documentService.getAllDocuments(showOnlyAlive, userPrincipal));
     }
 
     /**
-     * POST-метод для подписания документа по его ID.
+     * Обновляет указанную версию документа с предоставленными изменениями.
      *
-     * @param id Идентификатор документа, который нужно подписать.
-     * @param signature Объект запроса, содержащий данные подписи.
+     * <p>Этот метод обрабатывает PATCH-запросы для обновления версии документа.
+     * Принимает ID документа и тело запроса с полями для обновления,
+     * и возвращает обновленную версию документа.</p>
+     *
+     * @param id      идентификатор документа, который требуется обновить
+     * @param request объект {@link PatchDocumentVersionRequest}, содержащий данные для обновления версии документа
+     * @return объект {@link ResponseEntity}, содержащий обновленную версию документа в ответе
      */
-    /*
-    @PostMapping("/{id}")
-    public void signDocument(@PathVariable Long id, @RequestBody CreateSignatureRequest signature) {
-        documentService.signDocument(id, signature);
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<CreateDocumentVersionResponse> patchDocumentType(@PathVariable Long id, @Valid @RequestBody PatchDocumentVersionRequest request) {
+        return ResponseEntity.ok(documentService.patchDocumentVersion(id, request));
     }
-    */
+
+    @PostMapping("/{id}/comment")
+    public ResponseEntity<AddCommentResponse> addComment(@RequestParam Long id, @Valid @RequestBody AddCommentRequest createCommentRequest,
+                                                         @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return ResponseEntity.ok(documentService.addComment(id, createCommentRequest, userPrincipal));
+    }
 }

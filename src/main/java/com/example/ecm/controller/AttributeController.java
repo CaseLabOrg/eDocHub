@@ -1,5 +1,7 @@
 package com.example.ecm.controller;
 
+import com.example.ecm.aop.Loggable;
+import com.example.ecm.dto.patch_requests.PatchAttributeRequest;
 import com.example.ecm.dto.requests.CreateAttributeRequest;
 import com.example.ecm.dto.responses.CreateAttributeResponse;
 import com.example.ecm.service.AttributeService;
@@ -18,6 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/attributes")
 @RequiredArgsConstructor
+@Loggable
 public class AttributeController {
 
     private final AttributeService attributeService;
@@ -41,8 +44,8 @@ public class AttributeController {
      * @return Ответ с данными атрибута документа.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<CreateAttributeResponse> getAttributeById(@PathVariable Long id) {
-        return ResponseEntity.ok(attributeService.getAttributeById(id));
+    public ResponseEntity<CreateAttributeResponse> getAttributeById(@PathVariable Long id, @RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
+        return ResponseEntity.ok(attributeService.getAttributeById(id, showOnlyAlive));
     }
 
     /**
@@ -51,8 +54,8 @@ public class AttributeController {
      * @return Список всех атрибутов документов.
      */
     @GetMapping
-    public List<CreateAttributeResponse> getAllAttributes() {
-        return attributeService.getAllAttributes();
+    public List<CreateAttributeResponse> getAllAttributes(@RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
+        return attributeService.getAllAttributes(showOnlyAlive);
     }
 
     /**
@@ -79,5 +82,29 @@ public class AttributeController {
     public ResponseEntity<Void> deleteAttribute(@PathVariable Long id) {
         attributeService.deleteAttribute(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PatchMapping("/{id}/recover")
+    public ResponseEntity<Void> recoverAttribute(@PathVariable Long id) {
+        attributeService.recoverAttribute(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Обрабатывает частичное обновление атрибута документа.
+     * <p>
+     * Метод принимает идентификатор атрибута и данные для частичного обновления,
+     * переданные в запросе. Только те поля, которые указаны в запросе, будут обновлены.
+     * Остальные поля атрибута останутся без изменений.
+     *
+     * @param id      идентификатор атрибута, который необходимо обновить
+     * @param request объект {@link PatchAttributeRequest}, содержащий поля для частичного обновления
+     * @return {@link ResponseEntity} с данными обновлённого атрибута в формате {@link CreateAttributeResponse}
+     */
+    @PatchMapping("/{id}")
+    public ResponseEntity<CreateAttributeResponse> patchAttribute(@PathVariable Long id, @RequestBody PatchAttributeRequest request) {
+        CreateAttributeResponse response = attributeService.patchAttribute(id, request);
+        return ResponseEntity.ok(response);
     }
 }

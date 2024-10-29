@@ -1,5 +1,7 @@
 package com.example.ecm.controller;
 
+import com.example.ecm.aop.Loggable;
+import com.example.ecm.dto.patch_requests.PatchDocumentTypeRequest;
 import com.example.ecm.dto.requests.CreateDocumentTypeRequest;
 import com.example.ecm.dto.responses.CreateDocumentTypeResponse;
 import com.example.ecm.service.DocumentTypeService;
@@ -18,6 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/document-types")
 @RequiredArgsConstructor
+@Loggable
 public class DocumentTypeController {
 
     // Экземпляр DocumentTypeService для выполнения бизнес-логики, связанной с типами документов.
@@ -42,8 +45,9 @@ public class DocumentTypeController {
      * @return Ответ с данными типа документа.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<CreateDocumentTypeResponse> getDocumentTypeById(@PathVariable Long id) {
-        return ResponseEntity.ok(documentTypeService.getDocumentTypeById(id));
+    public ResponseEntity<CreateDocumentTypeResponse> getDocumentTypeById(@PathVariable Long id,
+                                                                          @RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
+        return ResponseEntity.ok(documentTypeService.getDocumentTypeById(id, showOnlyAlive));
     }
 
     /**
@@ -52,8 +56,8 @@ public class DocumentTypeController {
      * @return Список всех типов документов.
      */
     @GetMapping
-    public List<CreateDocumentTypeResponse> getAllDocumentTypes() {
-        return documentTypeService.getAllDocumentTypes();
+    public List<CreateDocumentTypeResponse> getAllDocumentTypes(@RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
+        return documentTypeService.getAllDocumentTypes(showOnlyAlive);
     }
 
     /**
@@ -80,5 +84,29 @@ public class DocumentTypeController {
     public ResponseEntity<Void> deleteDocumentTypeById(@PathVariable Long id) {
         documentTypeService.deleteDocumentType(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PatchMapping("/{id}/recover")
+    public ResponseEntity<Void> recoverAttribute(@PathVariable Long id) {
+        documentTypeService.recoverDocumentType(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Обновляет указанный тип документа с предоставленными изменениями.
+     *
+     * <p>Этот метод обрабатывает PATCH-запросы для обновления типа документа.
+     * Принимает ID типа документа и тело запроса с полями для обновления,
+     * и возвращает обновленный тип документа.</p>
+     *
+     * @param id      идентификатор типа документа, который требуется обновить
+     * @param request объект {@link PatchDocumentTypeRequest}, содержащий данные для обновления типа документа
+     * @return объект {@link ResponseEntity}, содержащий обновленный тип документа в ответе
+     */
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<CreateDocumentTypeResponse> patchDocumentType(@PathVariable Long id, @Valid @RequestBody PatchDocumentTypeRequest request) {
+        return ResponseEntity.ok(documentTypeService.patchDocumentType(id, request));
     }
 }

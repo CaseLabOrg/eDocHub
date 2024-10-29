@@ -15,37 +15,37 @@ import java.util.List;
 @Setter
 public class CreateDocumentRequest {
 
-        /**
-         * Заголовок документа.
-         */
-        @NotBlank(message = "Title cannot be blank")
-        @NotNull(message = "Title cannot be null")
-        private String title;
+    /**
+     * Заголовок документа.
+     */
+    @NotBlank(message = "Title cannot be blank")
+    @NotNull(message = "Title cannot be null")
+    private String title;
 
-        /**
-         * Пользователь, который создает или загружает документ.
-         */
-        @NotNull(message = "userId cannot be null")
-        private Long userId;
+    /**
+     * Пользователь, который создает или загружает документ.
+     */
+    @NotNull(message = "userId cannot be null")
+    private Long userId;
 
-        /**
-         * Тип документа, определяющий его классификацию.
-         */
-        @NotNull(message = "documentTypeId cannot be null")
-        private Long documentTypeId;
+    /**
+     * Тип документа, определяющий его классификацию.
+     */
+    @NotNull(message = "documentTypeId cannot be null")
+    private Long documentTypeId;
 
-        /**
-         * Описание документа, предоставленное пользователем.
-         */
-        private String description;
+    /**
+     * Описание документа, предоставленное пользователем.
+     */
+    private String description;
 
 
-        @NotNull(message = "Values cannot be null, but can be blank")
-        private List<SetValueRequest> values;
+    @NotNull(message = "Values cannot be null, but can be blank")
+    private List<SetValueRequest> values;
 
-        /**
-         * Содержание документа
-         */
-        private String base64Content;
+    /**
+     * Содержание документа
+     */
+    private String base64Content;
 
 }
