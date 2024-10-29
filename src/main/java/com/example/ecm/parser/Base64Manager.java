@@ -9,6 +9,7 @@ public class Base64Manager {
         return switch (mimeType) {
             case "image/jpeg" -> "jpg";
             case "image/png" -> "png";
+            case "image/gif" -> "gif";
             case "application/pdf" -> "pdf";
             case "text/plain" -> "txt";
             case "application/zip" -> "zip";
