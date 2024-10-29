@@ -2,6 +2,7 @@ package com.example.ecm.service;
 
 import com.example.ecm.dto.requests.CreateSignatureRequestRequest;
 import com.example.ecm.dto.requests.StartVotingRequest;
+import com.example.ecm.dto.responses.CancelVotingResponse;
 import com.example.ecm.dto.responses.StartVotingResponse;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.mapper.VotingMapper;
@@ -39,7 +40,7 @@ public class VotingService {
     public StartVotingResponse startVoting(StartVotingRequest startVotingRequest) {
         DocumentVersion documentVersion = documentVersionRepository.findByDocumentIdAndVersionId(startVotingRequest.getDocumentId(), startVotingRequest.getDocumentVersionId())
                 .orElseThrow(() -> new NotFoundException("Document Version with id: " + startVotingRequest.getDocumentId() + " or Document id " + startVotingRequest.getDocumentVersionId() + " not found"));
-        String base64Content = documentService.getDocumentVersionById(startVotingRequest.getDocumentId(), startVotingRequest.getDocumentVersionId()).getBase64Content();
+        String base64Content = documentService.getDocumentVersionById(startVotingRequest.getDocumentId(), startVotingRequest.getDocumentVersionId(), true).getBase64Content();
 
         List<SignatureRequest> signatureRequests = sendAllParticipantsToVote(startVotingRequest);
         Voting voting = votingMapper.toVoting(startVotingRequest, documentVersion, "ACTIVE");
@@ -50,8 +51,21 @@ public class VotingService {
         return votingMapper.toStartVotingResponse(voting, base64Content);
     }
 
+    public CancelVotingResponse cancelVoting(Long votingId) {
+        Voting voting = votingRepository.findById(votingId)
+                .orElseThrow(() -> new NotFoundException("Voting with id: " + votingId + " not found"));
+
+        if (!voting.getStatus().equals("ACTIVE")) {
+            throw new NotFoundException("Voting with id: " + votingId + " is not active");
+        }
+        voting.setStatus("NEW_CANCELED");
+        votingRepository.save(voting);
+
+        return votingMapper.toCancelVotingResponse(voting);
+    }
+
     @Scheduled(cron = "@daily")
-    private void activeVotingsResultUpdate() {
+    private void votingsResultsUpdate() {
         votingRepository.findByStatus("ACTIVE").forEach(voting -> {
             int all = voting.getSignatureRequests().size();
             long inFavor = voting.getSignatureRequests().stream()
@@ -66,12 +80,22 @@ public class VotingService {
 
             votingRepository.save(voting);
         });
+        votingRepository.findByStatus("NEW_CANCELED").forEach(voting -> {
+            voting.setStatus("CANCELED");
+            notifyParticipants(voting);
+        });
     }
 
     private void notifyParticipants(Voting voting) {
         for (SignatureRequest signatureRequest : voting.getSignatureRequests()) {
-            String text = "Голосование завершилось. Благодарим за участие! Поддержало: %s%%, необходимо для принятия: %s%%."
-                    .formatted(voting.getCurrentApprovalRate(), voting.getApprovalThreshold());
+            String text;
+            String documentTitle = voting.getDocumentVersion().getTitle();
+            if (voting.getStatus().equals("CANCELED"))  {
+                text = "Голосование по принятию документа \"%s\" было отменено".formatted(documentTitle);
+            } else  {
+                text = "Голосование по принятию документа \"%s\"завершилось. Благодарим за участие! Поддержало: %s%%, необходимо для принятия: %s%%."
+                    .formatted(documentTitle, voting.getCurrentApprovalRate(), voting.getApprovalThreshold());
+            }
 
             mailNotificationService.send(signatureRequest.getUserTo().getEmail(), "Результаты голосования", text);
         }

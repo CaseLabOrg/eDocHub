@@ -29,7 +29,7 @@ public class MailNotificationService {
     public void notifyUserSignature(Long userId, String documentTitle){
         String subject = "Подпишите документ";
         String text = String.format("Вам пришел документ \"%s\" на подпись", documentTitle);
-        String userEmail = userService.getUserById(userId).getEmail();
+        String userEmail = userService.getUserById(userId, true).getEmail();
 
         send(userEmail, subject, text);
     }

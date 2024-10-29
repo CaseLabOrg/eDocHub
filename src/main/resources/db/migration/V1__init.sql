@@ -1,12 +1,14 @@
 CREATE TABLE Documents(
                           id BIGSERIAL PRIMARY KEY,
                           user_id BIGINT,
-                          type_id BIGINT
+                          type_id BIGINT,
+                          is_alive BOOLEAN
 );
 
 CREATE TABLE Document_Types(
                                id BIGSERIAL PRIMARY KEY,
                                name VARCHAR(255),
+                               is_alive BOOLEAN,
                                constraint uniq_name UNIQUE(name)
 );
 
@@ -20,7 +22,8 @@ CREATE TABLE Document_Types_Attributes(
 CREATE TABLE Attributes(
                            id BIGSERIAL PRIMARY KEY,
                            name VARCHAR(255),
-                           required BOOLEAN
+                           required BOOLEAN,
+                           is_alive BOOLEAN
 );
 
 CREATE TABLE Values(
@@ -36,6 +39,7 @@ CREATE TABLE Users(
                       surname VARCHAR(255),
                       email VARCHAR(255),
                       password VARCHAR(255),
+                      is_alive BOOLEAN,
                       constraint uniq_email UNIQUE(email)
 );
 
@@ -84,4 +88,12 @@ CREATE TABLE Votings (
                          current_approval_rate FLOAT,
                          created_at TIMESTAMP NOT NULL,
                          deadline TIMESTAMP NOT NULL
+);
+
+CREATE TABLE Comments (
+                         id BIGSERIAL PRIMARY KEY,
+                         document_id BIGINT,
+                         author_id BIGINT,
+                         content TEXT NOT NULL,
+                         created_at TIMESTAMP NOT NULL
 );

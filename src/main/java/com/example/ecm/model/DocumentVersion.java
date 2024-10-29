@@ -56,4 +56,6 @@ public class DocumentVersion {
     /** Подписи документа */
     @OneToMany(mappedBy = "documentVersion", fetch = FetchType.LAZY)
     private List<Signature> signatures = new ArrayList<>();
+
+    private Boolean isAlive;
 }

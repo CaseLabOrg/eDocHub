@@ -11,7 +11,7 @@ public class PatchAttributeRequest {
     /**
      * Название типа документа, к которому относится атрибут
      */
-    private List<String> documentTypesNames;
+    private List<Long> documentTypesIds;
 
     /**
      * Имя атрибута, которое описывает его назначение
