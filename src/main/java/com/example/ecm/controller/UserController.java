@@ -98,7 +98,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
-    @DeleteMapping("/{id}/recover")
+    @PatchMapping("/{id}/recover")
     public ResponseEntity<Void> recoverUser(@PathVariable Long id) {
         userService.recoverUser(id);
         return ResponseEntity.noContent().build();

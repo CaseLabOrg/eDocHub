@@ -85,6 +85,12 @@ public class DocumentController {
         return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping("/{id}/recover")
+    public ResponseEntity<Void> recoverDocument(@PathVariable Long id) {
+        documentService.recoverDocument(id);
+        return ResponseEntity.noContent().build();
+    }
+
     /**
      * GET-ALL-метод для удаления документа по его ID.
      *
