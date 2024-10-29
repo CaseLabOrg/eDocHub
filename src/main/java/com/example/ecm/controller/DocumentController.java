@@ -50,8 +50,9 @@ public class DocumentController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<CreateDocumentResponse> getDocument(@PathVariable Long id,
-                                                              @RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
-        return ResponseEntity.ok(documentService.getDocumentById(id, showOnlyAlive));
+                                                              @RequestParam(defaultValue = "true") Boolean showOnlyAlive,
+                                                              @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return ResponseEntity.ok(documentService.getDocumentById(id, showOnlyAlive, userPrincipal));
     }
 
     @GetMapping("/{documentId}/{versionId}")
@@ -97,8 +98,8 @@ public class DocumentController {
      * @return List<CreateDocumentTypeResponse>.
      */
     @GetMapping
-    public ResponseEntity<List<CreateDocumentResponse>> getAllDocument(@RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
-        return ResponseEntity.ok(documentService.getAllDocuments(showOnlyAlive));
+    public ResponseEntity<List<CreateDocumentResponse>> getAllDocument(@RequestParam(defaultValue = "true") Boolean showOnlyAlive, @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return ResponseEntity.ok(documentService.getAllDocuments(showOnlyAlive, userPrincipal));
     }
 
     /**

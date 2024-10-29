@@ -5,7 +5,9 @@ import com.example.ecm.dto.requests.CreateDocumentTypeRequest;
 import com.example.ecm.dto.responses.CreateDocumentTypeResponse;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.mapper.DocumentTypeMapper;
+import com.example.ecm.model.Attribute;
 import com.example.ecm.model.DocumentType;
+import com.example.ecm.repository.AttributeRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class DocumentTypeService {
     private final DocumentTypeRepository documentTypeRepository;
+    private final AttributeRepository attributeRepository;
     private final DocumentTypeMapper documentTypeMapper;
 
     /**
@@ -28,6 +31,9 @@ public class DocumentTypeService {
      */
     public CreateDocumentTypeResponse createDocumentType(CreateDocumentTypeRequest request) {
         DocumentType documentType = documentTypeRepository.save(documentTypeMapper.toDocumentType(request));
+        List<Attribute> attributes = attributeRepository.findAttributesByIdIsIn(request.getAttributeIds());
+        documentType.setAttributes(attributes);
+
         return documentTypeMapper.toCreateDocumentTypeResponse(documentType);
     }
 

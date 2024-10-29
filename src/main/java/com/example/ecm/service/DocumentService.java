@@ -107,11 +107,15 @@ public class DocumentService {
      * @return ответ с данными документа
      * @throws RuntimeException если документ не найден
      */
-    public CreateDocumentResponse getDocumentById(Long id, Boolean showOnlyAlive) {
+    public CreateDocumentResponse getDocumentById(Long id, Boolean showOnlyAlive, UserPrincipal userPrincipal) {
         Optional<Document> document = documentRepository.findById(id);
 
         if (showOnlyAlive) {
             document = document.filter(Document::getIsAlive);
+        }
+
+        if (!userPrincipal.isAdmin()) {
+            document = document.filter(d -> d.getUser().getId().equals(userPrincipal.getId()));
         }
 
         Document doc = document.orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
@@ -143,12 +147,16 @@ public class DocumentService {
      *
      * @return список ответов с данными всех документов
      */
-    public List<CreateDocumentResponse> getAllDocuments(Boolean showOnlyAlive) {
+    public List<CreateDocumentResponse> getAllDocuments(Boolean showOnlyAlive, UserPrincipal userPrincipal) {
 
         Stream<Document> documentStream = documentRepository.findAll().stream();
 
         if (showOnlyAlive) {
             documentStream = documentStream.filter(Document::getIsAlive);
+        }
+
+        if (!userPrincipal.isAdmin()) {
+            documentStream = documentStream.filter(d -> d.getUser().getId().equals(userPrincipal.getId()));
         }
 
         return documentStream
