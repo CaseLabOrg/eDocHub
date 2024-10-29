@@ -1,20 +1,22 @@
 package com.example.ecm.config;
 
+import com.example.ecm.model.elasticsearch.DocumentElasticsearch;
+import jakarta.annotation.PostConstruct;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.elasticsearch.client.ClientConfiguration;
+import org.springframework.data.elasticsearch.client.RestClients;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 
 @Configuration
 public class SearchConfig {
-
-    @Value("${elastic.username}")
-    private String username;
-
-    @Value("${elastic.password}")
-    private String password;
 
     @Value("${elastic.hostname}")
     private String hostname;

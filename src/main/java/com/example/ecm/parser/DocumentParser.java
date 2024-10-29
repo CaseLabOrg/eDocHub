@@ -72,10 +72,8 @@ public class DocumentParser implements ContentParser {
                 text.append(pdfStripper.getText(document));
             }
         } else if (filePath.endsWith(".jpg") || filePath.endsWith(".png")) {
-            // Для фото
             text.append(parseImg(filePath));
         } else {
-            // Для всего остального просто читаем
             try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
                 String line;
 
