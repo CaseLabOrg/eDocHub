@@ -9,7 +9,6 @@ import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
 import com.example.ecm.exception.ServerException;
 import com.example.ecm.mapper.*;
 import com.example.ecm.model.*;
-import com.example.ecm.repository.*;
 
 import com.example.ecm.dto.requests.CreateDocumentRequest;
 import com.example.ecm.dto.responses.CreateDocumentResponse;
@@ -18,9 +17,12 @@ import com.example.ecm.mapper.DocumentMapper;
 import com.example.ecm.model.Document;
 import com.example.ecm.model.DocumentType;
 import com.example.ecm.model.User;
+import com.example.ecm.parser.Base64Manager;
+import com.example.ecm.repository.*;
 import com.example.ecm.repository.DocumentRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
 import com.example.ecm.security.UserPrincipal;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -47,6 +49,12 @@ public class DocumentService {
     private final DocumentVersionRepository documentVersionRepository;
     private final AttributeRepository attributeRepository;
     private final ValueRepository valueRepository;
+    private final SignatureMapper signatureMapper;
+    private final SearchService searchService;
+    private final Base64Manager base64Manager;
+
+    private final UserService userService;
+
     private final CommentMapper commentMapper;
     private final CommentRepository commentRepository;
 
@@ -59,6 +67,7 @@ public class DocumentService {
      * @return ответ с данными созданного документа или null в случае ошибки
      */
     public CreateDocumentResponse createDocument(CreateDocumentRequest createDocumentRequest) {
+
         User user = userRepository.findById(createDocumentRequest.getUserId())
                 .orElseThrow(() -> new NotFoundException("User with id: " + createDocumentRequest.getUserId() + " not found"));
         DocumentType documentType = documentTypeRepository.findById(createDocumentRequest.getDocumentTypeId())
@@ -80,7 +89,7 @@ public class DocumentService {
 
         createDocumentVersionRequest.setDescription(documentVersion.getDescription());
         createDocumentVersionRequest.setTitle(documentVersion.getTitle());
-        createDocumentVersionRequest.setBase64Content(createDocumentRequest.getBase64Content());
+        createDocumentVersionRequest.setBase64Content(base64Manager.removeMetadataPrefix(createDocumentRequest.getBase64Content()));
 
         boolean success = minioService.addDocument(documentVersionSaved.getId(), createDocumentVersionRequest);
         if (!success) {
@@ -93,6 +102,13 @@ public class DocumentService {
         createDocumentVersionResponse.setBase64Content(createDocumentRequest.getBase64Content());
         createDocumentVersionResponse.setValues(createDocumentRequest.getValues());
         documentVersions.add(createDocumentVersionResponse);
+
+        // There add to elastic
+        searchService.addIndexDocumentElasticsearch(
+                DocumentMapper.toDocumentElasticsearch(createDocumentRequest),
+                createDocumentRequest.getBase64Content(),
+                documentVersionSaved.getId()
+        );
 
         CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(documentSaved);
         response.setDocumentVersions(documentVersions);

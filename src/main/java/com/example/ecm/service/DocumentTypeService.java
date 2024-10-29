@@ -132,4 +132,8 @@ public class DocumentTypeService {
 
         return documentTypeMapper.toCreateDocumentTypeResponse(documentTypeRepository.save(documentType));
     }
+
+    public Optional<DocumentType> findById(Long id) {
+        return documentTypeRepository.findById(id);
+    }
 }
