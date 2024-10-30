@@ -6,6 +6,9 @@ import com.example.ecm.dto.responses.CreateAttributeResponse;
 import com.example.ecm.service.AttributeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -47,14 +50,21 @@ public class AttributeController {
         return ResponseEntity.ok(attributeService.getAttributeById(id));
     }
 
+
     /**
-     * GET-метод для получения всех существующих атрибутов документов.
+     * GET-метод для получения всех существующих атрибутов документов с поддержкой пагинации.
+     * Возвращает страницу, содержащую список атрибутов документов, с указанием количества записей на странице и номера страницы.
      *
-     * @return Список всех атрибутов документов.
+     * @param page номер страницы (по умолчанию 0), указывает, какую страницу данных необходимо вернуть.
+     * @param size количество записей на странице (по умолчанию 10), указывает, сколько записей должно быть на одной странице.
+     * @return страница с атрибутами документов в виде объектов {@link CreateAttributeResponse}.
      */
     @GetMapping
-    public List<CreateAttributeResponse> getAllAttributes() {
-        return attributeService.getAllAttributes();
+    public Page<CreateAttributeResponse> getAttributes(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return attributeService.getAttributes(pageable);
     }
 
     /**

@@ -9,9 +9,13 @@ import com.example.ecm.model.DocumentType;
 import com.example.ecm.repository.AttributeRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Сервис для работы с атрибутами документов.
@@ -58,10 +62,17 @@ public class AttributeService {
      *
      * @return список ответов с данными всех атрибутов документов
      */
-    public List<CreateAttributeResponse> getAllAttributes() {
-        return attributeRepository.findAll().stream()
-                .map(attributeMapper::toAttributeResponse)
-                .toList();
+    public Page<CreateAttributeResponse> getAttributes(Pageable pageable) {
+        Page<Attribute> attributePage = attributeRepository.findAll(pageable);
+
+
+        return new PageImpl<>(
+                attributePage.stream()
+                        .map(attributeMapper::toAttributeResponse)
+                        .collect(Collectors.toList()),
+                pageable,
+                attributePage.getTotalElements()
+        );
     }
 
     /**

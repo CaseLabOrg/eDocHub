@@ -6,14 +6,12 @@ import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
 import com.example.ecm.dto.responses.CreateDocumentResponse;
 import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
 import com.example.ecm.service.DocumentService;
-import com.example.ecm.service.SignatureService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 /**
  * Контроллер, отвечающий за обработку API-запросов, связанных с документами в системе ECM.
@@ -77,17 +75,6 @@ public class DocumentController {
     public ResponseEntity<Void> deleteDocument(@PathVariable Long id) {
         documentService.deleteDocument(id);
         return ResponseEntity.noContent().build();
-    }
-
-    /**
-     * GET-ALL-метод для удаления документа по его ID.
-     *
-     * @return List<CreateDocumentTypeResponse>.
-     */
-
-    @GetMapping("/all")
-    public ResponseEntity<List<CreateDocumentResponse>> getAllDocument() {
-        return ResponseEntity.ok(documentService.getAllDocuments());
     }
 
     /**
