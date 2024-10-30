@@ -71,38 +71,21 @@ public class AttributeService {
      *
      * @return список ответов с данными всех атрибутов документов
      */
-    public Page<CreateAttributeResponse> getAttributes(Pageable pageable) {
+    public List<CreateAttributeResponse> getAllAttributes(Pageable pageable, Boolean showOnlyALive) {
         Page<Attribute> attributePage = attributeRepository.findAll(pageable);
-
-
-        return new PageImpl<>(
-                attributePage.stream()
-                        .map(attributeMapper::toAttributeResponse)
-                        .collect(Collectors.toList()),
-                pageable,
-                attributePage.getTotalElements()
-        );
-    public List<CreateAttributeResponse> getAllAttributes(Boolean showOnlyALive) {
-        Stream<Attribute> attributeStream = attributeRepository.findAll().stream();
+        Stream<Attribute> attributeStream = attributePage.stream();
 
         if (showOnlyALive) {
             attributeStream = attributeStream.filter(Attribute::getIsAlive);
         }
 
-        return attributeStream
-                .map(attributeMapper::toAttributeResponse)
-                .toList();
-    public Page<CreateAttributeResponse> getAttributes(Pageable pageable) {
-        Page<Attribute> attributePage = attributeRepository.findAll(pageable);
-
-
         return new PageImpl<>(
-                attributePage.stream()
+                attributeStream
                         .map(attributeMapper::toAttributeResponse)
                         .collect(Collectors.toList()),
                 pageable,
                 attributePage.getTotalElements()
-        );
+        ).getContent();
     }
 
     /**
@@ -165,7 +148,7 @@ public class AttributeService {
             attribute.setRequired(request.getRequired());
         }
 
-        if (request.getDocumentTypesIds() != null && !request.getDocumentTypesIds().isEmpty()) {
+        if (request.getDocumentTypesIds() != null) {
             List<DocumentType> documentTypes = documentTypeRepository.findDocumentTypesByIdIsIn(request.getDocumentTypesIds());
             attribute.setDocumentTypes(documentTypes);
         }

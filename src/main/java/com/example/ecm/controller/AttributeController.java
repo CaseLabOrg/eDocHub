@@ -7,7 +7,6 @@ import com.example.ecm.dto.responses.CreateAttributeResponse;
 import com.example.ecm.service.AttributeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -60,13 +59,12 @@ public class AttributeController {
      * @return страница с атрибутами документов в виде объектов {@link CreateAttributeResponse}.
      */
     @GetMapping
-    public List<CreateAttributeResponse> getAllAttributes(@RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
-        return attributeService.getAllAttributes(showOnlyAlive);
-    public Page<CreateAttributeResponse> getAttributes(
+    public ResponseEntity<List<CreateAttributeResponse>> getAllAttributes(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
         Pageable pageable = PageRequest.of(page, size);
-        return attributeService.getAttributes(pageable);
+        return ResponseEntity.ok(attributeService.getAllAttributes(pageable, showOnlyAlive));
     }
 
     /**

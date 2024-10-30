@@ -82,6 +82,8 @@ public class DocumentTypeService {
         DocumentType documentType = documentTypeRepository.findById(id)
                 .filter(DocumentType::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("DocumentType with id: " + id + " not found"));
+        List<Attribute> attributes = attributeRepository.findAttributesByIdIsIn(request.getAttributeIds());
+        documentType.setAttributes(attributes);
         documentType.setId(id);
         documentType.setName(request.getName());
 

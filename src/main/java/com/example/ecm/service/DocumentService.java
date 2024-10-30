@@ -151,9 +151,22 @@ public class DocumentService {
      *
      * @return список ответов с данными всех документов
      */
-    public List<CreateDocumentResponse> getAllDocuments(Boolean showOnlyAlive, UserPrincipal userPrincipal) {
+    public List<CreateDocumentResponse> getAllDocuments(Integer page, Integer size, Boolean showOnlyAlive, UserPrincipal userPrincipal) {
 
-        Stream<Document> documentStream = documentRepository.findAll().stream();
+        List<DocumentVersion> latestVersions = documentVersionRepository.findLatestDocumentVersions();
+
+        latestVersions.sort(Comparator.comparing(DocumentVersion::getCreatedAt)
+                .reversed());
+
+        List<Long> documentIds = latestVersions.stream()
+                .map(version -> version.getDocument().getId())
+                .distinct()
+                .collect(Collectors.toList());
+
+        int start = page * size;
+        int end = Math.min(start + size, latestVersions.size());
+
+        Stream<Document> documentStream = documentRepository.findAllById(documentIds.subList(start, end)).stream();
 
         if (showOnlyAlive) {
             documentStream = documentStream.filter(Document::getIsAlive);
@@ -163,13 +176,16 @@ public class DocumentService {
             documentStream = documentStream.filter(d -> d.getUser().getId().equals(userPrincipal.getId()));
         }
 
-        return documentStream
+        List<CreateDocumentResponse> createDocumentResponses = documentStream
                 .map(document -> {
                     CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document);
-
                     return getCreateDocumentResponse(document, response);
                 })
                 .toList();
+        return new PageImpl<>(
+                createDocumentResponses, PageRequest.of(page, size),
+                latestVersions.size()
+        ).getContent();
     }
 
     private CreateDocumentResponse getCreateDocumentResponse(Document document, CreateDocumentResponse response) {
@@ -261,40 +277,6 @@ public class DocumentService {
             valueRepository.save(value);
         }
     }
-
-    /**
-     * Получает постраничный список документов, отсортированных по последним версиям документов.
-     * Метод находит последние версии для каждого документа, сортирует их по дате создания и применяет пагинацию.
-     *
-     * @param page          номер страницы для получения, начиная с 0.
-     * @param size          количество документов на странице.
-     * @param sortDirection направление сортировки (например, "ASC" для по возрастанию или "DESC" для по убыванию).
-     * @param sortBy        поле, по которому производится сортировка документов (в текущей реализации сортировка выполняется по дате создания).
-     * @return {@link Page}, содержащая объекты {@link CreateDocumentResponse}, представляющие документы.
-     */
-
-    public Page<CreateDocumentResponse> getAllDocuments(int page, int size, String sortDirection, String sortBy) {
-        List<DocumentVersion> latestVersions = documentVersionRepository.findLatestDocumentVersions();
-
-        latestVersions.sort(Comparator.comparing(DocumentVersion::getCreatedAt)
-                .reversed());
-
-        List<Long> documentIds = latestVersions.stream()
-                .map(version -> version.getDocument().getId())
-                .distinct()
-                .collect(Collectors.toList());
-
-        int start = page * size;
-        int end = Math.min(start + size, latestVersions.size());
-
-        List<CreateDocumentResponse> responses = documentRepository.findAllById(documentIds.subList(start, end)).stream()
-                .map(document -> documentMapper.toCreateDocumentResponse(document))
-                .collect(Collectors.toList());
-
-        return new PageImpl<>(responses, PageRequest.of(page, size), latestVersions.size());
-    }
-
-
 
     /**
      * Частично обновляет существующую версию документа на основе переданных изменений.
