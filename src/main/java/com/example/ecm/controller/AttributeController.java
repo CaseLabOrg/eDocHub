@@ -5,6 +5,9 @@ import com.example.ecm.dto.patch_requests.PatchAttributeRequest;
 import com.example.ecm.dto.requests.CreateAttributeRequest;
 import com.example.ecm.dto.responses.CreateAttributeResponse;
 import com.example.ecm.service.AttributeService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -17,102 +20,122 @@ import java.util.List;
 
 /**
  * Контроллер для управления атрибутами документов в системе ECM.
- * Предоставляет конечные точки для создания, получения, обновления и удаления автрибутов документов.
+ * Предоставляет конечные точки для создания, получения, обновления и удаления атрибутов документов.
  */
 @RestController
 @RequestMapping("/attributes")
 @RequiredArgsConstructor
 @Loggable
+@Tag(name = "Attribute Controller", description = "Управление атрибутами документов в системе ECM")
 public class AttributeController {
 
     private final AttributeService attributeService;
 
     /**
-     * POST-метод для создания нового атрибута документа.
+     * Создает новый атрибут документа.
      *
-     * @param request Объект запроса с данными для создания нового атрибута документа.
+     * @param request Запрос с данными для создания атрибута документа.
      * @return Ответ с данными созданного атрибута документа.
      */
     @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping
-    public ResponseEntity<CreateAttributeResponse> createAttribute(@Valid @RequestBody CreateAttributeRequest request) {
+    @Operation(summary = "Создание атрибута", description = "Создает новый атрибут документа")
+    public ResponseEntity<CreateAttributeResponse> createAttribute(
+            @Valid @RequestBody CreateAttributeRequest request) {
         return ResponseEntity.ok(attributeService.createAttribute(request));
     }
 
     /**
-     * GET-метод для получения атрибута документа по его ID.
+     * Получает атрибут документа по его ID.
      *
-     * @param id Идентификатор атрибута документа.
+     * @param id            Идентификатор атрибута документа.
+     * @param showOnlyAlive Флаг, показывающий, отображать ли только активные атрибуты (по умолчанию true).
      * @return Ответ с данными атрибута документа.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<CreateAttributeResponse> getAttributeById(@PathVariable Long id, @RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
+    @Operation(summary = "Получение атрибута", description = "Возвращает атрибут документа по его ID")
+    public ResponseEntity<CreateAttributeResponse> getAttributeById(
+            @PathVariable @Parameter(description = "Идентификатор атрибута") Long id,
+            @RequestParam(defaultValue = "true") @Parameter(description = "Отображать только активные атрибуты") Boolean showOnlyAlive) {
         return ResponseEntity.ok(attributeService.getAttributeById(id, showOnlyAlive));
     }
 
     /**
-     * GET-метод для получения всех существующих атрибутов документов с поддержкой пагинации.
-     * Возвращает страницу, содержащую список атрибутов документов, с указанием количества записей на странице и номера страницы.
+     * Получает все существующие атрибуты документов с поддержкой пагинации.
      *
-     * @param page номер страницы (по умолчанию 0), указывает, какую страницу данных необходимо вернуть.
-     * @param size количество записей на странице (по умолчанию 10), указывает, сколько записей должно быть на одной странице.
-     * @return страница с атрибутами документов в виде объектов {@link CreateAttributeResponse}.
+     * @param page          Номер страницы (по умолчанию 0).
+     * @param size          Количество записей на странице (по умолчанию 10).
+     * @param showOnlyAlive Флаг, показывающий, отображать ли только активные атрибуты (по умолчанию true).
+     * @return Список атрибутов документов в виде объектов {@link CreateAttributeResponse}.
      */
     @GetMapping
+    @Operation(summary = "Получение всех атрибутов", description = "Возвращает страницу атрибутов документов с поддержкой пагинации")
     public ResponseEntity<List<CreateAttributeResponse>> getAllAttributes(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
+            @RequestParam(defaultValue = "0") @Parameter(description = "Номер страницы") int page,
+            @RequestParam(defaultValue = "10") @Parameter(description = "Количество записей на странице") int size,
+            @RequestParam(defaultValue = "true") @Parameter(description = "Отображать только активные атрибуты") Boolean showOnlyAlive) {
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(attributeService.getAllAttributes(pageable, showOnlyAlive));
     }
 
     /**
-     * PUT-метод для обновления существующего атрибута документа по его ID.
+     * Обновляет существующий атрибут документа по его ID.
      *
-     * @param id      Идентификатор атрибута документа, который нужно обновить.
-     * @param request Объект запроса с новыми данными для обновления атрибута документа.
+     * @param id      Идентификатор атрибута документа.
+     * @param request Запрос с новыми данными для обновления атрибута документа.
      * @return Ответ с обновленными данными атрибута документа.
      */
     @PreAuthorize("hasAuthority('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<CreateAttributeResponse> updateAttribute(@PathVariable Long id, @Valid @RequestBody CreateAttributeRequest request) {
+    @Operation(summary = "Обновление атрибута", description = "Обновляет атрибут документа по его ID")
+    public ResponseEntity<CreateAttributeResponse> updateAttribute(
+            @PathVariable @Parameter(description = "Идентификатор атрибута") Long id,
+            @Valid @RequestBody CreateAttributeRequest request) {
         return ResponseEntity.ok(attributeService.updateAttribute(id, request));
     }
 
     /**
-     * DELETE-метод для удаления атрибута документа по его ID.
+     * Удаляет атрибут документа по его ID.
      *
-     * @param id Идентификатор атрибута документа, который нужно удалить.
-     * @return Ответ без содержимого (No Content) после успешного удаления.
+     * @param id Идентификатор атрибута документа.
+     * @return Ответ без содержимого после успешного удаления.
      */
     @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteAttribute(@PathVariable Long id) {
+    @Operation(summary = "Удаление атрибута", description = "Удаляет атрибут документа по его ID")
+    public ResponseEntity<Void> deleteAttribute(
+            @PathVariable @Parameter(description = "Идентификатор атрибута") Long id) {
         attributeService.deleteAttribute(id);
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Восстанавливает атрибут документа по его ID.
+     *
+     * @param id Идентификатор атрибута документа.
+     * @return Ответ без содержимого после успешного восстановления.
+     */
     @PreAuthorize("hasAuthority('ADMIN')")
     @PatchMapping("/{id}/recover")
-    public ResponseEntity<Void> recoverAttribute(@PathVariable Long id) {
+    @Operation(summary = "Восстановление атрибута", description = "Восстанавливает атрибут документа по его ID")
+    public ResponseEntity<Void> recoverAttribute(
+            @PathVariable @Parameter(description = "Идентификатор атрибута") Long id) {
         attributeService.recoverAttribute(id);
         return ResponseEntity.noContent().build();
     }
 
     /**
-     * Обрабатывает частичное обновление атрибута документа.
-     * <p>
-     * Метод принимает идентификатор атрибута и данные для частичного обновления,
-     * переданные в запросе. Только те поля, которые указаны в запросе, будут обновлены.
-     * Остальные поля атрибута останутся без изменений.
+     * Обновляет указанный атрибут документа частично.
      *
-     * @param id      идентификатор атрибута, который необходимо обновить
-     * @param request объект {@link PatchAttributeRequest}, содержащий поля для частичного обновления
-     * @return {@link ResponseEntity} с данными обновлённого атрибута в формате {@link CreateAttributeResponse}
+     * @param id      Идентификатор атрибута документа.
+     * @param request Запрос с данными для частичного обновления атрибута документа.
+     * @return Ответ с обновленными данными атрибута документа.
      */
     @PatchMapping("/{id}")
-    public ResponseEntity<CreateAttributeResponse> patchAttribute(@PathVariable Long id, @RequestBody PatchAttributeRequest request) {
+    @Operation(summary = "Частичное обновление атрибута", description = "Обновляет атрибут документа частично по его ID")
+    public ResponseEntity<CreateAttributeResponse> patchAttribute(
+            @PathVariable @Parameter(description = "Идентификатор атрибута") Long id,
+            @RequestBody PatchAttributeRequest request) {
         CreateAttributeResponse response = attributeService.patchAttribute(id, request);
         return ResponseEntity.ok(response);
     }

@@ -1,10 +1,7 @@
 package com.example.ecm.service;
 
-import com.example.ecm.dto.patch_requests.PatchDocumentVersionRequest;
-import com.example.ecm.dto.requests.AddCommentRequest;
 import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
 import com.example.ecm.dto.requests.SetValueRequest;
-import com.example.ecm.dto.responses.AddCommentResponse;
 import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
 import com.example.ecm.exception.ServerException;
 import com.example.ecm.mapper.*;
@@ -20,7 +17,6 @@ import com.example.ecm.model.DocumentType;
 import com.example.ecm.model.User;
 import com.example.ecm.repository.DocumentRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
-import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -30,8 +26,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
 import java.util.stream.Collectors;
 
 /**
@@ -51,8 +45,6 @@ public class DocumentService {
     private final DocumentVersionRepository documentVersionRepository;
     private final AttributeRepository attributeRepository;
     private final ValueRepository valueRepository;
-    private final CommentMapper commentMapper;
-    private final CommentRepository commentRepository;
 
     /**
      * Создает новый документ.
@@ -111,35 +103,21 @@ public class DocumentService {
      * @return ответ с данными документа
      * @throws RuntimeException если документ не найден
      */
-    public CreateDocumentResponse getDocumentById(Long id, Boolean showOnlyAlive, UserPrincipal userPrincipal) {
-        Optional<Document> document = documentRepository.findById(id);
+    public CreateDocumentResponse getDocumentById(Long id) {
+        Document document = documentRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
 
-        if (showOnlyAlive) {
-            document = document.filter(Document::getIsAlive);
-        }
+        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document);
 
-        if (!userPrincipal.isAdmin()) {
-            document = document.filter(d -> d.getUser().getId().equals(userPrincipal.getId()));
-        }
-
-        Document doc = document.orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
-
-        CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(doc);
-
-        return getCreateDocumentResponse(doc, response);
+        return getCreateDocumentResponse(document, response);
     }
 
-    public CreateDocumentVersionResponse getDocumentVersionById(Long documentId, Long versionId, Boolean showOnlyAlive) {
-        Optional<DocumentVersion> documentVersion = documentVersionRepository.findByDocumentIdAndVersionId(documentId, versionId);
+    public CreateDocumentVersionResponse getDocumentVersionById(Long documentId, Long versionId) {
+        DocumentVersion documentVersion = documentVersionRepository.findByDocumentIdAndVersionId(documentId, versionId)
+                .orElseThrow(() -> new NotFoundException("Document Version with id: " + versionId + " or Document id " + documentId + " not found"));
 
-        if (showOnlyAlive) {
-            documentVersion = documentVersion.filter(DocumentVersion::getIsAlive);
-        }
-
-        DocumentVersion version = documentVersion.orElseThrow(() -> new NotFoundException("Document Version with id: " + versionId + " or Document id " + documentId + " not found"));
-
-        CreateDocumentVersionResponse response = documentVersionMapper.toCreateDocumentVersionResponse(version);
-        String base64Content = minioService.getBase64DocumentByName(version.getId() + "_" + version.getTitle());
+        CreateDocumentVersionResponse response = documentVersionMapper.toCreateDocumentVersionResponse(documentVersion);
+        String base64Content = minioService.getBase64DocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle());
         response.setBase64Content(base64Content);
         return response;
 
@@ -151,41 +129,16 @@ public class DocumentService {
      *
      * @return список ответов с данными всех документов
      */
-    public List<CreateDocumentResponse> getAllDocuments(Integer page, Integer size, Boolean showOnlyAlive, UserPrincipal userPrincipal) {
+    public List<CreateDocumentResponse> getAllDocuments() {
 
-        List<DocumentVersion> latestVersions = documentVersionRepository.findLatestDocumentVersions();
-
-        latestVersions.sort(Comparator.comparing(DocumentVersion::getCreatedAt)
-                .reversed());
-
-        List<Long> documentIds = latestVersions.stream()
-                .map(version -> version.getDocument().getId())
-                .distinct()
-                .collect(Collectors.toList());
-
-        int start = page * size;
-        int end = Math.min(start + size, latestVersions.size());
-
-        Stream<Document> documentStream = documentRepository.findAllById(documentIds.subList(start, end)).stream();
-
-        if (showOnlyAlive) {
-            documentStream = documentStream.filter(Document::getIsAlive);
-        }
-
-        if (!userPrincipal.isAdmin()) {
-            documentStream = documentStream.filter(d -> d.getUser().getId().equals(userPrincipal.getId()));
-        }
-
-        List<CreateDocumentResponse> createDocumentResponses = documentStream
+        return documentRepository.findAll().stream()
                 .map(document -> {
                     CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document);
+
                     return getCreateDocumentResponse(document, response);
                 })
                 .toList();
-        return new PageImpl<>(
-                createDocumentResponses, PageRequest.of(page, size),
-                latestVersions.size()
-        ).getContent();
+
     }
 
     private CreateDocumentResponse getCreateDocumentResponse(Document document, CreateDocumentResponse response) {
@@ -197,6 +150,7 @@ public class DocumentService {
                     return versionResponse;
                 })
                 .toList());
+
         return response;
     }
 
@@ -209,36 +163,18 @@ public class DocumentService {
      */
     public void deleteDocument(Long id) {
         Document document = documentRepository.findById(id)
-                .filter(Document::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
-        document.setIsAlive(false);
-        documentRepository.save(document);
+        List<DocumentVersion> list = document.getDocumentVersions();
+        documentRepository.delete(document);
+        for (DocumentVersion documentVersion : list) {
+            minioService.deleteDocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle());
+        }
     }
 
-    public void recoverDocument(Long id) {
-        Document document = documentRepository.findById(id)
-                .filter(d -> !d.getIsAlive())
-                .orElseThrow(() -> new NotFoundException("Deleted Document with id: " + id + " not found"));
-        document.setIsAlive(true);
-        documentRepository.save(document);
-    }
 
-    /**
-     * Создает новую версию документа и сохраняет её в базе данных.
-     *
-     * <p>Метод находит документ по указанному ID, создает новую версию документа,
-     * задает ей порядковый номер, время создания и связь с документом. Далее версия
-     * сохраняется в репозитории версий документов. Также сохраняются значения атрибутов
-     * для этой версии и добавляется файл документа в MinIO.</p>
-     *
-     * @param id                           идентификатор документа, для которого создается новая версия
-     * @param createDocumentVersionRequest объект {@link CreateDocumentVersionRequest}, содержащий информацию о новой версии
-     * @return объект {@link CreateDocumentVersionResponse}, содержащий данные о созданной версии
-     * @throws NotFoundException если документ с указанным ID не найден
-     */
     public CreateDocumentVersionResponse updateDocumentVersion(Long id, CreateDocumentVersionRequest createDocumentVersionRequest) {
         Document document = documentRepository.findById(id)
-                .filter(Document::getIsAlive)
+
                 .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
 
         DocumentVersion documentVersion = documentVersionMapper.toDocumentVersion(createDocumentVersionRequest);
@@ -256,16 +192,6 @@ public class DocumentService {
         return response;
     }
 
-    /**
-     * Сохраняет или обновляет значения атрибутов для указанной версии документа.
-     *
-     * <p>Метод проходит по списку значений атрибутов, находит соответствующие атрибуты в репозитории
-     * и связывает их с версией документа. Новые значения атрибутов сохраняются в базе данных.</p>
-     *
-     * @param values          список значений атрибутов для обновления
-     * @param documentVersion версия документа, для которой устанавливаются значения атрибутов
-     * @throws NotFoundException если атрибут с указанным именем не найден
-     */
     private void setValues(List<SetValueRequest> values, DocumentVersion documentVersion) {
         for (SetValueRequest newValue : values) {
             Attribute attribute = attributeRepository.findByName(newValue.getAttributeName())
@@ -279,57 +205,38 @@ public class DocumentService {
     }
 
     /**
-     * Частично обновляет существующую версию документа на основе переданных изменений.
+     * Получает постраничный список документов, отсортированных по последним версиям документов.
+     * Метод находит последние версии для каждого документа, сортирует их по дате создания и применяет пагинацию.
      *
-     * <p>Метод находит версию документа по её ID и обновляет только те поля, которые переданы
-     * в объекте {@link PatchDocumentVersionRequest}. Если передано новое содержимое (Base64),
-     * оно загружается в MinIO, а старое удаляется. Также могут быть обновлены значения атрибутов.</p>
-     *
-     * @param id      идентификатор версии документа, которую требуется обновить
-     * @param request объект {@link PatchDocumentVersionRequest}, содержащий данные для частичного обновления версии
-     * @return объект {@link CreateDocumentVersionResponse}, содержащий обновленные данные о версии документа
-     * @throws NotFoundException если версия документа с указанным ID не найдена
+     * @param page          номер страницы для получения, начиная с 0.
+     * @param size          количество документов на странице.
+     * @param ascending направление сортировки (например, "true" для по возрастанию или "false" для по убыванию).
+     * В текущей реализации сортировка выполняется по дате создания.
+     * @return {@link Page}, содержащая объекты {@link CreateDocumentResponse}, представляющие документы.
      */
-    public CreateDocumentVersionResponse patchDocument(Long id, PatchDocumentVersionRequest request) {
-        Document document= documentRepository.findById(id).orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
 
-        DocumentVersion documentVersion = document.getDocumentVersions().getLast();
+    public Page<CreateDocumentResponse> getAllDocuments(int page, int size, boolean ascending) {
+        List<DocumentVersion> latestVersions = documentVersionRepository.findLatestDocumentVersions();
 
-        if (request.getDescription() != null) {
-            documentVersion.setDescription(request.getDescription());
-        }
-        if (request.getTitle() != null) {
-            CreateDocumentVersionRequest requestDocumentVersion = documentVersionMapper.toCreateDocumentVersionRequest(documentVersion, minioService.getBase64DocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle()));
-            documentVersion.setTitle(request.getTitle());
-            requestDocumentVersion.setTitle(documentVersion.getTitle());
-            minioService.addDocument(documentVersion.getId(), requestDocumentVersion);
-        }
-        if (request.getBase64Content() != null) {
-            minioService.addDocument(documentVersion.getId(), documentVersionMapper.toCreateDocumentVersionRequest(documentVersion, request.getBase64Content()));
-        }
-        if (request.getValues() != null) {
-            setValues(request.getValues(), documentVersion);
-        }
-        CreateDocumentVersionResponse response = documentVersionMapper.toCreateDocumentVersionResponse(documentVersionRepository.save(documentVersion));
-        response.setBase64Content(minioService.getBase64DocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle()));
+        // Сортировка по дате создания в зависимости от направления
+        latestVersions.sort(Comparator.comparing(DocumentVersion::getCreatedAt,
+                ascending ? Comparator.naturalOrder() : Comparator.reverseOrder()));
 
-        documentVersionRepository.save(documentVersion);
-        return response;
+        List<Long> documentIds = latestVersions.stream()
+                .map(version -> version.getDocument().getId())
+                .distinct()
+                .collect(Collectors.toList());
 
+        int start = page * size;
+        int end = Math.min(start + size, latestVersions.size());
+
+        List<CreateDocumentResponse> responses = documentRepository.findAllById(documentIds.subList(start, end)).stream()
+                .map(document -> documentMapper.toCreateDocumentResponse(document))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(responses, PageRequest.of(page, size), latestVersions.size());
     }
 
-    public AddCommentResponse addComment(Long id, AddCommentRequest addCommentRequest, UserPrincipal userPrincipal) {
-        Comment comment = commentMapper.toComment(addCommentRequest);
-        Document document = documentRepository.findById(id)
-                .filter(Document::getIsAlive)
-                .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
-        User author = userRepository.findById(userPrincipal.getId())
-                .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
-        comment.setDocument(document);
-        comment.setAuthor(author);
 
-        comment = commentRepository.save(comment);
 
-        return commentMapper.toAddCommentResponse(comment);
-    }
 }
