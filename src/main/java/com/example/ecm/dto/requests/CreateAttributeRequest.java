@@ -18,8 +18,8 @@ public class CreateAttributeRequest {
     /**
      * Название типа документа, к которому относится атрибут
      */
-    @NotNull(message = "DocumentTypesNames cannot be null, but can be blank")
-    private List<String> documentTypesNames;
+    @NotNull(message = "DocumentTypesIds cannot be null, but can be blank")
+    private List<Long> documentTypesIds;
 
     /**
      * Имя атрибута, которое описывает его назначение

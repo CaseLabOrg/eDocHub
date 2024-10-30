@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -28,6 +28,6 @@ public class StartVotingRequest {
 
     @Future(message = "deadline cannot be in the past")
     @NotNull(message = "approvalThreshold cannot be null")
-    private LocalDateTime deadline;
+    private LocalDate deadline;
 
 }

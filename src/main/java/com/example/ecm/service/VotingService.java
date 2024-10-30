@@ -2,6 +2,7 @@ package com.example.ecm.service;
 
 import com.example.ecm.dto.requests.CreateSignatureRequestRequest;
 import com.example.ecm.dto.requests.StartVotingRequest;
+import com.example.ecm.dto.responses.CancelVotingResponse;
 import com.example.ecm.dto.responses.StartVotingResponse;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.mapper.VotingMapper;
@@ -16,16 +17,12 @@ import com.example.ecm.repository.SignatureRequestRepository;
 import com.example.ecm.repository.UserRepository;
 import com.example.ecm.repository.VotingRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -34,18 +31,16 @@ public class VotingService {
     private final VotingRepository votingRepository;
     private final VotingMapper votingMapper;
     private final DocumentService documentService;
-    @Qualifier("votingFinisherScheduler")
-    private final ScheduledExecutorService votingFinisherScheduler;
     private final DocumentRepository documentRepository;
     private final UserRepository userRepository;
     private final SignatureRequestRepository signatureRequestRepository;
     private final DocumentVersionRepository documentVersionRepository;
+    private final MailNotificationService mailNotificationService;
 
     public StartVotingResponse startVoting(StartVotingRequest startVotingRequest) {
         DocumentVersion documentVersion = documentVersionRepository.findByDocumentIdAndVersionId(startVotingRequest.getDocumentId(), startVotingRequest.getDocumentVersionId())
                 .orElseThrow(() -> new NotFoundException("Document Version with id: " + startVotingRequest.getDocumentId() + " or Document id " + startVotingRequest.getDocumentVersionId() + " not found"));
-        String base64Content = documentService.getDocumentVersionById(startVotingRequest.getDocumentId(), startVotingRequest.getDocumentVersionId()).getBase64Content();
-
+        String base64Content = documentService.getDocumentVersionById(startVotingRequest.getDocumentId(), startVotingRequest.getDocumentVersionId(), true).getBase64Content();
 
         List<SignatureRequest> signatureRequests = sendAllParticipantsToVote(startVotingRequest);
         Voting voting = votingMapper.toVoting(startVotingRequest, documentVersion, "ACTIVE");
@@ -53,29 +48,57 @@ public class VotingService {
         voting.setSignatureRequests(signatureRequests);
         votingRepository.save(voting);
 
-        votingFinisherScheduler.schedule(() -> completeVoting(voting.getId()),
-                Duration.between(LocalDateTime.now(), voting.getDeadline()).getSeconds(), TimeUnit.SECONDS);
-
         return votingMapper.toStartVotingResponse(voting, base64Content);
     }
 
-    @Scheduled(initialDelay = 1, fixedRate = 1, timeUnit = TimeUnit.DAYS)
-    private void activeVotingsResultUpdate() {
+    public CancelVotingResponse cancelVoting(Long votingId) {
+        Voting voting = votingRepository.findById(votingId)
+                .orElseThrow(() -> new NotFoundException("Voting with id: " + votingId + " not found"));
+
+        if (!voting.getStatus().equals("ACTIVE")) {
+            throw new NotFoundException("Voting with id: " + votingId + " is not active");
+        }
+        voting.setStatus("NEW_CANCELED");
+        votingRepository.save(voting);
+
+        return votingMapper.toCancelVotingResponse(voting);
+    }
+
+    @Scheduled(cron = "@daily")
+    private void votingsResultsUpdate() {
         votingRepository.findByStatus("ACTIVE").forEach(voting -> {
             int all = voting.getSignatureRequests().size();
             long inFavor = voting.getSignatureRequests().stream()
                     .filter(signatureRequest -> signatureRequest.getStatus().equals("FOR"))
                     .count();
             voting.setCurrentApprovalRate(all / (float) inFavor);
+
+            if (LocalDateTime.now().isAfter(voting.getDeadline().atStartOfDay())) {
+                voting.setStatus("COMPLETED");
+                notifyParticipants(voting);
+            }
+
             votingRepository.save(voting);
+        });
+        votingRepository.findByStatus("NEW_CANCELED").forEach(voting -> {
+            voting.setStatus("CANCELED");
+            notifyParticipants(voting);
         });
     }
 
-    private void completeVoting(Long votingId) {
-        Voting voting = votingRepository.findById(votingId)
-                .orElseThrow(() -> new NotFoundException("Voting with id: " + votingId + " not found"));
-        voting.setStatus("COMPLETED");
-        votingRepository.save(voting);
+    private void notifyParticipants(Voting voting) {
+        for (SignatureRequest signatureRequest : voting.getSignatureRequests()) {
+            String text;
+            String documentTitle = voting.getDocumentVersion().getTitle();
+            if (voting.getStatus().equals("CANCELED"))  {
+                text = "Голосование по принятию документа \"%s\" было отменено".formatted(documentTitle);
+            } else  {
+                text = "Голосование по принятию документа \"%s\"завершилось. Благодарим за участие! Поддержало: %s%%, необходимо для принятия: %s%%."
+                    .formatted(documentTitle, voting.getCurrentApprovalRate(), voting.getApprovalThreshold());
+            }
+
+            mailNotificationService.send(signatureRequest.getUserTo().getEmail(), "Результаты голосования", text);
+        }
     }
 
     private SignatureRequest sendToVote(Long id, CreateSignatureRequestRequest request) {

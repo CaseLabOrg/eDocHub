@@ -44,8 +44,8 @@ public class UserController {
      * @return DTO с данными пользователя, если найден, или 404 Not Found
      */
     @GetMapping("/{id}")
-    public ResponseEntity<CreateUserResponse> getUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getUserById(id));
+    public ResponseEntity<CreateUserResponse> getUserById(@PathVariable Long id, @RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
+        return ResponseEntity.ok(userService.getUserById(id, showOnlyAlive));
     }
 
     /**
@@ -54,8 +54,8 @@ public class UserController {
      * @return Список DTO с данными всех пользователей
      */
     @GetMapping
-    public ResponseEntity<List<CreateUserResponse>> getAllUsers() {
-        List<CreateUserResponse> users = userService.getAllUsers();
+    public ResponseEntity<List<CreateUserResponse>> getAllUsers(@RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
+        List<CreateUserResponse> users = userService.getAllUsers(showOnlyAlive);
         return ResponseEntity.ok(users);
     }
 
@@ -90,11 +90,20 @@ public class UserController {
      * @param id Идентификатор пользователя
      * @return Ответ без содержимого (204 No Content), если пользователь был удален
      */
+    @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PatchMapping("/{id}/recover")
+    public ResponseEntity<Void> recoverUser(@PathVariable Long id) {
+        userService.recoverUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
 
     /**
      * Обрабатывает частичное обновление пользователя.

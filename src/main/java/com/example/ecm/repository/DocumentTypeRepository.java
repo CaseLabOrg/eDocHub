@@ -17,5 +17,5 @@ public interface DocumentTypeRepository extends JpaRepository<DocumentType, Long
 
     Optional<DocumentType> findByName(String name);
 
-    List<DocumentType> findDocumentTypesByNameIsIn(List<String> names);
+    List<DocumentType> findDocumentTypesByIdIsIn(List<Long> ids);
 }
