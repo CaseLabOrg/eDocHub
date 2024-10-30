@@ -6,29 +6,25 @@ import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
 import com.example.ecm.dto.requests.SetValueRequest;
 import com.example.ecm.dto.responses.AddCommentResponse;
 import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
-import com.example.ecm.exception.ServerException;
+import com.example.ecm.dto.requests.CreateDocumentRequest;
+import com.example.ecm.dto.responses.CreateDocumentResponse;
 import com.example.ecm.mapper.*;
 import com.example.ecm.model.*;
 import com.example.ecm.repository.*;
-
-import com.example.ecm.dto.requests.CreateDocumentRequest;
-import com.example.ecm.dto.responses.CreateDocumentResponse;
 import com.example.ecm.exception.NotFoundException;
-import com.example.ecm.mapper.DocumentMapper;
-import com.example.ecm.model.Document;
-import com.example.ecm.model.DocumentType;
-import com.example.ecm.model.User;
-import com.example.ecm.repository.DocumentRepository;
-import com.example.ecm.repository.DocumentTypeRepository;
 import com.example.ecm.security.UserPrincipal;
+import com.example.ecm.exception.ServerException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 /**
  * Сервис для работы с документами.
@@ -147,9 +143,22 @@ public class DocumentService {
      *
      * @return список ответов с данными всех документов
      */
-    public List<CreateDocumentResponse> getAllDocuments(Boolean showOnlyAlive, UserPrincipal userPrincipal) {
+    public List<CreateDocumentResponse> getAllDocuments(Integer page, Integer size, Boolean showOnlyAlive, UserPrincipal userPrincipal) {
 
-        Stream<Document> documentStream = documentRepository.findAll().stream();
+        List<DocumentVersion> latestVersions = documentVersionRepository.findLatestDocumentVersions();
+
+        latestVersions.sort(Comparator.comparing(DocumentVersion::getCreatedAt)
+                .reversed());
+
+        List<Long> documentIds = latestVersions.stream()
+                .map(version -> version.getDocument().getId())
+                .distinct()
+                .collect(Collectors.toList());
+
+        int start = page * size;
+        int end = Math.min(start + size, latestVersions.size());
+
+        Stream<Document> documentStream = documentRepository.findAllById(documentIds.subList(start, end)).stream();
 
         if (showOnlyAlive) {
             documentStream = documentStream.filter(Document::getIsAlive);
@@ -159,13 +168,16 @@ public class DocumentService {
             documentStream = documentStream.filter(d -> d.getUser().getId().equals(userPrincipal.getId()));
         }
 
-        return documentStream
+        List<CreateDocumentResponse> createDocumentResponses = documentStream
                 .map(document -> {
                     CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document);
-
                     return getCreateDocumentResponse(document, response);
                 })
                 .toList();
+        return new PageImpl<>(
+                createDocumentResponses, PageRequest.of(page, size),
+                latestVersions.size()
+        ).getContent();
     }
 
     private CreateDocumentResponse getCreateDocumentResponse(Document document, CreateDocumentResponse response) {
@@ -297,7 +309,7 @@ public class DocumentService {
         return response;
 
     }
-  
+
     public AddCommentResponse addComment(Long id, AddCommentRequest addCommentRequest, UserPrincipal userPrincipal) {
         Comment comment = commentMapper.toComment(addCommentRequest);
         Document document = documentRepository.findById(id)
