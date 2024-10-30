@@ -71,6 +71,17 @@ public class AttributeService {
      *
      * @return список ответов с данными всех атрибутов документов
      */
+    public Page<CreateAttributeResponse> getAttributes(Pageable pageable) {
+        Page<Attribute> attributePage = attributeRepository.findAll(pageable);
+
+
+        return new PageImpl<>(
+                attributePage.stream()
+                        .map(attributeMapper::toAttributeResponse)
+                        .collect(Collectors.toList()),
+                pageable,
+                attributePage.getTotalElements()
+        );
     public List<CreateAttributeResponse> getAllAttributes(Boolean showOnlyALive) {
         Stream<Attribute> attributeStream = attributeRepository.findAll().stream();
 
