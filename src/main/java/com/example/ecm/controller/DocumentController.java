@@ -12,6 +12,7 @@ import com.example.ecm.security.UserPrincipal;
 import com.example.ecm.service.DocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import java.util.List;
 
 @Tag(name = "Document Controller", description = "Контроллер для управления документами")
 @RestController
@@ -84,7 +87,7 @@ public class DocumentController {
             @PathVariable Long documentId,
             @PathVariable Long versionId,
             @RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
-        return ResponseEntity.ok(documentService.getDocumentVersionById(documentId, versionId));
+        return ResponseEntity.ok(documentService.getDocumentVersionById(documentId, versionId, showOnlyAlive));
     }
 
     /**
@@ -152,15 +155,13 @@ public class DocumentController {
             @ApiResponse(responseCode = "404", description = "Документы не найдены")
     })
     @GetMapping
-    public ResponseEntity<Page<CreateDocumentResponse>> getAllDocuments(
+    public ResponseEntity<List<CreateDocumentResponse>> getAllDocuments(
             @RequestParam(defaultValue = "true") Boolean showOnlyAlive,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "false") boolean ascending,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
-
-        Page<CreateDocumentResponse> documents = documentService.getAllDocuments(page, size, ascending);
-        return ResponseEntity.ok(documents);
+        return ResponseEntity.ok(documentService.getAllDocuments(page, size, ascending, showOnlyAlive, userPrincipal));
     }
 
     /**

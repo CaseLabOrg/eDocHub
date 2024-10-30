@@ -143,7 +143,7 @@ public class DocumentService {
      *
      * @return список ответов с данными всех документов
      */
-    public List<CreateDocumentResponse> getAllDocuments(Integer page, Integer size, Boolean showOnlyAlive, UserPrincipal userPrincipal) {
+    public List<CreateDocumentResponse> getAllDocuments(Integer page, Integer size, Boolean ascending, Boolean showOnlyAlive, UserPrincipal userPrincipal) {
 
         List<DocumentVersion> latestVersions = documentVersionRepository.findLatestDocumentVersions();
 
