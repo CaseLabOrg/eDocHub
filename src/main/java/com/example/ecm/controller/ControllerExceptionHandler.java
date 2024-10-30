@@ -46,7 +46,7 @@ public class ControllerExceptionHandler {
     }
 
     @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<String> handleForbiddenException(ServerException ex) {
+    public ResponseEntity<String> handleForbiddenException(ForbiddenException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.FORBIDDEN);
     }
 }

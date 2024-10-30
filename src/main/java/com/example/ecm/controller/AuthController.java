@@ -21,6 +21,6 @@ public class AuthController {
 
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest request) {
-        return serviceAuth.attemptLogin(request.getUsername(), request.getPassword());
+        return serviceAuth.attemptLogin(request.getEmail(), request.getPassword());
     }
 }

@@ -1,8 +1,10 @@
 package com.example.ecm.service;
 
 import com.example.ecm.dto.patch_requests.PatchDocumentVersionRequest;
+import com.example.ecm.dto.requests.AddCommentRequest;
 import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
 import com.example.ecm.dto.requests.SetValueRequest;
+import com.example.ecm.dto.responses.AddCommentResponse;
 import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
 import com.example.ecm.exception.ServerException;
 import com.example.ecm.mapper.*;
@@ -18,6 +20,7 @@ import com.example.ecm.model.DocumentType;
 import com.example.ecm.model.User;
 import com.example.ecm.repository.DocumentRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
+import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -42,6 +45,8 @@ public class DocumentService {
     private final DocumentVersionRepository documentVersionRepository;
     private final AttributeRepository attributeRepository;
     private final ValueRepository valueRepository;
+    private final CommentMapper commentMapper;
+    private final CommentRepository commentRepository;
 
     /**
      * Создает новый документ.
@@ -147,7 +152,6 @@ public class DocumentService {
                     return versionResponse;
                 })
                 .toList());
-
         return response;
     }
 
@@ -183,7 +187,6 @@ public class DocumentService {
      */
     public CreateDocumentVersionResponse updateDocumentVersion(Long id, CreateDocumentVersionRequest createDocumentVersionRequest) {
         Document document = documentRepository.findById(id)
-
                 .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
 
         DocumentVersion documentVersion = documentVersionMapper.toDocumentVersion(createDocumentVersionRequest);
@@ -223,7 +226,6 @@ public class DocumentService {
         }
     }
 
-
     /**
      * Частично обновляет существующую версию документа на основе переданных изменений.
      *
@@ -261,5 +263,20 @@ public class DocumentService {
 
         documentVersionRepository.save(documentVersion);
         return response;
+
+    }
+  
+    public AddCommentResponse addComment(Long id, AddCommentRequest addCommentRequest, UserPrincipal userPrincipal) {
+        Comment comment = commentMapper.toComment(addCommentRequest);
+        Document document = documentRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
+        User author = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
+        comment.setDocument(document);
+        comment.setAuthor(author);
+
+        comment = commentRepository.save(comment);
+
+        return commentMapper.toAddCommentResponse(comment);
     }
 }
