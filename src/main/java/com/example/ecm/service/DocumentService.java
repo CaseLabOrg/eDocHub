@@ -236,22 +236,21 @@ public class DocumentService {
      * @return объект {@link CreateDocumentVersionResponse}, содержащий обновленные данные о версии документа
      * @throws NotFoundException если версия документа с указанным ID не найдена
      */
-    public CreateDocumentVersionResponse patchDocumentVersion(Long id, PatchDocumentVersionRequest request) {
-        DocumentVersion documentVersion = documentVersionRepository.findById(id).orElseThrow(() -> new NotFoundException("Document Version with id: " + id + " not found"));
+    public CreateDocumentVersionResponse patchDocument(Long id, PatchDocumentVersionRequest request) {
+        Document document= documentRepository.findById(id).orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
 
+        DocumentVersion documentVersion = document.getDocumentVersions().getLast();
 
         if (request.getDescription() != null) {
             documentVersion.setDescription(request.getDescription());
         }
         if (request.getTitle() != null) {
             CreateDocumentVersionRequest requestDocumentVersion = documentVersionMapper.toCreateDocumentVersionRequest(documentVersion, minioService.getBase64DocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle()));
-            minioService.deleteDocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle());
             documentVersion.setTitle(request.getTitle());
             requestDocumentVersion.setTitle(documentVersion.getTitle());
             minioService.addDocument(documentVersion.getId(), requestDocumentVersion);
         }
         if (request.getBase64Content() != null) {
-            minioService.deleteDocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle());
             minioService.addDocument(documentVersion.getId(), documentVersionMapper.toCreateDocumentVersionRequest(documentVersion, request.getBase64Content()));
         }
         if (request.getValues() != null) {
@@ -260,6 +259,7 @@ public class DocumentService {
         CreateDocumentVersionResponse response = documentVersionMapper.toCreateDocumentVersionResponse(documentVersionRepository.save(documentVersion));
         response.setBase64Content(minioService.getBase64DocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle()));
 
+        documentVersionRepository.save(documentVersion);
         return response;
     }
 }
