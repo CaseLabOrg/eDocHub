@@ -116,7 +116,7 @@ public class DocumentController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<CreateDocumentVersionResponse> patchDocumentType(@PathVariable Long id, @Valid @RequestBody PatchDocumentVersionRequest request) {
-        return ResponseEntity.ok(documentService.patchDocumentVersion(id, request));
+        return ResponseEntity.ok(documentService.patchDocument(id, request));
     }
 
     @PostMapping("/{id}/comment")
