@@ -62,6 +62,7 @@ public class DocumentService {
         Document document = new Document();
         document.setUser(user);
         document.setDocumentType(documentType);
+        document.setIsAlive(true);
         Document documentSaved = documentRepository.save(document);
 
         DocumentVersion documentVersion = documentMapper.toDocumentVersion(createDocumentRequest);
