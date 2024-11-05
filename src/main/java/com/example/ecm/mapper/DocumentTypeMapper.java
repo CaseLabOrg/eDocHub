@@ -24,6 +24,7 @@ public class DocumentTypeMapper {
     public DocumentType toDocumentType(CreateDocumentTypeRequest request) {
         DocumentType documentType = new DocumentType();
         documentType.setName(request.getName());
+        documentType.setIsAlive(true);
         return documentType;
     }
 

@@ -26,7 +26,7 @@ public class Attribute {
 
     /** Тип документа, к которому относится атрибут */
     @JsonBackReference
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "document_types_attributes",
             joinColumns = @JoinColumn(name = "id_attribute"),
@@ -40,4 +40,6 @@ public class Attribute {
 
     /** Флаг, указывающий, является ли данный атрибут обязательным для заполнения */
     private Boolean required;
+
+    private Boolean isAlive;
 }

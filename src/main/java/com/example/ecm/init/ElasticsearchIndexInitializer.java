@@ -24,17 +24,23 @@ public class ElasticsearchIndexInitializer implements CommandLineRunner {
     }
 
     @Override
-    public void run(String... args) throws Exception {
-        createIndexIfNotExists("documents", getDocumentsMapping());
+    public void run(String... args) {
+        try {
+            createIndexIfNotExists("documents", getDocumentsMapping());
+        } catch (IOException e) {
+            System.err.println("Failed to initialize Elasticsearch index: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void createIndexIfNotExists(String indexName, String mapping) throws IOException {
-        GetIndexRequest request = new GetIndexRequest(indexName);
-        boolean exists = client.indices().exists(request, RequestOptions.DEFAULT);
+        GetIndexRequest getIndexRequest = new GetIndexRequest(indexName);
+        boolean exists = client.indices().exists(getIndexRequest, RequestOptions.DEFAULT);
+
         if (!exists) {
             CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
 
-            // Настройки для анализаторов
+            // Settings for analyzers and filters
             createIndexRequest.settings(Settings.builder()
                     .put("index.number_of_shards", 1)
                     .put("index.number_of_replicas", 1)
@@ -55,17 +61,21 @@ public class ElasticsearchIndexInitializer implements CommandLineRunner {
                             "lowercase", "russian_stop", "english_stop", "russian_stemmer", "english_stemmer")
             );
 
-            // Устанавливаем маппинг
+            // Set mapping for the index
             createIndexRequest.mapping(mapping, XContentType.JSON);
             CreateIndexResponse response = client.indices().create(createIndexRequest, RequestOptions.DEFAULT);
 
             if (response.isAcknowledged()) {
-                System.out.println("Index " + indexName + " created");
+                System.out.println("Index " + indexName + " created successfully.");
+            } else {
+                System.err.println("Index creation for " + indexName + " was not acknowledged.");
             }
+        } else {
+            System.out.println("Index " + indexName + " already exists. No action needed.");
         }
     }
 
-    // Маппинг для индекса "documents" с анализаторами
+    // Mapping for the "documents" index
     private String getDocumentsMapping() {
         return """
                 {
@@ -78,7 +88,8 @@ public class ElasticsearchIndexInitializer implements CommandLineRunner {
                     "content": { "type": "text", "analyzer": "multilingual_analyzer" },
                     "title": { "type": "text", "analyzer": "multilingual_analyzer" },
                     "values": { "type": "object", "dynamic": true },
-                    "createdAt": { "type": "date", "format": "strict_date_time||epoch_millis" }
+                    "createdAt": { "type": "date", "format": "strict_date_time||epoch_millis" },
+                    "isAlive": { "type": "boolean" }
                   }
                 }""";
     }

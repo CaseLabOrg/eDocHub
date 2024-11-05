@@ -1,5 +1,7 @@
 package com.example.ecm.controller;
 
+import com.example.ecm.aop.Loggable;
+import com.example.ecm.dto.patch_requests.PatchUserRequest;
 import com.example.ecm.dto.requests.CreateUserRequest;
 import com.example.ecm.dto.responses.CreateUserResponse;
 import com.example.ecm.dto.requests.PutRoleRequest;
@@ -18,6 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
+@Loggable
 public class UserController {
 
     private final UserService userService;
@@ -41,8 +44,8 @@ public class UserController {
      * @return DTO с данными пользователя, если найден, или 404 Not Found
      */
     @GetMapping("/{id}")
-    public ResponseEntity<CreateUserResponse> getUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getUserById(id));
+    public ResponseEntity<CreateUserResponse> getUserById(@PathVariable Long id, @RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
+        return ResponseEntity.ok(userService.getUserById(id, showOnlyAlive));
     }
 
     /**
@@ -51,8 +54,8 @@ public class UserController {
      * @return Список DTO с данными всех пользователей
      */
     @GetMapping
-    public ResponseEntity<List<CreateUserResponse>> getAllUsers() {
-        List<CreateUserResponse> users = userService.getAllUsers();
+    public ResponseEntity<List<CreateUserResponse>> getAllUsers(@RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
+        List<CreateUserResponse> users = userService.getAllUsers(showOnlyAlive);
         return ResponseEntity.ok(users);
     }
 
@@ -87,9 +90,35 @@ public class UserController {
      * @param id Идентификатор пользователя
      * @return Ответ без содержимого (204 No Content), если пользователь был удален
      */
+    @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PatchMapping("/{id}/recover")
+    public ResponseEntity<Void> recoverUser(@PathVariable Long id) {
+        userService.recoverUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
+
+    /**
+     * Обрабатывает частичное обновление пользователя.
+     * <p>
+     * Метод принимает идентификатор пользователя и данные для частичного обновления,
+     * переданные в запросе. Только те поля, которые указаны в запросе, будут обновлены.
+     * Остальные поля пользователя останутся без изменений.
+     *
+     * @param id      идентификатор пользователя, который необходимо обновить
+     * @param request объект {@link PatchUserRequest}, содержащий поля для частичного обновления
+     * @return {@link ResponseEntity} с данными обновлённого пользователя в формате {@link CreateUserResponse}
+     */
+    @PatchMapping("/{id}")
+    public ResponseEntity<CreateUserResponse> patchUser(@PathVariable Long id, @Valid @RequestBody PatchUserRequest request) {
+        CreateUserResponse response = userService.patchUser(id, request);
+        return ResponseEntity.ok(response);
     }
 }

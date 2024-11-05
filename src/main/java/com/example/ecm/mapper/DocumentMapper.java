@@ -26,6 +26,7 @@ public class DocumentMapper {
     private final DocumentTypeMapper documentTypeMapper;
     private final UserMapper userMapper;
     private final AttributeService attributeService;
+    private final CommentMapper commentMapper;
     /**
      * Преобразует запрос на создание документа (CreateDocumentRequest) в объект сущности Document.
      *
@@ -59,6 +60,9 @@ public class DocumentMapper {
         createDocumentResponse.setId(document.getId());
         createDocumentResponse.setUser(userMapper.toCreateUserResponse(document.getUser()));
         createDocumentResponse.setDocumentType(documentTypeMapper.toCreateDocumentTypeResponse(document.getDocumentType()));
+        createDocumentResponse.setComments(document.getComments().stream()
+                .map(commentMapper::toAddCommentResponse)
+                .toList());
 
         return createDocumentResponse;
     }
