@@ -137,6 +137,11 @@ public class SearchService {
         updateDocument(documentElasticsearch.getId(), Map.of("isAlive", Boolean.FALSE));
     }
 
+    public void recoverByDocumentVersionId(long documentVersionId) throws IOException {
+        DocumentElasticsearch documentElasticsearch = searchByDocumentVersionId(documentVersionId);
+        updateDocument(documentElasticsearch.getId(), Map.of("isAlive", Boolean.TRUE));
+    }
+
     public List<DocumentElasticsearch> search(String searchString, List<String> attributes, List<String> documentTypes) throws Exception {
 
         SearchRequest searchRequest = new SearchRequest(INDEX_DOCUMENTS);
