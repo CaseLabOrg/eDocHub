@@ -53,6 +53,8 @@ public class SearchService {
     public void addIndexDocumentElasticsearch(DocumentElasticsearch document, String base64Content, Long documentVersionId) {
 
         document.setDocumentVersionId(documentVersionId);
+        document.setIsAlive(true);
+
         String fullFilename = document.getId() + "." + base64Manager.getFileExtensionFromBase64(base64Content);
         try {
 
@@ -82,6 +84,64 @@ public class SearchService {
 
     }
 
+
+    /**
+     * Updates a document in the specified index by ID.
+     *
+     * @param documentId The ID of the document to update.
+     * @param updatedFields A map of the fields and values to update.
+     * @throws IOException If there's an error with the update.
+     */
+    public void updateDocument(String documentId, Map<String, Object> updatedFields) throws IOException {
+        UpdateRequest updateRequest = new UpdateRequest(INDEX_DOCUMENTS, documentId);
+
+        updateRequest.doc(updatedFields, XContentType.JSON);
+
+        UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
+
+        if (updateResponse.getResult().name().equalsIgnoreCase("UPDATED")) {
+            log.info("Document " + documentId + " updated successfully.");
+        } else {
+            log.error("Document " + documentId + " was not updated. Status: " + updateResponse.getResult());
+        }
+    }
+
+
+    /**
+     * Searches for a document by documentVersionId and returns it as a DocumentElasticsearch object.
+     *
+     * @param documentVersionId The documentVersionId to search for.
+     * @return A DocumentElasticsearch object matching the documentVersionId, or null if not found.
+     * @throws IOException If there's an error during the search.
+     */
+    public DocumentElasticsearch searchByDocumentVersionId(long documentVersionId) throws IOException {
+
+        SearchRequest searchRequest = new SearchRequest(INDEX_DOCUMENTS);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+        searchSourceBuilder.query(QueryBuilders.termQuery("documentVersionId", documentVersionId));
+        searchRequest.source(searchSourceBuilder);
+
+        SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+
+        SearchHit[] searchHits = searchResponse.getHits().getHits();
+        if (searchHits.length > 0) {
+            return mapper.readValue(searchHits[0].getSourceAsString(), DocumentElasticsearch.class);
+        } else {
+            return null;
+        }
+    }
+
+    public void deleteByDocumentVersionId(long documentVersionId) throws IOException {
+        DocumentElasticsearch documentElasticsearch = searchByDocumentVersionId(documentVersionId);
+        updateDocument(documentElasticsearch.getId(), Map.of("isAlive", Boolean.FALSE));
+    }
+
+    public void recoverByDocumentVersionId(long documentVersionId) throws IOException {
+        DocumentElasticsearch documentElasticsearch = searchByDocumentVersionId(documentVersionId);
+        updateDocument(documentElasticsearch.getId(), Map.of("isAlive", Boolean.TRUE));
+    }
+
     public List<DocumentElasticsearch> search(String searchString, List<String> attributes, List<String> documentTypes) throws Exception {
 
         SearchRequest searchRequest = new SearchRequest(INDEX_DOCUMENTS);
@@ -90,25 +150,39 @@ public class SearchService {
 
         if (attributes != null && !attributes.isEmpty()) {
             BoolQueryBuilder valuesQuery = QueryBuilders.boolQuery();
-
             for (String attribute : attributes) {
                 valuesQuery.should(QueryBuilders.multiMatchQuery(attribute)
                         .field("values.*")
                         .fuzziness(Fuzziness.AUTO));
             }
-
             request.must(valuesQuery);
         }
 
         if (searchString != null) {
-            if (searchString.length() < 4) {
-                String wildcardQuery = "*" + searchString + "*";
-                request.should(QueryBuilders.wildcardQuery("title", wildcardQuery))
-                        .should(QueryBuilders.wildcardQuery("description", wildcardQuery))
-                        .should(QueryBuilders.wildcardQuery("content", wildcardQuery));
-            } else {
-                request.must(QueryBuilders.multiMatchQuery(searchString, "title", "description", "content")
-                        .fuzziness(Fuzziness.AUTO));
+            List<QueryBuilder> strictQueries = parseStrictTerms(searchString);
+            for (QueryBuilder strictQuery : strictQueries) {
+                request.must(strictQuery);  // Exact matches must be present
+            }
+
+            List<String> notInTerms = parseNotInQuery(searchString);
+            for (String excludeTerm : notInTerms) {
+                request.mustNot(QueryBuilders.multiMatchQuery(excludeTerm, "title", "description", "content"));
+            }
+
+            String[] words = searchString.split(" ");
+            for (String word : words) {
+                word = word.trim();
+                if (!word.startsWith("\"") && !word.startsWith("!")) {
+                    if (word.length() < 4) {
+                        String wildcardQuery = "*" + word + "*";
+                        request.should(QueryBuilders.wildcardQuery("title", wildcardQuery))
+                                .should(QueryBuilders.wildcardQuery("description", wildcardQuery))
+                                .should(QueryBuilders.wildcardQuery("content", wildcardQuery));
+                    } else {
+                        request.should(QueryBuilders.multiMatchQuery(word, "title", "description", "content")
+                                .fuzziness(Fuzziness.AUTO));
+                    }
+                }
             }
         } else {
             request.must(QueryBuilders.matchAllQuery());
@@ -125,20 +199,11 @@ public class SearchService {
             documents.add(document);
         }
 
-//        List<Document> docs = new ArrayList<>();
-//        for (DocumentElasticsearch de : documents) {
-//            docs.add(
-//                    documentMapper.toDocument(
-//                            de,
-//                            userService.findById(de.getUserId()).get(),
-//                            documentTypeService.findById(de.getDocumentTypeId()).get(),
-//                            de.getValues().entrySet()
-//                    )
-//            );
-//        }
-
         return documents;
     }
+
+
+
 
 
     private List<QueryBuilder> parseStrictTerms(String searchString) {

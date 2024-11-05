@@ -150,7 +150,7 @@ public class DocumentController {
             @ApiResponse(responseCode = "404", description = "Документ не найден")
     })
     @PatchMapping("/{id}/recover")
-    public ResponseEntity<Void> recoverDocument(@PathVariable Long id) {
+    public ResponseEntity<Void> recoverDocument(@PathVariable Long id) throws IOException {
         documentService.recoverDocument(id);
         return ResponseEntity.noContent().build();
     }
