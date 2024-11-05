@@ -45,4 +45,6 @@ public class DocumentElasticsearch {
     @Field(type = FieldType.Object)
     private Map<String, String> values;
 
+    @Field(type = FieldType.Boolean)
+    private Boolean isAlive;
 }
