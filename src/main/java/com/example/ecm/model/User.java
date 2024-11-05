@@ -2,7 +2,6 @@ package com.example.ecm.model;
 
 import jakarta.persistence.*;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.proxy.HibernateProxy;
@@ -17,7 +16,6 @@ import java.util.Set;
 @Table(name = "users")
 @Getter
 @Setter
-@EqualsAndHashCode
 public class User {
 
     /**
@@ -51,6 +49,10 @@ public class User {
      */
     @Column(nullable = false)
     private String password;
+
+    @ManyToOne
+    @JoinColumn(name = "department_id")
+    private Department department;
 
     /**
      * Роли пользователя
