@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -81,7 +82,7 @@ public class DocumentController {
      * @return Ответ без содержимого (No Content) после успешного удаления.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDocument(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteDocument(@PathVariable Long id) throws IOException {
         documentService.deleteDocument(id);
         return ResponseEntity.noContent().build();
     }

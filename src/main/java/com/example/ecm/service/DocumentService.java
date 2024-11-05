@@ -25,7 +25,9 @@ import com.example.ecm.security.UserPrincipal;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -203,12 +205,15 @@ public class DocumentService {
      *
      * @param id идентификатор документа
      */
-    public void deleteDocument(Long id) {
+
+    @Transactional
+    public void deleteDocument(Long id) throws IOException {
         Document document = documentRepository.findById(id)
                 .filter(Document::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
         document.setIsAlive(false);
         documentRepository.save(document);
+        searchService.deleteByDocumentVersionId(document.getDocumentVersions().getLast().getId());
     }
 
     public void recoverDocument(Long id) {
