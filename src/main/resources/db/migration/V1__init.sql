@@ -1,5 +1,6 @@
 CREATE TABLE Documents(
                           id BIGSERIAL PRIMARY KEY,
+                          department_id BIGSERIAL,
                           user_id BIGINT,
                           type_id BIGINT,
                           is_alive BOOLEAN
@@ -35,6 +36,7 @@ CREATE TABLE Values(
 
 CREATE TABLE Users(
                       id BIGSERIAL PRIMARY KEY,
+                      department_id BIGSERIAL,
                       name VARCHAR(255),
                       surname VARCHAR(255),
                       email VARCHAR(255),
@@ -96,4 +98,15 @@ CREATE TABLE Comments (
                          author_id BIGINT,
                          content TEXT NOT NULL,
                          created_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE Departments (
+                          id BIGSERIAL PRIMARY KEY,
+                          name TEXT
+);
+
+CREATE TABLE Department_Departments (
+                             id BIGSERIAL PRIMARY KEY,
+                             root_id BIGSERIAL NOT NULL,
+                             children_id BIGSERIAL
 );

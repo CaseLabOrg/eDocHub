@@ -1,16 +1,19 @@
+INSERT INTO departments(name) VALUES ('testDepartment');
+
 INSERT INTO document_types(name, is_alive) VALUES ('testType', true);
 
-INSERT INTO users(name, surname, email, password, is_alive) VALUES ('admin', 'admin', 'admin', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', true);
+INSERT INTO users(name, surname, email, password, department_id, is_alive) VALUES ('admin', 'admin', 'admin', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', 1, true);
 
 INSERT INTO attributes(name, required, is_alive) VALUES('testAttr1', false, true);
 INSERT INTO attributes(name, required, is_alive) VALUES('testAttr2', true, true);
 
 
-INSERT INTO documents(user_id, type_id, is_alive) VALUES (1, 1, true);
+INSERT INTO documents(user_id, type_id, department_id, is_alive) VALUES (1, 1, 1,true);
 
 INSERT INTO values(attribute_id, document_version_id, value) VALUES (2,1, '52');
 
 INSERT INTO roles(name) VALUES ('ADMIN');
+INSERT INTO roles(name) VALUES ('DEPARTMENT_ADMIN');
 INSERT INTO roles(name) VALUES ('USER');
 
 INSERT INTO user_roles VALUES (1, 1);
