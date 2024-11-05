@@ -232,12 +232,14 @@ public class DocumentService {
         documentRepository.save(document);
     }
 
-    public void recoverDocument(Long id) {
+    @Transactional
+    public void recoverDocument(Long id) throws IOException {
         Document document = documentRepository.findById(id)
                 .filter(d -> !d.getIsAlive())
                 .orElseThrow(() -> new NotFoundException("Deleted Document with id: " + id + " not found"));
         document.setIsAlive(true);
         documentRepository.save(document);
+        searchService.recoverByDocumentVersionId(document.getDocumentVersions().getLast().getId());
     }
 
     /**
