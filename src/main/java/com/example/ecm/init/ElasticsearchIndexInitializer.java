@@ -88,7 +88,8 @@ public class ElasticsearchIndexInitializer implements CommandLineRunner {
                     "content": { "type": "text", "analyzer": "multilingual_analyzer" },
                     "title": { "type": "text", "analyzer": "multilingual_analyzer" },
                     "values": { "type": "object", "dynamic": true },
-                    "createdAt": { "type": "date", "format": "strict_date_time||epoch_millis" }
+                    "createdAt": { "type": "date", "format": "strict_date_time||epoch_millis" },
+                    "isAlive": { "type": "boolean" }
                   }
                 }""";
     }
