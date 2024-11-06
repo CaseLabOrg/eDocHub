@@ -24,6 +24,11 @@ public class Attribute {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne
+    @JoinColumn(name = "tenant_id", nullable = false)  // Указываем связь с Tenant
+    private Tenant tenant;
+
+
     /** Тип документа, к которому относится атрибут */
     @JsonBackReference
     @ManyToMany(fetch = FetchType.LAZY)
