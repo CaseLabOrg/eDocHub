@@ -25,6 +25,7 @@ public class DocumentMapper {
 
     private final DocumentTypeMapper documentTypeMapper;
     private final UserMapper userMapper;
+    private final AttributeService attributeService;
     private final CommentMapper commentMapper;
     private final AttributeService attributeService;
     /**

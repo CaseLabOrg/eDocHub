@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import java.io.IOException;
 import java.util.List;
 
 @Tag(name = "Document Controller", description = "Контроллер для управления документами")
@@ -122,7 +123,7 @@ public class DocumentController {
             @ApiResponse(responseCode = "404", description = "Документ не найден")
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDocument(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteDocument(@PathVariable Long id) throws IOException {
         documentService.deleteDocument(id);
         return ResponseEntity.noContent().build();
     }
