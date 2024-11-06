@@ -12,5 +12,4 @@ public class TenantResponse {
 
     private String name;
     private LocalDateTime createdAt;
-    private boolean isAlive;
 }

@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -28,14 +27,12 @@ public class Tenant {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @OneToOne
-    @JoinColumn(name = "owner_id", nullable = true)
-    private User owner;
-
-    private Boolean isAlive;
+    @OneToOne // Если у вас связь "многие-к-одному"
+    @JoinColumn(name = "user_id", nullable = true)
+    private User superUser;
 
     // Связь с пользователями, принадлежащими арендатору
     @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<User> users;
+    private Set<User> users;
 
 }

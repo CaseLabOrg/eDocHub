@@ -15,7 +15,6 @@ public class TenantMapper {
         Tenant tenant = new Tenant();
         tenant.setName(request.getName());
         tenant.setCreatedAt(LocalDateTime.now());
-        tenant.setIsAlive(true);
         return tenant;
     }
 
@@ -23,7 +22,6 @@ public class TenantMapper {
         TenantResponse tenantResponse = new TenantResponse();
         tenantResponse.setCreatedAt(tenant.getCreatedAt());
         tenantResponse.setName(tenant.getName());
-        tenantResponse.setAlive(tenant.getIsAlive());
         return tenantResponse;
     }
 }

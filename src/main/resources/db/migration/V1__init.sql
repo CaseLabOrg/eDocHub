@@ -1,21 +1,7 @@
-
 CREATE TABLE Tenants (
                          id BIGSERIAL PRIMARY KEY,
                          name TEXT NOT NULL,
-                         created_at TIMESTAMP NOT NULL,
-                         is_alive BOOLEAN,
-                         owner_id BIGSERIAL NOT NULL
-);
-
-
-CREATE TABLE Users (
-                       id BIGSERIAL PRIMARY KEY,
-                       name VARCHAR(255) NOT NULL,
-                       surname VARCHAR(255) NOT NULL,
-                       email VARCHAR(255) NOT NULL UNIQUE,
-                       password VARCHAR(255) NOT NULL,
-                       is_alive BOOLEAN,
-                       tenant_id BIGINT NOT NULL
+                         created_at TIMESTAMP NOT NULL
 );
 
 CREATE TABLE Documents(
@@ -57,6 +43,17 @@ CREATE TABLE Values(
                        value VARCHAR(255)
 );
 
+
+CREATE TABLE Users (
+                       id BIGSERIAL PRIMARY KEY,
+                       name VARCHAR(255) NOT NULL,
+                       surname VARCHAR(255) NOT NULL,
+                       email VARCHAR(255) NOT NULL UNIQUE,
+                       password VARCHAR(255) NOT NULL,
+                       is_alive BOOLEAN,
+                       tenant_id BIGINT NOT NULL,
+                       CONSTRAINT fk_tenant FOREIGN KEY (tenant_id) REFERENCES Tenants(id)
+);
 
 CREATE TABLE User_Roles(
                            user_id BIGINT,
