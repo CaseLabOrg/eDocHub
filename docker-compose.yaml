@@ -92,7 +92,7 @@ services:
       elastic.scheme: http
       elastic.username: elastic
       elastic.password: F8x6X_xkjA105DiuWTxC
-    entrypoint: ["sh", "-c", "sleep 60 && java -jar /path/to/your/app.jar"]
+    entrypoint: ["sh", "-c", "sleep 60 && java -jar /app/ecm.jar"]
 
 volumes:
   es_data:
