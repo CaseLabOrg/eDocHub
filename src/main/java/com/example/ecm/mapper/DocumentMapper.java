@@ -27,7 +27,6 @@ public class DocumentMapper {
     private final UserMapper userMapper;
     private final AttributeService attributeService;
     private final CommentMapper commentMapper;
-    private final AttributeService attributeService;
     /**
      * Преобразует запрос на создание документа (CreateDocumentRequest) в объект сущности Document.
      *
