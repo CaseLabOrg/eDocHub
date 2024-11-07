@@ -93,7 +93,7 @@ public class DocumentService {
 
         createDocumentVersionRequest.setDescription(documentVersion.getDescription());
         createDocumentVersionRequest.setTitle(documentVersion.getTitle());
-        createDocumentVersionRequest.setBase64Content(base64Manager.removeMetadataPrefix(createDocumentRequest.getBase64Content()));
+        createDocumentVersionRequest.setBase64Content(createDocumentRequest.getBase64Content());
 
         boolean success = minioService.addDocument(documentVersionSaved.getId(), createDocumentVersionRequest);
         if (!success) {
@@ -110,7 +110,7 @@ public class DocumentService {
         // There add to elastic
         searchService.addIndexDocumentElasticsearch(
                 DocumentMapper.toDocumentElasticsearch(createDocumentRequest),
-                createDocumentRequest.getBase64Content(),
+                createDocumentRequest,
                 documentVersionSaved.getId()
         );
 
