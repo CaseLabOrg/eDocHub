@@ -144,6 +144,12 @@ public class SearchService {
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder request = QueryBuilders.boolQuery();
 
+        BoolQueryBuilder isAliveQuery = QueryBuilders.boolQuery()
+                .should(QueryBuilders.termQuery("isAlive", true))
+                .should(QueryBuilders.boolQuery().mustNot(QueryBuilders.existsQuery("isAlive")));
+
+        request.must(isAliveQuery);
+
         if (attributes != null && !attributes.isEmpty()) {
             BoolQueryBuilder valuesQuery = QueryBuilders.boolQuery();
             for (String attribute : attributes) {
