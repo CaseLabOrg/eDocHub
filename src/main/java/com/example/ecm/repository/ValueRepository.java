@@ -10,5 +10,4 @@ import java.util.Optional;
 
 @Repository
 public interface ValueRepository extends JpaRepository<Value, Long> {
-    Optional<Value> findByAttributeAndDocumentVersion(Attribute attribute, DocumentVersion documentVersion);
 }
