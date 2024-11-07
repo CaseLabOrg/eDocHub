@@ -206,7 +206,6 @@ public class DocumentService {
      * @param id идентификатор документа
      */
 
-    @Transactional
     public void deleteDocument(Long id) throws IOException {
         Document document = documentRepository.findById(id)
                 .filter(Document::getIsAlive)
@@ -216,7 +215,6 @@ public class DocumentService {
         searchService.deleteByDocumentVersionId(document.getDocumentVersions().getLast().getId());
     }
 
-    @Transactional
     public void recoverDocument(Long id) throws IOException {
         Document document = documentRepository.findById(id)
                 .filter(d -> !d.getIsAlive())
