@@ -18,6 +18,7 @@ public class AuthService {
 
     private final JwtIssuer issuer;
     private final AuthenticationManager manager;
+    private final UserService userService;
 
     public LoginResponse attemptLogin(String login, String password) {
         log.info("Attempting to login using login: " + login);
@@ -28,9 +29,13 @@ public class AuthService {
 
         var principle = (UserPrincipal)auth.getPrincipal();
 
+        var id = principle.getId();
+
+        var user = userService.getUserById(id, true);
+
         var roles = principle.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
 
         var token = issuer.issue(principle.getId(), principle.getLogin(), roles);
-        return LoginResponse.builder().token(token).build();
+        return LoginResponse.builder().token(token).user(user).build();
     }
 }
