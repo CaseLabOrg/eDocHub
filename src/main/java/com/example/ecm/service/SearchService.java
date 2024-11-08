@@ -133,11 +133,22 @@ public class SearchService {
         updateDocument(documentElasticsearch.getId(), Map.of("isAlive", Boolean.FALSE));
     }
 
+    public void recoverByDocumentVersionId(long documentVersionId) throws IOException {
+        DocumentElasticsearch documentElasticsearch = searchByDocumentVersionId(documentVersionId);
+        updateDocument(documentElasticsearch.getId(), Map.of("isAlive", Boolean.TRUE));
+    }
+
     public List<DocumentElasticsearch> search(String searchString, List<String> attributes, List<String> documentTypes) throws Exception {
 
         SearchRequest searchRequest = new SearchRequest(INDEX_DOCUMENTS);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder request = QueryBuilders.boolQuery();
+
+        BoolQueryBuilder isAliveQuery = QueryBuilders.boolQuery()
+                .should(QueryBuilders.termQuery("isAlive", true))
+                .should(QueryBuilders.boolQuery().mustNot(QueryBuilders.existsQuery("isAlive")));
+
+        request.must(isAliveQuery);
 
         if (attributes != null && !attributes.isEmpty()) {
             BoolQueryBuilder valuesQuery = QueryBuilders.boolQuery();
