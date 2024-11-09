@@ -1,6 +1,7 @@
 package com.example.ecm.service;
 
 import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
+import com.example.ecm.parser.Base64Manager;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
@@ -16,8 +17,6 @@ import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Сервис для работы с MinIO, реализующий загрузку, получение и удаление файлов.
@@ -32,30 +31,17 @@ public class MinioService {
     private String bucketName;
 
     /**
-     * Карта для сопоставления расширений файлов с их MIME-типами.
-     */
-    private static final Map<String, String> extensionToMimeType = new HashMap<>() {{
-        put("pdf", "application/pdf");
-        put("png", "image/png");
-        put("jpg", "image/jpeg");
-        put("jpeg", "image/jpeg");
-        put("txt", "text/plain");
-        put("docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-    }};
-
-    /**
      * Загружает документ в MinIO.
      * Документ загружается в виде Base64-строки, которая декодируется перед отправкой.
      *
      * @param id идентификатор документа
-     * @param createDocumentRequest запрос с данными документа
+     * @param request запрос с данными документа
      * @return true, если загрузка прошла успешно, иначе false
      */
     public boolean addDocument(Long id, CreateDocumentVersionRequest request) {
         try {
-            // Декодирование Base64-строки в байтовый массив
             byte[] decodedBytes = Base64.getDecoder().decode(request.getBase64Content());
-            // Получение расширения файла
+
             String fileExtension = request.getTitle().substring(request.getTitle().lastIndexOf('.') + 1);
 
 
@@ -64,7 +50,7 @@ public class MinioService {
                             .bucket(bucketName)
                             .object(id + "_" + request.getTitle())
                             .stream(new ByteArrayInputStream(decodedBytes), decodedBytes.length, -1)
-                            .contentType(extensionToMimeType.getOrDefault(fileExtension.toLowerCase(), "application/octet-stream"))
+                            .contentType(Base64Manager.extensionToMimeType(fileExtension.toLowerCase()))
                             .build()
             );
 
