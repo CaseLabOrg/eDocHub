@@ -27,9 +27,9 @@ public class Tenant {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @OneToOne // Если у вас связь "многие-к-одному"
-    @JoinColumn(name = "user_id", nullable = true)
-    private User superUser;
+    @OneToOne
+    @JoinColumn(name = "adminUser", nullable = true)
+    private User adminUser;
 
     // Связь с пользователями, принадлежащими арендатору
     @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

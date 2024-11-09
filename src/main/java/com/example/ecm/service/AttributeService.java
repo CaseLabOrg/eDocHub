@@ -9,16 +9,13 @@ import com.example.ecm.model.Attribute;
 import com.example.ecm.model.DocumentType;
 import com.example.ecm.repository.AttributeRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
-import com.example.ecm.repository.TenantRepository;
 import com.example.ecm.saas.TenantContext;
-import com.example.ecm.saas.annotation.TenantRestrictedForAttribute;
+import com.example.ecm.saas.TenantRestrictedForAttribute;
 import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -36,8 +33,8 @@ public class AttributeService {
 
     private final AttributeRepository attributeRepository;
     private final DocumentTypeRepository documentTypeRepository;
-    private final TenantRepository tenantRepository;
     private final AttributeMapper attributeMapper;
+
     /**
      * Создает новый атрибут документа.
      *
@@ -49,7 +46,6 @@ public class AttributeService {
 
         Attribute attribute = attributeMapper.toAttribute(request);
         attribute.getDocumentTypes().addAll(documentTypes);
-        attribute.setTenant(tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow( () -> new NotFoundException("Tenant not found")));
         return attributeMapper.toAttributeResponse(
                 attributeRepository.save(attribute)
         );
@@ -79,20 +75,17 @@ public class AttributeService {
      *
      * @return список ответов с данными всех атрибутов документов
      */
-    public List<CreateAttributeResponse> getAllAttributes(Pageable pageable, Boolean showOnlyALive) {
+
+    public List<CreateAttributeResponse> getAllAttributes(Pageable pageable, Boolean showOnlyALive, UserPrincipal userPrincipal) {
         Page<Attribute> attributePage = attributeRepository.findAll(pageable);
         Stream<Attribute> attributeStream = attributePage.stream();
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
         if (showOnlyALive) {
             attributeStream = attributeStream.filter(Attribute::getIsAlive);
         }
-
         if(!userPrincipal.isAdmin()) {
                 attributeStream = attributeStream.filter(attribute ->  attribute.getTenant().getId().equals(TenantContext.getCurrentTenantId()));
         }
-
         return new PageImpl<>(
                 attributeStream
                         .map(attributeMapper::toAttributeResponse)
@@ -173,6 +166,7 @@ public class AttributeService {
 
         return attributeMapper.toAttributeResponse(attributeRepository.save(attribute));
     }
+
 
     public Optional<Attribute> findAttributeByName(String name) {
         return attributeRepository.findByName(name);

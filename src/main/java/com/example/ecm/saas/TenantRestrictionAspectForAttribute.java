@@ -1,7 +1,10 @@
 package com.example.ecm.saas;
 
+
 import com.example.ecm.exception.NotFoundException;
+import com.example.ecm.model.Attribute;
 import com.example.ecm.model.DocumentType;
+import com.example.ecm.repository.AttributeRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
 import com.example.ecm.service.DocumentTypeService;
 import lombok.RequiredArgsConstructor;
@@ -17,12 +20,12 @@ import org.springframework.stereotype.Component;
 @Aspect
 @Component
 @RequiredArgsConstructor
-public class TenantRestrictionAspectForDocumentType {
+public class TenantRestrictionAspectForAttribute {
 
-    private final DocumentTypeRepository documentTypeRepository;
+    private final AttributeRepository attributeRepository;
 
-    @Around("@annotation(tenantRestricted)")
-    public Object checkTenantAccess(ProceedingJoinPoint joinPoint, TenantRestrictedForDocumentType tenantRestricted) throws Throwable {
+    @Around("@annotation(tenantRestrictedForAttribute)")
+    public Object checkTenantAccess(ProceedingJoinPoint joinPoint, TenantRestrictedForAttribute tenantRestrictedForAttribute) throws Throwable {
 
         if (hasAccess(joinPoint)) {
             return joinPoint.proceed();
@@ -39,10 +42,10 @@ public class TenantRestrictionAspectForDocumentType {
 
     private Long getResourceTenantId(Object[] args) {
         if (args.length > 0 && args[0] instanceof Long id) {
-            DocumentType documentType = documentTypeRepository.findById(id)
+            Attribute attribute = attributeRepository.findById(id)
                     .orElseThrow(() -> new NotFoundException("DocumentType не найден для ID: " + id));
-            if (documentType.getTenant() != null) {
-                return documentType.getTenant().getId();
+            if (attribute.getTenant() != null) {
+                return attribute.getTenant().getId();
             } else {
                 throw new NotFoundException("Tenant не найден для DocumentType с ID: " + id);
             }
@@ -50,6 +53,5 @@ public class TenantRestrictionAspectForDocumentType {
         }
         throw new NotFoundException("Ничего не выйдет");
     }
-
 
 }
