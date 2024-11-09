@@ -9,6 +9,9 @@ import com.example.ecm.model.Attribute;
 import com.example.ecm.model.DocumentType;
 import com.example.ecm.repository.AttributeRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
+import com.example.ecm.saas.TenantContext;
+import com.example.ecm.saas.TenantRestrictedForDocumentType;
+import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -43,6 +46,7 @@ public class DocumentTypeService {
      * @param id идентификатор типа документа
      * @return ответ с данными типа документа
      */
+    @TenantRestrictedForDocumentType
     public CreateDocumentTypeResponse getDocumentTypeById(Long id, Boolean showOnlyAlive) {
         Optional<DocumentType> documentType = documentTypeRepository.findById(id);
 
@@ -60,12 +64,18 @@ public class DocumentTypeService {
      *
      * @return список ответов с данными всех типов документов
      */
-    public List<CreateDocumentTypeResponse> getAllDocumentTypes(Boolean showOnlyAlive) {
+
+    public List<CreateDocumentTypeResponse> getAllDocumentTypes(Boolean showOnlyAlive, UserPrincipal userPrincipal) {
         Stream<DocumentType> documentTypeStream = documentTypeRepository.findAll().stream();
+
+
         if (showOnlyAlive) {
             documentTypeStream = documentTypeStream.filter(DocumentType::getIsAlive);
         }
 
+        if (!userPrincipal.isAdmin()) {
+            documentTypeStream = documentTypeStream.filter(d -> d.getTenant().getId().equals(TenantContext.getCurrentTenantId()));
+        }
         return documentTypeStream
                 .map(documentTypeMapper::toCreateDocumentTypeResponse)
                 .toList();
@@ -78,6 +88,7 @@ public class DocumentTypeService {
      * @param request запрос на обновление типа документа
      * @return ответ с данными обновленного типа документа
      */
+    @TenantRestrictedForDocumentType
     public CreateDocumentTypeResponse updateDocumentType(Long id, CreateDocumentTypeRequest request) {
         DocumentType documentType = documentTypeRepository.findById(id)
                 .filter(DocumentType::getIsAlive)
@@ -95,6 +106,7 @@ public class DocumentTypeService {
      *
      * @param id идентификатор типа документа
      */
+    @TenantRestrictedForDocumentType
     public void deleteDocumentType(Long id) {
         DocumentType documentType = documentTypeRepository.findById(id)
                 .filter(DocumentType::getIsAlive)
@@ -103,6 +115,7 @@ public class DocumentTypeService {
         documentTypeRepository.save(documentType);
     }
 
+    @TenantRestrictedForDocumentType
     public void recoverDocumentType(Long id) {
         DocumentType documentType = documentTypeRepository.findById(id)
                 .filter(t -> !t.getIsAlive())
@@ -135,7 +148,5 @@ public class DocumentTypeService {
         return documentTypeMapper.toCreateDocumentTypeResponse(documentTypeRepository.save(documentType));
     }
 
-    public Optional<DocumentType> findById(Long id) {
-        return documentTypeRepository.findById(id);
-    }
+
 }

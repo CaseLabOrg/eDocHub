@@ -4,6 +4,7 @@ import com.example.ecm.aop.Loggable;
 import com.example.ecm.dto.patch_requests.PatchAttributeRequest;
 import com.example.ecm.dto.requests.CreateAttributeRequest;
 import com.example.ecm.dto.responses.CreateAttributeResponse;
+import com.example.ecm.security.UserPrincipal;
 import com.example.ecm.service.AttributeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -73,9 +75,10 @@ public class AttributeController {
     public ResponseEntity<List<CreateAttributeResponse>> getAllAttributes(
             @RequestParam(defaultValue = "0") @Parameter(description = "Номер страницы") int page,
             @RequestParam(defaultValue = "10") @Parameter(description = "Количество записей на странице") int size,
-            @RequestParam(defaultValue = "true") @Parameter(description = "Отображать только активные атрибуты") Boolean showOnlyAlive) {
+            @RequestParam(defaultValue = "true") @Parameter(description = "Отображать только активные атрибуты") Boolean showOnlyAlive,
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(attributeService.getAllAttributes(pageable, showOnlyAlive));
+        return ResponseEntity.ok(attributeService.getAllAttributes(pageable, showOnlyAlive, userPrincipal));
     }
 
     /**

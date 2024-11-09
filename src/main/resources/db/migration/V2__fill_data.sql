@@ -1,13 +1,18 @@
 INSERT INTO tenants (name, created_at) VALUES ('Tenant1', NOW());
+
 INSERT INTO tenants (name, created_at) VALUES ('Tenant2', NOW());
+
+
+INSERT INTO users (name, surname, email, password, is_alive, tenant_id)
+VALUES ('admin', 'admin', 'admin@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', true, 2);
+
+UPDATE tenants
+SET admin_user = 1
+WHERE name = 'Tenant2';
+
 
 INSERT INTO document_types(name, is_alive, tenant_id) VALUES ('testType', true, 1);
 INSERT INTO document_types(name, is_alive, tenant_id) VALUES ('testTpe', true, 2);
-
-INSERT INTO users (name, surname, email, password, is_alive, tenant_id)
-
-VALUES ('admin', 'admin', 'admin@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', true, 2);
-
 
 INSERT INTO attributes(name, required, is_alive, tenant_id) VALUES('testAttr1', false, true, 1);
 INSERT INTO attributes(name, required, is_alive, tenant_id) VALUES('testAttr2', true, true, 2);
