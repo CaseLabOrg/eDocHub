@@ -4,6 +4,7 @@ import com.example.ecm.aop.Loggable;
 import com.example.ecm.dto.patch_requests.PatchDocumentTypeRequest;
 import com.example.ecm.dto.requests.CreateDocumentTypeRequest;
 import com.example.ecm.dto.responses.CreateDocumentTypeResponse;
+import com.example.ecm.security.UserPrincipal;
 import com.example.ecm.service.DocumentTypeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -12,6 +13,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -72,8 +74,9 @@ public class DocumentTypeController {
     @ApiResponse(responseCode = "200", description = "Успешное получение списка типов документов")
     @GetMapping
     public List<CreateDocumentTypeResponse> getAllDocumentTypes(
-            @RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
-        return documentTypeService.getAllDocumentTypes(showOnlyAlive);
+            @RequestParam(defaultValue = "true") Boolean showOnlyAlive,
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return documentTypeService.getAllDocumentTypes(showOnlyAlive, userPrincipal);
     }
 
     /**
