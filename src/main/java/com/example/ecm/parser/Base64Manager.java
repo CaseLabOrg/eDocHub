@@ -20,7 +20,7 @@ public class Base64Manager {
         put("xls", "application/vnd.ms-excel");
     }};
 
-    public static String mimeToExtension(String mimeType) {
+    public static String extensionToMimeType(String mimeType) {
         return extensionToMimeType.getOrDefault(mimeType, "application/octet-stream");
     }
 }
