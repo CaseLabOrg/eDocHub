@@ -9,6 +9,7 @@ import com.example.ecm.model.Attribute;
 import com.example.ecm.model.DocumentType;
 import com.example.ecm.repository.AttributeRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
+import com.example.ecm.repository.TenantRepository;
 import com.example.ecm.saas.TenantContext;
 import com.example.ecm.saas.TenantRestrictedForAttribute;
 import com.example.ecm.security.UserPrincipal;
@@ -33,6 +34,7 @@ public class AttributeService {
 
     private final AttributeRepository attributeRepository;
     private final DocumentTypeRepository documentTypeRepository;
+    private final TenantRepository tenantRepository;
     private final AttributeMapper attributeMapper;
 
     /**
@@ -46,6 +48,7 @@ public class AttributeService {
 
         Attribute attribute = attributeMapper.toAttribute(request);
         attribute.getDocumentTypes().addAll(documentTypes);
+        attribute.setTenant(tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow( () -> new NotFoundException("Tenant not found")));
         return attributeMapper.toAttributeResponse(
                 attributeRepository.save(attribute)
         );
