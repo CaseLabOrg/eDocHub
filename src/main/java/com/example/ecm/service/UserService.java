@@ -76,7 +76,7 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
     }
 
-    @TenantRestrictedForUser
+
     public CreateUserResponse getUserById(Long id, Boolean showOnlyALive) {
 
         Optional<User> attribute = userRepository.findById(id);
