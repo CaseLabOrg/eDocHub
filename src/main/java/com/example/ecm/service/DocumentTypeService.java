@@ -9,6 +9,7 @@ import com.example.ecm.model.Attribute;
 import com.example.ecm.model.DocumentType;
 import com.example.ecm.repository.AttributeRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
+import com.example.ecm.repository.TenantRepository;
 import com.example.ecm.saas.TenantContext;
 import com.example.ecm.saas.TenantRestrictedForDocumentType;
 import com.example.ecm.security.UserPrincipal;
@@ -23,8 +24,9 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class DocumentTypeService {
     private final DocumentTypeRepository documentTypeRepository;
-    private final DocumentTypeMapper documentTypeMapper;
     private final AttributeRepository attributeRepository;
+    private final DocumentTypeMapper documentTypeMapper;
+    private final TenantRepository tenantRepository;
 
     /**
      * Создает новый тип документа.
@@ -36,7 +38,7 @@ public class DocumentTypeService {
         DocumentType documentType = documentTypeRepository.save(documentTypeMapper.toDocumentType(request));
         List<Attribute> attributes = attributeRepository.findAttributesByIdIsIn(request.getAttributeIds());
         documentType.setAttributes(attributes);
-
+        documentType.setTenant(tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow( () -> new NotFoundException("Tenant not found")));
         return documentTypeMapper.toCreateDocumentTypeResponse(documentType);
     }
 
@@ -84,7 +86,7 @@ public class DocumentTypeService {
     /**
      * Обновляет тип документа по идентификатору.
      *
-     * @param id идентификатор типа документа
+     * @param id      идентификатор типа документа
      * @param request запрос на обновление типа документа
      * @return ответ с данными обновленного типа документа
      */
