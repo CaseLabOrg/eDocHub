@@ -28,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -224,7 +225,9 @@ public class DocumentService {
      *
      * @param id идентификатор документа
      */
-    public void deleteDocument(Long id) {
+
+    public void deleteDocument(Long id) throws IOException {
+
         Document document = documentRepository.findById(id)
                 .filter(Document::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
@@ -232,12 +235,13 @@ public class DocumentService {
         documentRepository.save(document);
     }
 
-    public void recoverDocument(Long id) {
+    public void recoverDocument(Long id) throws IOException {
         Document document = documentRepository.findById(id)
                 .filter(d -> !d.getIsAlive())
                 .orElseThrow(() -> new NotFoundException("Deleted Document with id: " + id + " not found"));
         document.setIsAlive(true);
         documentRepository.save(document);
+        searchService.recoverByDocumentVersionId(document.getDocumentVersions().getLast().getId());
     }
 
     /**
