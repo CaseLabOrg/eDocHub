@@ -1,6 +1,7 @@
 package com.example.ecm.repository;
 
 import com.example.ecm.dto.responses.IgnoredVotes;
+import com.example.ecm.dto.responses.SignatureStatus;
 import com.example.ecm.dto.responses.UserApproval;
 import com.example.ecm.model.SignatureRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -62,5 +63,17 @@ public interface SignatureRequestRepository extends JpaRepository<SignatureReque
             @Param("endDate") LocalDateTime endDate
     );
 
+    @Query(value = """
+            SELECT\s
+                status,
+                COUNT(*) AS request_count
+            FROM\s
+                Signature_Requests
+            GROUP BY\s
+                status
+            ORDER BY\s
+                request_count DESC
+            """, nativeQuery = true)
+    List<SignatureStatus> findCountSignatureRequestStatus();
 
 }

@@ -1,9 +1,7 @@
 package com.example.ecm.service;
 
-import com.example.ecm.dto.responses.ActiveUser;
-import com.example.ecm.dto.responses.IgnoredVotes;
-import com.example.ecm.dto.responses.UserApproval;
-import com.example.ecm.dto.responses.VotingSummary;
+import com.example.ecm.dto.responses.*;
+import com.example.ecm.model.SignatureRequest;
 import com.example.ecm.repository.DocumentRepository;
 import com.example.ecm.repository.SignatureRequestRepository;
 import com.example.ecm.repository.VotingRepository;
@@ -37,4 +35,9 @@ public class AnalyticService {
     public List<IgnoredVotes> getIgnoredVotes(LocalDateTime startDate, LocalDateTime endDate) {
         return signatureRequestRepository.findIgnoredVotes(startDate, endDate);
     }
+
+    public List<SignatureStatus> getCountSignatureRequestStatus() {
+        return signatureRequestRepository.findCountSignatureRequestStatus();
+    }
+
 }
