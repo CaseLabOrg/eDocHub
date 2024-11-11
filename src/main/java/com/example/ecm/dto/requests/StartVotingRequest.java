@@ -1,5 +1,6 @@
 package com.example.ecm.dto.requests;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -28,6 +29,7 @@ public class StartVotingRequest {
 
     @Future(message = "deadline cannot be in the past")
     @NotNull(message = "approvalThreshold cannot be null")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate deadline;
 
 }
