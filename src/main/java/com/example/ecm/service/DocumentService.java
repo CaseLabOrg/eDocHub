@@ -12,18 +12,13 @@ import com.example.ecm.mapper.*;
 import com.example.ecm.model.*;
 import com.example.ecm.repository.*;
 
-import com.example.ecm.dto.requests.CreateDocumentRequest;
-import com.example.ecm.dto.responses.CreateDocumentResponse;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.security.UserPrincipal;
 import com.example.ecm.exception.ServerException;
 import com.example.ecm.mapper.DocumentMapper;
-import com.example.ecm.mapper.SignatureMapper;
 import com.example.ecm.model.Document;
 import com.example.ecm.model.DocumentType;
 import com.example.ecm.model.User;
-import com.example.ecm.parser.Base64Manager;
-import com.example.ecm.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -56,12 +51,7 @@ public class DocumentService {
     private final ValueRepository valueRepository;
     private final CommentMapper commentMapper;
     private final CommentRepository commentRepository;
-    private final SignatureMapper signatureMapper;
     private final SearchService searchService;
-    private final Base64Manager base64Manager;
-
-    private final UserService userService;
-
 
     /**
      * Создает новый документ.
