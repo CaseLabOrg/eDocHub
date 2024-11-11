@@ -102,18 +102,17 @@ public class DocumentService {
             throw new ServerException("Could not add document");
         }
 
+        // There add to elastic
+        searchService.addIndexDocumentElasticsearch(
+                DocumentMapper.toDocumentElasticsearch(createDocumentRequest),
+                createDocumentRequest,
+                documentVersionSaved.getId());
+
         List<CreateDocumentVersionResponse> documentVersions = new ArrayList<>();
         CreateDocumentVersionResponse createDocumentVersionResponse = documentVersionMapper.toCreateDocumentVersionResponse(documentVersionSaved);
         createDocumentVersionResponse.setBase64Content(createDocumentRequest.getBase64Content());
         createDocumentVersionResponse.setValues(createDocumentRequest.getValues());
         documentVersions.add(createDocumentVersionResponse);
-
-        // There add to elastic
-        searchService.addIndexDocumentElasticsearch(
-                DocumentMapper.toDocumentElasticsearch(createDocumentRequest),
-                createDocumentRequest,
-                documentVersionSaved.getId()
-        );
 
         CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(documentSaved);
         response.setDocumentVersions(documentVersions);
@@ -241,7 +240,7 @@ public class DocumentService {
                 .orElseThrow(() -> new NotFoundException("Deleted Document with id: " + id + " not found"));
         document.setIsAlive(true);
         documentRepository.save(document);
-        searchService.recoverByDocumentVersionId(document.getDocumentVersions().getLast().getId());
+        //searchService.recoverByDocumentVersionId(document.getDocumentVersions().getLast().getId());
     }
 
     /**
