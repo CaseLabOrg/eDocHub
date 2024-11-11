@@ -1,10 +1,8 @@
 package com.example.ecm.controller;
 
 
-import com.example.ecm.dto.responses.ActiveUser;
-import com.example.ecm.dto.responses.IgnoredVotes;
-import com.example.ecm.dto.responses.UserApproval;
-import com.example.ecm.dto.responses.VotingSummary;
+import com.example.ecm.dto.responses.*;
+import com.example.ecm.model.Signature;
 import com.example.ecm.service.AnalyticService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -58,5 +56,10 @@ public class AnalyticController {
             @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
         List<IgnoredVotes> ignoredVotes = analyticService.getIgnoredVotes(startDate, endDate);
         return ResponseEntity.ok(ignoredVotes);
+    }
+
+    @GetMapping("/signature")
+    public ResponseEntity<List<SignatureStatus>> getSignatures(){
+        return ResponseEntity.ok(analyticService.getCountSignatureRequestStatus());
     }
 }
