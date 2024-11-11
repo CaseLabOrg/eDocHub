@@ -1,5 +1,6 @@
 package com.example.ecm.repository;
 
+import com.example.ecm.dto.responses.DocumentSignatureRequestStatistics;
 import com.example.ecm.dto.responses.IgnoredVotes;
 import com.example.ecm.dto.responses.SignatureStatus;
 import com.example.ecm.dto.responses.UserApproval;
@@ -10,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 public interface SignatureRequestRepository extends JpaRepository<SignatureRequest, Long> {
     List<SignatureRequest> findAllByUserToId(Long userIdTo);
@@ -76,4 +78,12 @@ public interface SignatureRequestRepository extends JpaRepository<SignatureReque
             """, nativeQuery = true)
     List<SignatureStatus> findCountSignatureRequestStatus();
 
+    @Query(value = """
+            SELECT dv.document_id AS documentId,
+            COUNT(sr) AS requestCount,
+            SUM(CASE WHEN sr.status = 'approved' THEN 1 ELSE 0 END) AS approvedCount,
+            SUM(CASE WHEN sr.status = 'rejected' THEN 1 ELSE 0 END) AS rejectedCount
+            FROM signature_requests sr JOIN document_version dv ON sr.document_version_id = dv.id
+            GROUP BY dv.document_id""", nativeQuery = true)
+    List<DocumentSignatureRequestStatistics> findDocumentSignatureRequestStatistics();
 }

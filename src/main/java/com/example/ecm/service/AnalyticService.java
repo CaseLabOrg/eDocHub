@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -40,4 +41,28 @@ public class AnalyticService {
         return signatureRequestRepository.findCountSignatureRequestStatus();
     }
 
+    public List<UserSignaturesSummary> getUsersSignaturesSummary() {
+        List<SignatureRequest> signatureRequests = signatureRequestRepository.findAll();
+
+        return signatureRequests.stream()
+                .collect(Collectors.groupingBy(
+                        signatureRequest -> signatureRequest.getUserTo().getId()
+                ))
+                .entrySet().stream()
+                .map(entry -> {
+                    Long userId = entry.getKey();
+                    var signatureRequestId2status = entry.getValue().stream()
+                            .collect(Collectors.toMap(
+                                    SignatureRequest::getId,
+                                    SignatureRequest::getStatus
+                            ));
+
+                    return new UserSignaturesSummary(userId, signatureRequestId2status.entrySet().size(), signatureRequestId2status);
+                })
+                .toList();
+    }
+
+    public List<DocumentSignatureRequestStatistics> getDocumentSignatureRequestStatistics() {
+        return signatureRequestRepository.findDocumentSignatureRequestStatistics();
+    }
 }
