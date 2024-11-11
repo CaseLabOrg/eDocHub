@@ -10,6 +10,7 @@ import com.example.ecm.dto.requests.CreateDocumentRequest;
 import com.example.ecm.dto.responses.CreateDocumentResponse;
 import com.example.ecm.mapper.*;
 import com.example.ecm.model.*;
+import com.example.ecm.model.elasticsearch.DocumentElasticsearch;
 import com.example.ecm.repository.*;
 
 import com.example.ecm.dto.requests.CreateDocumentRequest;
@@ -227,12 +228,12 @@ public class DocumentService {
      */
 
     public void deleteDocument(Long id) throws IOException {
-
         Document document = documentRepository.findById(id)
                 .filter(Document::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
         document.setIsAlive(false);
         documentRepository.save(document);
+        searchService.deleteByDocumentVersionId(document.getDocumentVersions().getLast().getId());
     }
 
     public void recoverDocument(Long id) throws IOException {
@@ -257,13 +258,13 @@ public class DocumentService {
      * @return объект {@link CreateDocumentVersionResponse}, содержащий данные о созданной версии
      * @throws NotFoundException если документ с указанным ID не найден
      */
-    public CreateDocumentVersionResponse updateDocumentVersion(Long id, CreateDocumentVersionRequest createDocumentVersionRequest) {
+    public CreateDocumentVersionResponse updateDocumentVersion(Long id, CreateDocumentVersionRequest createDocumentVersionRequest) throws Exception {
         Document document = documentRepository.findById(id)
                 .filter(Document::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
 
         DocumentVersion documentVersion = documentVersionMapper.toDocumentVersion(createDocumentVersionRequest);
-        documentVersion.setVersionId((long) document.getDocumentVersions().size() + 1);
+        documentVersion.setVersionId((long) (document.getDocumentVersions().size() + 1));
         documentVersion.setCreatedAt(LocalDateTime.now());
         documentVersion.setDocument(document);
 
@@ -274,6 +275,15 @@ public class DocumentService {
         minioService.addDocument(documentVersion.getId(), createDocumentVersionRequest);
         response.setBase64Content(createDocumentVersionRequest.getBase64Content());
         response.setValues(createDocumentVersionRequest.getValues());
+
+        // Elastic update
+        System.out.println("VERSION ID: " + id);
+        System.out.println("DOCUMENT: " + documentVersion);
+        searchService.updateDocument(
+                searchService.searchByDocumentVersionId(id).getId(),
+                documentVersionMapper.mapToElasticsearch(documentVersion),
+                documentVersion.getId()
+        );
         return response;
     }
 

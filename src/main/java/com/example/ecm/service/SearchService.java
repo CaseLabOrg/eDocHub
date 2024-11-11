@@ -1,9 +1,7 @@
 package com.example.ecm.service;
 
 import com.example.ecm.dto.requests.CreateDocumentRequest;
-import com.example.ecm.mapper.DocumentMapper;
 import com.example.ecm.model.elasticsearch.DocumentElasticsearch;
-import com.example.ecm.parser.Base64Manager;
 import com.example.ecm.parser.DocumentManager;
 import com.example.ecm.parser.DocumentParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,19 +42,34 @@ public class SearchService {
     private final DocumentManager documentManager;
     private final DocumentParser documentParser;
 
+    private String getFileContent(String id, String title, String base64Content) throws Exception {
+
+        String fileExtension = title.substring(title.lastIndexOf('.') + 1);
+        String fullFilename = id + "." + fileExtension;
+
+        documentManager.saveFileFromBase64(base64Content, fullFilename);
+        String content = documentParser.parse(documentManager.getAbsolutePath() + "/" + fullFilename);
+
+        if (documentManager.deleteFile(fullFilename))
+            log.info("Success delete: " + fullFilename);
+        else
+            log.error("Not deleted: " + fullFilename);
+
+        return content;
+
+    }
+
     public void addIndexDocumentElasticsearch(DocumentElasticsearch document, CreateDocumentRequest request, Long documentVersionId) {
 
         document.setDocumentVersionId(documentVersionId);
         document.setIsAlive(true);
 
-        String fileExtension = request.getTitle().substring(request.getTitle().lastIndexOf('.') + 1);
-        String fullFilename = document.getId() + "." + fileExtension;
-
         try {
-
-            documentManager.saveFileFromBase64(request.getBase64Content(), fullFilename);
-            String content = documentParser.parse(documentManager.getAbsolutePath() + "/" + fullFilename);
-            document.setContent(content);
+            document.setContent(getFileContent(
+                    document.getId(),
+                    request.getTitle(),
+                    request.getBase64Content()
+            ));
 
             IndexRequest indexRequest = new IndexRequest(INDEX_DOCUMENTS)
                     .id(document.getId())
@@ -67,15 +80,8 @@ public class SearchService {
             log.info("Document to be indexed: " + mapper.writeValueAsString(document));
             log.info("Successfully indexed document with ID: " + document.getId());
 
-        } catch (IOException e) {
-            log.error("Failed to index document: " + e.getMessage());
-        } catch (Exception ex) {
-            log.error(ex.getMessage());
-        } finally {
-            if (documentManager.deleteFile(fullFilename))
-                log.info("Success delete: " + fullFilename);
-            else
-                log.error("Not deleted: " + fullFilename);
+        } catch (Exception e) {
+            log.info(e.getMessage());
         }
 
     }
@@ -99,6 +105,25 @@ public class SearchService {
             log.info("Document " + documentId + " updated successfully.");
         } else {
             log.error("Document " + documentId + " was not updated. Status: " + updateResponse.getResult());
+        }
+    }
+
+    public void updateDocument(String id, DocumentElasticsearch updatedDocument, Long newDocumentVersionId) throws Exception {
+
+        updatedDocument.setDocumentVersionId(newDocumentVersionId);
+        updatedDocument.setContent(getFileContent(
+                id,
+                updatedDocument.getTitle(),
+                updatedDocument.getContent()
+        ));
+
+        UpdateRequest updateRequest = new UpdateRequest(INDEX_DOCUMENTS, id)
+                .doc(updatedDocument);
+
+        try {
+            client.update(updateRequest, RequestOptions.DEFAULT);
+        } catch (Exception e) {
+            log.error("Не удалось обновить документ", e);
         }
     }
 

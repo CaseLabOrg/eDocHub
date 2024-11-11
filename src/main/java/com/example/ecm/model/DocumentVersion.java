@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import java.util.Map;
 @Getter
 @Setter
 @NoArgsConstructor
+@ToString
 public class DocumentVersion {
 
     @Id

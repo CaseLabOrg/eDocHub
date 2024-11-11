@@ -4,8 +4,12 @@ import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
 import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
 import com.example.ecm.dto.requests.SetValueRequest;
 import com.example.ecm.model.DocumentVersion;
+import com.example.ecm.model.elasticsearch.DocumentElasticsearch;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Component
@@ -60,6 +64,28 @@ public class DocumentVersionMapper {
                 .toList());
 
         return request;
+    }
+
+
+    public DocumentElasticsearch mapToElasticsearch(DocumentVersion documentVersion) {
+
+        DocumentElasticsearch elasticDocument = new DocumentElasticsearch();
+        elasticDocument.setDocumentVersionId(documentVersion.getId());
+        elasticDocument.setUserId(documentVersion.getDocument().getId());
+        elasticDocument.setTitle(documentVersion.getTitle());
+        elasticDocument.setDescription(documentVersion.getDescription());
+        elasticDocument.setCreatedAt(documentVersion.getCreatedAt().toString());
+        elasticDocument.setIsAlive(documentVersion.getIsAlive());
+
+        // Преобразование карты значений
+        Map<String, String> values = documentVersion.getValues().entrySet().stream()
+                .collect(Collectors.toMap(
+                        entry -> entry.getKey().getName(),
+                        entry -> entry.getValue().getValue()
+                ));
+        elasticDocument.setValues(values);
+
+        return elasticDocument;
     }
 
 
