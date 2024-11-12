@@ -1,12 +1,14 @@
 package com.example.ecm.service;
 
+import com.example.ecm.dto.requests.CreateDocumentRequest;
 import com.example.ecm.model.elasticsearch.DocumentElasticsearch;
-import com.example.ecm.parser.Base64Manager;
 import com.example.ecm.parser.DocumentManager;
 import com.example.ecm.parser.DocumentParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -20,10 +22,15 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.xcontent.XContentType;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,20 +47,38 @@ public class SearchService {
     private final ObjectMapper mapper;
     private final RestHighLevelClient client;
     private final DocumentManager documentManager;
-    private final Base64Manager base64Manager;
     private final DocumentParser documentParser;
 
-    public void addIndexDocumentElasticsearch(DocumentElasticsearch document, String base64Content, Long documentVersionId) {
+    private String getFileContent(String id, String title, String base64Content) throws Exception {
+
+        if (base64Content == null) return null;
+
+        String fileExtension = title.substring(title.lastIndexOf('.') + 1);
+        String fullFilename = id + "." + fileExtension;
+
+        documentManager.saveFileFromBase64(base64Content, fullFilename);
+        String content = documentParser.parse(documentManager.getAbsolutePath() + "/" + fullFilename);
+
+        if (documentManager.deleteFile(fullFilename))
+            log.info("Success delete: " + fullFilename);
+        else
+            log.error("Not deleted: " + fullFilename);
+
+        return content;
+
+    }
+
+    public void addIndexDocumentElasticsearch(DocumentElasticsearch document, CreateDocumentRequest request, Long documentVersionId) {
 
         document.setDocumentVersionId(documentVersionId);
         document.setIsAlive(true);
 
-        String fullFilename = document.getId() + "." + base64Manager.getFileExtensionFromBase64(base64Content);
         try {
-
-            documentManager.saveFileFromBase64(base64Manager.removeMetadataPrefix(base64Content), fullFilename);
-            String content = documentParser.parse(documentManager.getAbsolutePath() + "/" + fullFilename);
-            document.setContent(content);
+            document.setContent(getFileContent(
+                    document.getId(),
+                    request.getTitle(),
+                    request.getBase64Content()
+            ));
 
             IndexRequest indexRequest = new IndexRequest(INDEX_DOCUMENTS)
                     .id(document.getId())
@@ -64,15 +89,8 @@ public class SearchService {
             log.info("Document to be indexed: " + mapper.writeValueAsString(document));
             log.info("Successfully indexed document with ID: " + document.getId());
 
-        } catch (IOException e) {
-            log.error("Failed to index document: " + e.getMessage());
-        } catch (Exception ex) {
-            log.error(ex.getMessage());
-        } finally {
-            if (documentManager.deleteFile(fullFilename))
-                log.info("Success delete: " + fullFilename);
-            else
-                log.error("Not deleted: " + fullFilename);
+        } catch (Exception e) {
+            log.info(e.getMessage());
         }
 
     }
@@ -99,6 +117,36 @@ public class SearchService {
         }
     }
 
+    public void updateDocument(String id, DocumentElasticsearch updatedDocument, Long newDocumentVersionId, String base64Content) throws Exception {
+
+        updatedDocument.setDocumentVersionId(newDocumentVersionId);
+        System.out.println(updatedDocument);
+        updatedDocument.setContent(getFileContent(
+                id,
+                updatedDocument.getTitle(),
+                base64Content
+        ));
+
+
+        Map<String, Object> docAsMap = mapper.convertValue(updatedDocument, Map.class);
+
+        GetRequest getRequest = new GetRequest(INDEX_DOCUMENTS, id);
+        GetResponse getResponse = client.get(getRequest, RequestOptions.DEFAULT);
+
+        if (getResponse.isExists()) {
+            UpdateRequest updateRequest = new UpdateRequest(INDEX_DOCUMENTS, id).doc(docAsMap);
+            try {
+                client.update(updateRequest, RequestOptions.DEFAULT);
+            } catch (Exception e) {
+                log.error("Не удалось обновить документ", e);
+            }
+        } else {
+            log.error("Документ с id " + id + " не найден для обновления.");
+        }
+
+    }
+
+
 
     /**
      * Searches for a document by documentVersionId and returns it as a DocumentElasticsearch object.
@@ -108,11 +156,11 @@ public class SearchService {
      * @throws IOException If there's an error during the search.
      */
     public DocumentElasticsearch searchByDocumentVersionId(long documentVersionId) throws IOException {
-
         SearchRequest searchRequest = new SearchRequest(INDEX_DOCUMENTS);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
-        searchSourceBuilder.query(QueryBuilders.termQuery("documentVersionId", documentVersionId));
+        searchSourceBuilder.query(QueryBuilders.matchQuery("documentVersionId", documentVersionId));
+
         searchRequest.source(searchSourceBuilder);
 
         SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
@@ -125,9 +173,15 @@ public class SearchService {
         }
     }
 
+
     public void deleteByDocumentVersionId(long documentVersionId) throws IOException {
         DocumentElasticsearch documentElasticsearch = searchByDocumentVersionId(documentVersionId);
         updateDocument(documentElasticsearch.getId(), Map.of("isAlive", Boolean.FALSE));
+    }
+
+    public void recoverByDocumentVersionId(long documentVersionId) throws IOException {
+        DocumentElasticsearch documentElasticsearch = searchByDocumentVersionId(documentVersionId);
+        updateDocument(documentElasticsearch.getId(), Map.of("isAlive", Boolean.TRUE));
     }
 
     public List<DocumentElasticsearch> search(String searchString, List<String> attributes, List<String> documentTypes) throws Exception {
@@ -135,6 +189,12 @@ public class SearchService {
         SearchRequest searchRequest = new SearchRequest(INDEX_DOCUMENTS);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder request = QueryBuilders.boolQuery();
+
+        BoolQueryBuilder isAliveQuery = QueryBuilders.boolQuery()
+                .should(QueryBuilders.termQuery("isAlive", true))
+                .should(QueryBuilders.boolQuery().mustNot(QueryBuilders.existsQuery("isAlive")));
+
+        request.must(isAliveQuery);
 
         if (attributes != null && !attributes.isEmpty()) {
             BoolQueryBuilder valuesQuery = QueryBuilders.boolQuery();
