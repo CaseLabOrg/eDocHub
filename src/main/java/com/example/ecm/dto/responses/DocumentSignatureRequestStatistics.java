@@ -1,8 +1,8 @@
 package com.example.ecm.dto.responses;
 
-public class DocumentSignatureRequestStatistics {
-    private Long documentId;
-    private Long requestCount;
-    private Long approvedCount;
-    private Long rejectedCount;
+public interface DocumentSignatureRequestStatistics {
+    Long getDocumentId();
+    Long getRequestCount();
+    Long getApprovedCount();
+    Long getRejectedCount();
 }

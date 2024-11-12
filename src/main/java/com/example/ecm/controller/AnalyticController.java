@@ -37,10 +37,10 @@ public class AnalyticController {
     }
 
     @GetMapping("/active-users")
-    public ResponseEntity<List<ActiveUser>> getMostActiveUsers(
+    public ResponseEntity<List<ActiveUserProjection>> getMostActiveUsers(
             @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-        List<ActiveUser> activeUsers = analyticService.getMostActiveUsers(startDate, endDate);
+        List<ActiveUserProjection> activeUsers = analyticService.getMostActiveUsers(startDate, endDate);
         return ResponseEntity.ok(activeUsers);
     }
 
