@@ -13,8 +13,12 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@RequiredArgsConstructor
+
+/**
+ * Контроллер для аналитики
+ */
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/analytics")
 public class AnalyticController {
 
@@ -65,5 +69,34 @@ public class AnalyticController {
     @GetMapping("/document-signatures-stats")
     public ResponseEntity<List<DocumentSignatureRequestStatistics>> getDocumentSignaturesStatistics() {
         return ResponseEntity.ok(analyticService.getDocumentSignatureRequestStatistics());
+    }
+    /**
+     * Получает количество документов по типам
+     *
+     * @return Список DocumentCountByTypeResponse c информацией о количестве документов каждого типа
+     */
+    @GetMapping("/documents/count-by-type")
+    public List<DocumentCountByTypeResponse> getDocumentCountByType() {
+        return analyticService.getDocumentCountByType();
+    }
+
+    /**
+     * Возвращает количество активных и неактивных документов.
+     *
+     * @return Список DocumentStatusCount с информацией о количестве активных и неактивных документов
+     */
+    @GetMapping("/documents/status-count")
+    public List<DocumentStatusCountResponse> getDocumentStatusCounts() {
+        return analyticService.getDocumentStatusCounts();
+    }
+
+    /**
+     * Возвращает процентное соотношение типов документов.
+     *
+     * @return Список DocumentTypePercentage с процентным соотношением документов по типам
+     */
+    @GetMapping("/documents/type-percentage")
+    public List<DocumentTypePercentageResponse> getDocumentTypePercentages() {
+        return analyticService.getDocumentTypePercentages();
     }
 }

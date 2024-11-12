@@ -20,8 +20,8 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class DocumentTypeService {
     private final DocumentTypeRepository documentTypeRepository;
-    private final AttributeRepository attributeRepository;
     private final DocumentTypeMapper documentTypeMapper;
+    private final AttributeRepository attributeRepository;
 
     /**
      * Создает новый тип документа.
@@ -74,7 +74,7 @@ public class DocumentTypeService {
     /**
      * Обновляет тип документа по идентификатору.
      *
-     * @param id      идентификатор типа документа
+     * @param id идентификатор типа документа
      * @param request запрос на обновление типа документа
      * @return ответ с данными обновленного типа документа
      */
@@ -82,6 +82,8 @@ public class DocumentTypeService {
         DocumentType documentType = documentTypeRepository.findById(id)
                 .filter(DocumentType::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("DocumentType with id: " + id + " not found"));
+        List<Attribute> attributes = attributeRepository.findAttributesByIdIsIn(request.getAttributeIds());
+        documentType.setAttributes(attributes);
         documentType.setId(id);
         documentType.setName(request.getName());
 

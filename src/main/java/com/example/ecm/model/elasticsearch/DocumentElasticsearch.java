@@ -47,5 +47,4 @@ public class DocumentElasticsearch {
 
     @Field(type = FieldType.Boolean)
     private Boolean isAlive;
-
 }

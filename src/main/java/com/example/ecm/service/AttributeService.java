@@ -10,10 +10,14 @@ import com.example.ecm.model.DocumentType;
 import com.example.ecm.repository.AttributeRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -67,22 +71,27 @@ public class AttributeService {
      *
      * @return список ответов с данными всех атрибутов документов
      */
-    public List<CreateAttributeResponse> getAllAttributes(Boolean showOnlyALive) {
-        Stream<Attribute> attributeStream = attributeRepository.findAll().stream();
+    public List<CreateAttributeResponse> getAllAttributes(Pageable pageable, Boolean showOnlyALive) {
+        Page<Attribute> attributePage = attributeRepository.findAll(pageable);
+        Stream<Attribute> attributeStream = attributePage.stream();
 
         if (showOnlyALive) {
             attributeStream = attributeStream.filter(Attribute::getIsAlive);
         }
 
-        return attributeStream
-                .map(attributeMapper::toAttributeResponse)
-                .toList();
+        return new PageImpl<>(
+                attributeStream
+                        .map(attributeMapper::toAttributeResponse)
+                        .collect(Collectors.toList()),
+                pageable,
+                attributePage.getTotalElements()
+        ).getContent();
     }
 
     /**
      * Обновляет атрибут документа по идентификатору.
      *
-     * @param id      идентификатор атрибута документа
+     * @param id идентификатор атрибута документа
      * @param request запрос на обновление атрибута документа
      * @return ответ с данными обновленного атрибута документа
      */
@@ -119,14 +128,6 @@ public class AttributeService {
         attributeRepository.save(attribute);
     }
 
-    /**
-     * Частичное обновление атрибута документа по идентификатору.
-     *
-     * @param id      идентификатор атрибута документа
-     * @param request запрос на частичное обновление атрибута документа
-     * @return ответ с данными обновленного атрибута документа
-     */
-
     public CreateAttributeResponse patchAttribute(Long id, PatchAttributeRequest request) {
         Attribute attribute = attributeRepository.findById(id)
                 .filter(Attribute::getIsAlive)
@@ -139,7 +140,7 @@ public class AttributeService {
             attribute.setRequired(request.getRequired());
         }
 
-        if (request.getDocumentTypesIds() != null && !request.getDocumentTypesIds().isEmpty()) {
+        if (request.getDocumentTypesIds() != null) {
             List<DocumentType> documentTypes = documentTypeRepository.findDocumentTypesByIdIsIn(request.getDocumentTypesIds());
             attribute.setDocumentTypes(documentTypes);
         }

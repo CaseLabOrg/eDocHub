@@ -37,6 +37,4 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
             @Param("endDate") LocalDateTime endDate
     );
 
-
-
 }
