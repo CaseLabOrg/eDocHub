@@ -7,6 +7,8 @@ import com.example.ecm.parser.DocumentParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -20,10 +22,15 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.xcontent.XContentType;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +50,8 @@ public class SearchService {
     private final DocumentParser documentParser;
 
     private String getFileContent(String id, String title, String base64Content) throws Exception {
+
+        if (base64Content == null) return null;
 
         String fileExtension = title.substring(title.lastIndexOf('.') + 1);
         String fullFilename = id + "." + fileExtension;
@@ -108,24 +117,35 @@ public class SearchService {
         }
     }
 
-    public void updateDocument(String id, DocumentElasticsearch updatedDocument, Long newDocumentVersionId) throws Exception {
+    public void updateDocument(String id, DocumentElasticsearch updatedDocument, Long newDocumentVersionId, String base64Content) throws Exception {
 
         updatedDocument.setDocumentVersionId(newDocumentVersionId);
+        System.out.println(updatedDocument);
         updatedDocument.setContent(getFileContent(
                 id,
                 updatedDocument.getTitle(),
-                updatedDocument.getContent()
+                base64Content
         ));
 
-        UpdateRequest updateRequest = new UpdateRequest(INDEX_DOCUMENTS, id)
-                .doc(updatedDocument);
 
-        try {
-            client.update(updateRequest, RequestOptions.DEFAULT);
-        } catch (Exception e) {
-            log.error("Не удалось обновить документ", e);
+        Map<String, Object> docAsMap = mapper.convertValue(updatedDocument, Map.class);
+
+        GetRequest getRequest = new GetRequest(INDEX_DOCUMENTS, id);
+        GetResponse getResponse = client.get(getRequest, RequestOptions.DEFAULT);
+
+        if (getResponse.isExists()) {
+            UpdateRequest updateRequest = new UpdateRequest(INDEX_DOCUMENTS, id).doc(docAsMap);
+            try {
+                client.update(updateRequest, RequestOptions.DEFAULT);
+            } catch (Exception e) {
+                log.error("Не удалось обновить документ", e);
+            }
+        } else {
+            log.error("Документ с id " + id + " не найден для обновления.");
         }
+
     }
+
 
 
     /**
@@ -136,11 +156,11 @@ public class SearchService {
      * @throws IOException If there's an error during the search.
      */
     public DocumentElasticsearch searchByDocumentVersionId(long documentVersionId) throws IOException {
-
         SearchRequest searchRequest = new SearchRequest(INDEX_DOCUMENTS);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
-        searchSourceBuilder.query(QueryBuilders.termQuery("documentVersionId", documentVersionId));
+        searchSourceBuilder.query(QueryBuilders.matchQuery("documentVersionId", documentVersionId));
+
         searchRequest.source(searchSourceBuilder);
 
         SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
@@ -152,6 +172,7 @@ public class SearchService {
             return null;
         }
     }
+
 
     public void deleteByDocumentVersionId(long documentVersionId) throws IOException {
         DocumentElasticsearch documentElasticsearch = searchByDocumentVersionId(documentVersionId);

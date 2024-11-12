@@ -277,13 +277,30 @@ public class DocumentService {
         response.setValues(createDocumentVersionRequest.getValues());
 
         // Elastic update
-        System.out.println("VERSION ID: " + id);
+        System.out.println("VERSION ID: " + document.getDocumentVersions().getLast().getVersionId());
         System.out.println("DOCUMENT: " + documentVersion);
-        searchService.updateDocument(
-                searchService.searchByDocumentVersionId(id).getId(),
-                documentVersionMapper.mapToElasticsearch(documentVersion),
-                documentVersion.getId()
-        );
+
+        try {
+            int index = document.getDocumentVersions().size()-2;
+            if (index < 0) index = 0;
+            DocumentElasticsearch existingDocument = searchService.searchByDocumentVersionId(document.getDocumentVersions().get(index).getVersionId());
+
+            if (existingDocument != null) {
+
+                searchService.updateDocument(
+                        existingDocument.getId(),
+                        documentVersionMapper.mapToElasticsearch(documentVersion),
+                        documentVersion.getId(),
+                        response.getBase64Content()
+                );
+            } else {
+                System.out.println("Последняя версия документа не найдена в Elasticsearch.");
+            }
+        } catch (Exception e) {
+            System.err.println("Ошибка при обновлении документа в Elasticsearch: ");
+            e.printStackTrace();
+        }
+
         return response;
     }
 

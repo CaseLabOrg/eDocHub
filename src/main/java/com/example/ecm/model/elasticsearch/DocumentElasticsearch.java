@@ -1,8 +1,10 @@
 package com.example.ecm.model.elasticsearch;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -16,6 +18,7 @@ import java.util.Map;
 @Getter
 @Setter
 @Document(indexName = "documents")
+@ToString
 public class DocumentElasticsearch {
 
     @Id
@@ -46,6 +49,7 @@ public class DocumentElasticsearch {
     @Field(type = FieldType.Object)
     private Map<String, String> values;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
     @Field(type = FieldType.Boolean)
     private Boolean isAlive;
 }
