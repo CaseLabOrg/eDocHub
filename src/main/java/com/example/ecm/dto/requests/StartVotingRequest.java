@@ -1,6 +1,8 @@
 package com.example.ecm.dto.requests;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -29,6 +31,8 @@ public class StartVotingRequest {
 
     @Future(message = "deadline cannot be in the past")
     @NotNull(message = "approvalThreshold cannot be null")
+    @JsonDeserialize(using = LocalDateDeserializer.class)
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate deadline;
 
