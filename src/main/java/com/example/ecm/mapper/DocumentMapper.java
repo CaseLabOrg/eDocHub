@@ -77,7 +77,7 @@ public class DocumentMapper {
         documentElasticsearch.setUserId(request.getUserId());
         documentElasticsearch.setDocumentTypeId(request.getDocumentTypeId());
         documentElasticsearch.setDescription(request.getDescription());
-        documentElasticsearch.setCreatedAt(OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        documentElasticsearch.setCreatedAt(LocalDateTime.parse(OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
         documentElasticsearch.setValues(mapValues(request.getValues()));
 
         return documentElasticsearch;
@@ -105,7 +105,7 @@ public class DocumentMapper {
         documentVersion.setDocument(document);
         documentVersion.setTitle(documentElasticsearch.getTitle());
         documentVersion.setDescription(documentElasticsearch.getDescription());
-        documentVersion.setCreatedAt(OffsetDateTime.parse(documentElasticsearch.getCreatedAt()).toLocalDateTime());
+        documentVersion.setCreatedAt(documentElasticsearch.getCreatedAt());
 
         Map<Attribute, Value> values = new HashMap<>();
         for (Map.Entry<String, String> entry : entrySet) {

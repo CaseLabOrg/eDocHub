@@ -6,10 +6,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
@@ -18,7 +20,6 @@ import java.util.Map;
 @Getter
 @Setter
 @Document(indexName = "documents")
-@ToString
 public class DocumentElasticsearch {
 
     @Id
@@ -43,13 +44,12 @@ public class DocumentElasticsearch {
     @Field(type = FieldType.Text)
     private String content;
 
-    @Field(type = FieldType.Date)
-    private String createdAt;
+    @Field(type = FieldType.Date, format = DateFormat.custom, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+    private LocalDateTime createdAt;
 
     @Field(type = FieldType.Object)
     private Map<String, String> values;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
     @Field(type = FieldType.Boolean)
     private Boolean isAlive;
 }
