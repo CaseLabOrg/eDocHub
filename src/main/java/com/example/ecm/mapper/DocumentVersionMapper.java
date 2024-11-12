@@ -71,10 +71,11 @@ public class DocumentVersionMapper {
 
         DocumentElasticsearch elasticDocument = new DocumentElasticsearch();
         elasticDocument.setDocumentVersionId(documentVersion.getId());
+        elasticDocument.setDocumentTypeId(documentVersion.getDocument().getDocumentType().getId());
         elasticDocument.setUserId(documentVersion.getDocument().getId());
         elasticDocument.setTitle(documentVersion.getTitle());
         elasticDocument.setDescription(documentVersion.getDescription());
-        elasticDocument.setCreatedAt(documentVersion.getCreatedAt().toString());
+        elasticDocument.setCreatedAt(documentVersion.getCreatedAt());
         elasticDocument.setIsAlive(documentVersion.getIsAlive());
 
         // Преобразование карты значений

@@ -1,6 +1,8 @@
 package com.example.ecm.service;
 
 import com.example.ecm.dto.requests.CreateDocumentRequest;
+import com.example.ecm.mapper.DocumentVersionMapper;
+import com.example.ecm.model.DocumentVersion;
 import com.example.ecm.model.elasticsearch.DocumentElasticsearch;
 import com.example.ecm.parser.DocumentManager;
 import com.example.ecm.parser.DocumentParser;
@@ -48,6 +50,7 @@ public class SearchService {
     private final RestHighLevelClient client;
     private final DocumentManager documentManager;
     private final DocumentParser documentParser;
+    private final DocumentVersionMapper documentVersionMapper;
 
     private String getFileContent(String id, String title, String base64Content) throws Exception {
 
@@ -117,33 +120,37 @@ public class SearchService {
         }
     }
 
-    public void updateDocument(String id, DocumentElasticsearch updatedDocument, Long newDocumentVersionId, String base64Content) throws Exception {
 
-        updatedDocument.setDocumentVersionId(newDocumentVersionId);
+    public void updateDocument(String idDocumentElastic, DocumentVersion updatedDocument, String base64Content) throws Exception {
+
+        if (idDocumentElastic == null || updatedDocument == null) {
+            throw new IllegalArgumentException("Document ID and updated document must not be null.");
+        }
+
         System.out.println(updatedDocument);
-        updatedDocument.setContent(getFileContent(
-                id,
+
+        DocumentElasticsearch documentElastic = documentVersionMapper.mapToElasticsearch(updatedDocument);
+
+        documentElastic.setId(idDocumentElastic);
+        documentElastic.setDocumentVersionId(updatedDocument.getId());
+        documentElastic.setContent(getFileContent(
+                idDocumentElastic,
                 updatedDocument.getTitle(),
                 base64Content
         ));
+        documentElastic.setIsAlive(updatedDocument.getIsAlive());
+
+        Map<String, Object> documentMap = mapper.convertValue(documentElastic, Map.class);
 
 
-        Map<String, Object> docAsMap = mapper.convertValue(updatedDocument, Map.class);
+        UpdateRequest updateRequest = new UpdateRequest("documents", idDocumentElastic)
+                .doc(documentMap, XContentType.JSON);
 
-        GetRequest getRequest = new GetRequest(INDEX_DOCUMENTS, id);
-        GetResponse getResponse = client.get(getRequest, RequestOptions.DEFAULT);
-
-        if (getResponse.isExists()) {
-            UpdateRequest updateRequest = new UpdateRequest(INDEX_DOCUMENTS, id).doc(docAsMap);
-            try {
-                client.update(updateRequest, RequestOptions.DEFAULT);
-            } catch (Exception e) {
-                log.error("Не удалось обновить документ", e);
-            }
-        } else {
-            log.error("Документ с id " + id + " не найден для обновления.");
+        try {
+            client.update(updateRequest, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            log.info(e.getMessage());
         }
-
     }
 
 

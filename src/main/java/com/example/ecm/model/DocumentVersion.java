@@ -21,7 +21,6 @@ import java.util.Map;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString
 public class DocumentVersion {
 
     @Id
