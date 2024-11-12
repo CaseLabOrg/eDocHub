@@ -29,7 +29,7 @@ public class AnalyticService {
         return votingRepository.findVotingSummaries(startDate, endDate);
     }
 
-    public List<ActiveUser> getMostActiveUsers(LocalDateTime startDate, LocalDateTime endDate) {
+    public List<ActiveUserProjection> getMostActiveUsers(LocalDateTime startDate, LocalDateTime endDate) {
         return documentRepository.findMostActiveUsers(startDate, endDate);
     }
 

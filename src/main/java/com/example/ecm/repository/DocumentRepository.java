@@ -1,6 +1,6 @@
 package com.example.ecm.repository;
 
-import com.example.ecm.dto.responses.ActiveUser;
+import com.example.ecm.dto.responses.ActiveUserProjection;
 import com.example.ecm.model.Document;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -22,27 +22,21 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     //@Query("SELECT d FROM Document d LEFT JOIN SignatureRequest sr ON d.id = sr.document.id WHERE d.user.id = ?1 OR sr.userTo.id = ?1")
     //List<Document> findDocumentsBySignature(Long userId);
 
-    @Query(value = """
-           SELECT 
-               d.user_id AS userId,
-               CONCAT(u.name, ' ', u.surname) AS userName,
-               COUNT(d.id) AS documentsCreated
-           FROM 
-               Documents d
-           JOIN 
-               Users u ON d.user_id = u.id
-           WHERE 
-               d.is_alive = true 
-               AND d.created_at BETWEEN :startDate AND :endDate
-           GROUP BY 
-               d.user_id, userName
-           ORDER BY 
-               documentsCreated DESC
-           LIMIT 10
-           """, nativeQuery = true)
-    List<ActiveUser> findMostActiveUsers(
+    @Query("""
+    SELECT u AS user, COUNT(dv.id) AS documentsCreated
+    FROM Document d
+    JOIN d.user u
+    JOIN DocumentVersion dv ON dv.document = d
+    WHERE d.isAlive = true
+      AND dv.createdAt BETWEEN :startDate AND :endDate
+    GROUP BY u
+    ORDER BY documentsCreated DESC
+    """)
+    List<ActiveUserProjection> findMostActiveUsers(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
+
+
 
 }
