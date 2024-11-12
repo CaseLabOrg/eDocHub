@@ -2,6 +2,7 @@ CREATE TABLE Documents(
                           id BIGSERIAL PRIMARY KEY,
                           user_id BIGINT,
                           type_id BIGINT,
+                          state VARCHAR(255),
                           is_alive BOOLEAN
 );
 

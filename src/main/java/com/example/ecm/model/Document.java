@@ -1,5 +1,6 @@
 package com.example.ecm.model;
 
+import com.example.ecm.model.enums.DocumentState;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -38,5 +39,8 @@ public class Document {
     @OneToMany(mappedBy = "document", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.REMOVE})
     private List<Comment> comments = new ArrayList<>();
 
-    private Boolean isAlive;
+    @Enumerated(EnumType.STRING)
+    private DocumentState state = DocumentState.CREATED;
+
+    private Boolean isAlive = true;
 }

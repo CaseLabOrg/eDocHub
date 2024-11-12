@@ -4,12 +4,14 @@ import com.example.ecm.dto.requests.CreateSignatureRequest;
 import com.example.ecm.dto.requests.CreateSignatureRequestRequest;
 import com.example.ecm.dto.responses.CreateSignatureRequestResponse;
 import com.example.ecm.dto.responses.GetSignatureResponse;
+import com.example.ecm.exception.ConflictException;
 import com.example.ecm.exception.ForbiddenException;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.kafka.event.DocumentSignedEvent;
 import com.example.ecm.kafka.service.EventProducerService;
 import com.example.ecm.mapper.SignatureMapper;
 import com.example.ecm.model.*;
+import com.example.ecm.model.enums.DocumentState;
 import com.example.ecm.repository.*;
 import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ public class SignatureService {
     private final SignatureMapper signatureMapper;
     private final EventProducerService eventProducerService;
     private final MailNotificationService mailNotificationService;
+    private final DocumentStateService documentStateService;
 
     public CreateSignatureRequestResponse sendToSign(CreateSignatureRequestRequest request, UserPrincipal currentUser) {
         Document document = documentRepository.findById(request.getDocumentId())
@@ -44,6 +47,10 @@ public class SignatureService {
 
         if (!currentUser.getId().equals(document.getUser().getId()) && !currentUser.isAdmin()) {
             throw new ForbiddenException("You have no permission to send this document");
+        }
+
+        if (!documentStateService.checkTransition(document, DocumentState.SIGNED_BY_AUTHOR)) {
+            throw new ConflictException("You cannot sign as author document with id: " + request.getDocumentId() + " check available transitions");
         }
 
         Signature signature = signatureMapper.toSignature(document, documentVersion);
