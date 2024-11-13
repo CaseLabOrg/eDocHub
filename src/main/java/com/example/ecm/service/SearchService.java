@@ -1,7 +1,5 @@
 package com.example.ecm.service;
 
-import com.example.ecm.dto.requests.CreateDocumentRequest;
-import com.example.ecm.mapper.DocumentMapper;
 import com.example.ecm.model.elasticsearch.DocumentElasticsearch;
 import com.example.ecm.parser.Base64Manager;
 import com.example.ecm.parser.DocumentManager;
@@ -45,17 +43,15 @@ public class SearchService {
     private final Base64Manager base64Manager;
     private final DocumentParser documentParser;
 
-    public void addIndexDocumentElasticsearch(DocumentElasticsearch document, CreateDocumentRequest request, Long documentVersionId) {
+    public void addIndexDocumentElasticsearch(DocumentElasticsearch document, String base64Content, Long documentVersionId) {
 
         document.setDocumentVersionId(documentVersionId);
         document.setIsAlive(true);
 
-        String fileExtension = request.getTitle().substring(request.getTitle().lastIndexOf('.') + 1);
-        String fullFilename = document.getId() + "." + fileExtension;
-
+        String fullFilename = document.getId() + "." + base64Manager.getFileExtensionFromBase64(base64Content);
         try {
 
-            documentManager.saveFileFromBase64(request.getBase64Content(), fullFilename);
+            documentManager.saveFileFromBase64(base64Manager.removeMetadataPrefix(base64Content), fullFilename);
             String content = documentParser.parse(documentManager.getAbsolutePath() + "/" + fullFilename);
             document.setContent(content);
 

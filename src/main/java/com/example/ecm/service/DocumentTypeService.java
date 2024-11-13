@@ -75,9 +75,8 @@ public class DocumentTypeService {
             documentTypeStream = documentTypeStream.filter(DocumentType::getIsAlive);
         }
 
-        if (!userPrincipal.isAdmin()) {
-            documentTypeStream = documentTypeStream.filter(d -> d.getTenant().getId().equals(TenantContext.getCurrentTenantId()));
-        }
+        documentTypeStream = documentTypeStream.filter(d -> d.getTenant().getId().equals(TenantContext.getCurrentTenantId()));
+
         return documentTypeStream
                 .map(documentTypeMapper::toCreateDocumentTypeResponse)
                 .toList();
