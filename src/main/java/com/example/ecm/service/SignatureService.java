@@ -131,13 +131,16 @@ public class SignatureService {
         return signatureMapper.toGetSignatureResponse(signature);
     }
 
-    public List<CreateSignatureRequestResponse> getAllSignatureRequests() {
+    public List<CreateSignatureRequestResponse> getAllSignatureRequests(UserPrincipal userPrincipal) {
         return signatureRequestRepository.findAll()
-                .stream().map(signatureMapper::toCreateSignatureRequestResponse).toList();
+                .stream()
+                .filter(r -> r.getId().equals(userPrincipal.getId()))
+                .map(signatureMapper::toCreateSignatureRequestResponse).toList();
     }
 
-    public CreateSignatureRequestResponse getSignatureRequestById(Long id) {
+    public CreateSignatureRequestResponse getSignatureRequestById(Long id, UserPrincipal userPrincipal) {
         return signatureRequestRepository.findById(id).map(signatureMapper::toCreateSignatureRequestResponse)
+                .filter(r -> r.getId().equals(userPrincipal.getId()))
                 .orElseThrow(() -> new NotFoundException("SignatureRequest with id: " + id + " not found"));
 
     }
