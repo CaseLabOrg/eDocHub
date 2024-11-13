@@ -2,7 +2,8 @@
 CREATE TABLE Tenants (
                          id BIGSERIAL PRIMARY KEY,
                          name TEXT NOT NULL,
-                         created_at TIMESTAMP NOT NULL
+                         created_at TIMESTAMP NOT NULL,
+                         owner_id BIGSERIAL NOT NULL
 );
 
 
@@ -13,16 +14,8 @@ CREATE TABLE Users (
                        email VARCHAR(255) NOT NULL UNIQUE,
                        password VARCHAR(255) NOT NULL,
                        is_alive BOOLEAN,
-                       tenant_id BIGINT
+                       tenant_id BIGINT NOT NULL
 );
-
-
-ALTER TABLE Users
-    ADD CONSTRAINT fk_tenant FOREIGN KEY (tenant_id) REFERENCES Tenants(id);
-
-ALTER TABLE Tenants
-    ADD COLUMN admin_user BIGINT,
-ADD FOREIGN KEY (admin_user) REFERENCES Users(id);
 
 CREATE TABLE Documents(
                           id BIGSERIAL PRIMARY KEY,

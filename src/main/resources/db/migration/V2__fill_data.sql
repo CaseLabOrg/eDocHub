@@ -1,15 +1,12 @@
-INSERT INTO tenants (name, created_at) VALUES ('Tenant1', NOW());
+INSERT INTO tenants (name, created_at, owner_id) VALUES ('Tenant1', NOW(), 1);
 
-INSERT INTO tenants (name, created_at) VALUES ('Tenant2', NOW());
-
+INSERT INTO tenants (name, created_at, owner_id) VALUES ('Tenant2', NOW(), 2);
 
 INSERT INTO users (name, surname, email, password, is_alive, tenant_id)
-VALUES ('super_admin', 'admin', 'admin@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', true, 2);
+VALUES ('super_admin', 'admin', 'admin@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', true, 1);
 
-UPDATE tenants
-SET admin_user = 1
-WHERE name = 'Tenant2';
-
+INSERT INTO users (name, surname, email, password, is_alive, tenant_id)
+VALUES ('super_admin2', 'admin2', 'admin2@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', true, 2);
 
 INSERT INTO document_types(name, is_alive, tenant_id) VALUES ('testType', true, 1);
 INSERT INTO document_types(name, is_alive, tenant_id) VALUES ('testTpe', true, 2);
@@ -27,6 +24,8 @@ INSERT INTO roles(name) VALUES ('ADMIN');
 INSERT INTO roles(name) VALUES ('USER');
 
 INSERT INTO user_roles VALUES (1, 1);
+INSERT INTO user_roles VALUES (1, 2);
+INSERT INTO user_roles VALUES (1, 3);
 
 INSERT INTO Document_Types_Attributes VALUES (1, 1);
 INSERT INTO Document_Types_Attributes VALUES (2, 1);
