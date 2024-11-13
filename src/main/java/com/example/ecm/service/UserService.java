@@ -7,12 +7,14 @@ import com.example.ecm.dto.requests.PutRoleRequest;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.mapper.UserMapper;
 import com.example.ecm.model.Role;
+import com.example.ecm.model.Tenant;
 import com.example.ecm.model.User;
 import com.example.ecm.repository.RoleRepository;
 import com.example.ecm.repository.TenantRepository;
 import com.example.ecm.repository.UserRepository;
 import com.example.ecm.saas.TenantContext;
-import com.example.ecm.saas.TenantRestrictedForUser;
+import com.example.ecm.saas.annotation.CheckAdmin;
+import com.example.ecm.saas.annotation.TenantRestrictedForUser;
 import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -48,9 +50,27 @@ public class UserService {
     @Transactional
     public CreateUserResponse createUser(CreateUserRequest createUserRequest, UserPrincipal userPrincipal) {
         User user = userMapper.toUser(createUserRequest);
-        user.setTenant(tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow( () -> new NotFoundException("Tenant not found")));
+        user.setTenant(tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow(() -> new NotFoundException("Tenant not found")));
         user.setRoles(Set.of(roleRepository.findByName("USER").orElseThrow(() -> new NotFoundException("Role with name: USER not found"))));
         user.setPassword(encoder.encode(createUserRequest.getPassword()));
+        User savedUser = userRepository.save(user);
+
+        return userMapper.toCreateUserResponse(savedUser);
+    }
+
+
+
+    @Transactional
+    public CreateUserResponse createUserAdmin(CreateUserRequest createUserRequest, UserPrincipal userPrincipal, Long tenantId) {
+        User user = userMapper.toUser(createUserRequest);
+
+        user.setTenant(tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow(() -> new NotFoundException("Tenant not found")));
+
+        user.setRoles(Set.of(roleRepository.findByName("ADMIN").orElseThrow(() -> new NotFoundException("Role with name: ADMIN not found"))));
+        user.setPassword(encoder.encode(createUserRequest.getPassword()));
+
+        Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> new NotFoundException("Tenant not found"));
+        tenant.setAdminUser(user);
         User savedUser = userRepository.save(user);
 
         return userMapper.toCreateUserResponse(savedUser);
@@ -188,7 +208,8 @@ public class UserService {
 
     /**
      * Частичное обновление пользователя
-     * @param id идентификатор пользователя
+     *
+     * @param id      идентификатор пользователя
      * @param request запрос на частичное обновление пользователя
      * @return ответ с данными обновленного пользователя
      */
@@ -201,7 +222,7 @@ public class UserService {
             user.setName(request.getName());
         }
 
-        if (request.getSurname() != null){
+        if (request.getSurname() != null) {
             user.setSurname(request.getSurname());
         }
 
@@ -216,5 +237,9 @@ public class UserService {
         User updatedUser = userRepository.save(user);
         return userMapper.toCreateUserResponse(updatedUser);
     }
+
+
+
+
 }
 

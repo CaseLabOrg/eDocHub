@@ -4,7 +4,7 @@ INSERT INTO tenants (name, created_at) VALUES ('Tenant2', NOW());
 
 
 INSERT INTO users (name, surname, email, password, is_alive, tenant_id)
-VALUES ('admin', 'admin', 'admin@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', true, 2);
+VALUES ('super_admin', 'admin', 'admin@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', true, 2);
 
 UPDATE tenants
 SET admin_user = 1
@@ -22,6 +22,7 @@ INSERT INTO documents(user_id, type_id, is_alive) VALUES (1, 1, true);
 
 INSERT INTO values(attribute_id, document_version_id, value) VALUES (2,1, '52');
 
+INSERT INTO roles(name) VALUES ('SUPER_ADMIN');
 INSERT INTO roles(name) VALUES ('ADMIN');
 INSERT INTO roles(name) VALUES ('USER');
 
