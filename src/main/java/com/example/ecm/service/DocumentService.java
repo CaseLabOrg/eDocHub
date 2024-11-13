@@ -129,7 +129,7 @@ public class DocumentService {
         Optional<DocumentVersion> documentVersion = documentVersionRepository.findByDocumentIdAndVersionId(documentId, versionId);
 
         if (showOnlyAlive) {
-            documentVersion = documentVersion.filter(DocumentVersion::getIsAlive);
+            documentVersion = documentVersion.filter(v -> v.getDocument().getIsAlive());
         }
 
         DocumentVersion version = documentVersion.orElseThrow(() -> new NotFoundException("Document Version with id: " + versionId + " or Document id " + documentId + " not found"));

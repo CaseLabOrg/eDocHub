@@ -4,12 +4,14 @@ import com.example.ecm.dto.patch_requests.PatchUserRequest;
 import com.example.ecm.dto.requests.CreateUserRequest;
 import com.example.ecm.dto.responses.CreateUserResponse;
 import com.example.ecm.dto.requests.PutRoleRequest;
+import com.example.ecm.exception.ConflictException;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.mapper.UserMapper;
 import com.example.ecm.model.Role;
 import com.example.ecm.model.User;
 import com.example.ecm.repository.RoleRepository;
 import com.example.ecm.repository.UserRepository;
+import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,16 @@ public class UserService {
      */
     @Transactional
     public CreateUserResponse createUser(CreateUserRequest createUserRequest) {
+        Optional<User> userOptional = userRepository.findByEmail(createUserRequest.getEmail());
+        if (userOptional.isPresent()) {
+            if (!userOptional.get().getIsAlive()) {
+                User user = userOptional.get();
+                user.setIsAlive(true);
+                user = userRepository.save(user);
+                return userMapper.toCreateUserResponse(user);
+            }
+            throw new ConflictException("Email already exists");
+        }
         User user = userMapper.toUser(createUserRequest);
         user.setRoles(Set.of(roleRepository.findByName("USER").orElseThrow(() -> new NotFoundException("Role with name: USER not found"))));
         user.setPassword(encoder.encode(createUserRequest.getPassword()));
@@ -128,7 +140,7 @@ public class UserService {
      *
      * @param id Идентификатор пользователя
      */
-    public void deleteUser(Long id) {
+    public void deleteUser(Long id, UserPrincipal userPrincipal) {
         User user = userRepository.findById(id)
                 .filter(User::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));

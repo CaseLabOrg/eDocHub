@@ -4,6 +4,7 @@ import com.example.ecm.dto.requests.CreateSignatureRequestRequest;
 import com.example.ecm.dto.requests.StartVotingRequest;
 import com.example.ecm.dto.responses.CancelVotingResponse;
 import com.example.ecm.dto.responses.StartVotingResponse;
+import com.example.ecm.exception.ConflictException;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.mapper.VotingMapper;
 import com.example.ecm.model.Document;
@@ -11,6 +12,8 @@ import com.example.ecm.model.DocumentVersion;
 import com.example.ecm.model.SignatureRequest;
 import com.example.ecm.model.User;
 import com.example.ecm.model.Voting;
+import com.example.ecm.model.enums.DocumentState;
+import com.example.ecm.model.enums.SignatureRequestState;
 import com.example.ecm.repository.DocumentRepository;
 import com.example.ecm.repository.DocumentVersionRepository;
 import com.example.ecm.repository.SignatureRequestRepository;
@@ -36,11 +39,16 @@ public class VotingService {
     private final SignatureRequestRepository signatureRequestRepository;
     private final DocumentVersionRepository documentVersionRepository;
     private final MailNotificationService mailNotificationService;
+    private final DocumentStateService documentStateService;
 
     public StartVotingResponse startVoting(StartVotingRequest startVotingRequest) {
         DocumentVersion documentVersion = documentVersionRepository.findByDocumentIdAndVersionId(startVotingRequest.getDocumentId(), startVotingRequest.getDocumentVersionId())
                 .orElseThrow(() -> new NotFoundException("Document Version with id: " + startVotingRequest.getDocumentId() + " or Document id " + startVotingRequest.getDocumentVersionId() + " not found"));
         String base64Content = documentService.getDocumentVersionById(startVotingRequest.getDocumentId(), startVotingRequest.getDocumentVersionId(), true).getBase64Content();
+
+        if (!documentStateService.checkTransition(documentVersion.getDocument(), DocumentState.SENT_ON_VOTING)) {
+            throw new ConflictException("You cannot send on voting document with id: " + documentVersion.getDocument().getId() + " check available transitions");
+        }
 
         List<SignatureRequest> signatureRequests = sendAllParticipantsToVote(startVotingRequest);
         Voting voting = votingMapper.toVoting(startVotingRequest, documentVersion, "ACTIVE");
@@ -114,7 +122,7 @@ public class VotingService {
         SignatureRequest signatureRequest = new SignatureRequest();
         signatureRequest.setUserTo(user);
         signatureRequest.setDocumentVersion(documentVersion);
-        signatureRequest.setStatus("PENDING");
+        signatureRequest.setStatus(SignatureRequestState.PENDING);
 
         return signatureRequestRepository.save(signatureRequest);
     }
