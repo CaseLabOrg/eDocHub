@@ -37,6 +37,7 @@ public class UserController {
      * @param createUserRequest DTO с данными для создания нового пользователя.
      * @return DTO с данными созданного пользователя.
      */
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Создать пользователя", description = "Создает нового пользователя с указанными данными.")
     @ApiResponse(responseCode = "200", description = "Пользователь успешно создан")
     @PostMapping
@@ -46,6 +47,15 @@ public class UserController {
         return ResponseEntity.ok(userResponse);
     }
 
+    @PreAuthorize("hasAuthority('SUPER_ADMIN')")
+    @PostMapping("/createAdmin")
+    @Operation(summary = "Создать пользователя", description = "Создает нового пользователя с указанными данными.")
+    @ApiResponse(responseCode = "200", description = "Пользователь успешно создан")
+    public ResponseEntity<CreateUserResponse> createAdminUser(@Valid @RequestBody CreateUserRequest createUserRequest,
+                                                         @AuthenticationPrincipal UserPrincipal userPrincipal, Long tenantId) {
+        CreateUserResponse userResponse = userService.createUserAdmin(createUserRequest, userPrincipal, tenantId);
+        return ResponseEntity.ok(userResponse);
+    }
     /**
      * Получение пользователя по его ID с возвратом данных в виде DTO.
      *
@@ -53,6 +63,7 @@ public class UserController {
      * @param showOnlyAlive Параметр для фильтрации пользователей по статусу (по умолчанию true).
      * @return DTO с данными пользователя, если найден, или 404 Not Found.
      */
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Получить пользователя по ID", description = "Возвращает данные пользователя по его идентификатору.")
     @ApiResponse(responseCode = "200", description = "Пользователь найден")
     @GetMapping("/{id}")
@@ -67,6 +78,7 @@ public class UserController {
      * @param showOnlyAlive Параметр для фильтрации пользователей по статусу (по умолчанию true).
      * @return Список DTO с данными всех пользователей.
      */
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Получить всех пользователей", description = "Возвращает список всех пользователей.")
     @ApiResponse(responseCode = "200", description = "Список пользователей успешно возвращен")
     @GetMapping
@@ -83,7 +95,7 @@ public class UserController {
      * @param role DTO с данными роли для добавления.
      * @return DTO с обновленными данными пользователя.
      */
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('SUPER_ADMIN')")
     @Operation(summary = "Добавить роль пользователю", description = "Добавляет указанную роль пользователю по его идентификатору.")
     @ApiResponse(responseCode = "200", description = "Роль успешно добавлена")
     @PutMapping("/{id}/role")
@@ -99,7 +111,7 @@ public class UserController {
      * @param role DTO с данными роли для удаления.
      * @return DTO с обновленными данными пользователя.
      */
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('SUPER_ADMIN')")
     @Operation(summary = "Удалить роль у пользователя", description = "Удаляет указанную роль у пользователя по его идентификатору.")
     @ApiResponse(responseCode = "200", description = "Роль успешно удалена")
     @DeleteMapping("/{id}/role")
@@ -115,6 +127,7 @@ public class UserController {
      * @param updateUserRequest DTO с обновленными данными пользователя.
      * @return Обновленный пользователь в виде DTO.
      */
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Обновить данные пользователя", description = "Обновляет данные пользователя по его идентификатору.")
     @ApiResponse(responseCode = "200", description = "Данные пользователя успешно обновлены")
     @PutMapping("/{id}")
@@ -130,7 +143,7 @@ public class UserController {
      * @param id Идентификатор пользователя.
      * @return Ответ без содержимого (204 No Content), если пользователь был удален.
      */
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Удалить пользователя", description = "Удаляет пользователя по его идентификатору.")
     @ApiResponse(responseCode = "204", description = "Пользователь успешно удален")
     @DeleteMapping("/{id}")
@@ -146,7 +159,7 @@ public class UserController {
      * @param id Идентификатор пользователя.
      * @return Ответ без содержимого (204 No Content), если пользователь был восстановлен.
      */
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Восстановить пользователя", description = "Восстанавливает пользователя по его идентификатору.")
     @ApiResponse(responseCode = "204", description = "Пользователь успешно восстановлен")
     @PatchMapping("/{id}/recover")
@@ -167,6 +180,7 @@ public class UserController {
      * @param request Объект {@link PatchUserRequest}, содержащий поля для частичного обновления.
      * @return {@link ResponseEntity} с данными обновленного пользователя в формате {@link CreateUserResponse}.
      */
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Частичное обновление пользователя", description = "Обновляет только указанные поля пользователя по его идентификатору.")
     @ApiResponse(responseCode = "200", description = "Данные пользователя успешно обновлены")
     @PatchMapping("/{id}")
