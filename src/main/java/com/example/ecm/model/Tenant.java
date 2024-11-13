@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.List;
 
 /**
  * Класс сущности Tenant, представляющий арендатора (компанию) в системе.
@@ -28,11 +28,10 @@ public class Tenant {
     private LocalDateTime createdAt;
 
     @OneToOne
-    @JoinColumn(name = "adminUser", nullable = true)
-    private User adminUser;
+    @JoinColumn(name = "owner_id")
+    private User owner;
 
-    // Связь с пользователями, принадлежащими арендатору
     @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<User> users;
+    private List<User> users;
 
 }

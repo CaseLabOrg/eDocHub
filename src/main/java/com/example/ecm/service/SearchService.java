@@ -42,6 +42,7 @@ public class SearchService {
     private final ObjectMapper mapper;
     private final RestHighLevelClient client;
     private final DocumentManager documentManager;
+    private final Base64Manager base64Manager;
     private final DocumentParser documentParser;
 
     public void addIndexDocumentElasticsearch(DocumentElasticsearch document, CreateDocumentRequest request, Long documentVersionId) {

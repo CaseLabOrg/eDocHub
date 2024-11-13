@@ -1,5 +1,6 @@
 package com.example.ecm.security.jwt;
 
+import com.example.ecm.saas.TenantContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,7 +28,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 .map(converter::convert)
                 .map(UserPrincipalAuthenticationToken::new)
                 .ifPresent(authentication -> SecurityContextHolder.getContext().setAuthentication(authentication));
-        filterChain.doFilter(request, response);
+        try {
+            filterChain.doFilter(request, response);
+        } finally {
+            TenantContext.clear();
+        }
     }
 
     private Optional<String> extractToken(HttpServletRequest request) {
