@@ -11,7 +11,7 @@ import com.example.ecm.repository.AttributeRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
 import com.example.ecm.repository.TenantRepository;
 import com.example.ecm.saas.TenantContext;
-import com.example.ecm.saas.TenantRestrictedForAttribute;
+import com.example.ecm.saas.annotation.TenantRestrictedForAttribute;
 import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -170,6 +170,12 @@ public class AttributeService {
     }
 
 
+    public void deleteAllAttribute( ) {
+        Stream<Attribute> attributeStream = attributeRepository.findAll().stream();
+        attributeStream.filter(attribute -> attribute.getTenant().getId().equals(TenantContext.getCurrentTenantId()));
+
+        attributeRepository.deleteAll(attributeStream.collect(Collectors.toList()));
+    }
     public Optional<Attribute> findAttributeByName(String name) {
         return attributeRepository.findByName(name);
     }

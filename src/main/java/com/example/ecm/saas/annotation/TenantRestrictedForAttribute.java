@@ -1,4 +1,4 @@
-package com.example.ecm.saas;
+package com.example.ecm.saas.annotation;
 
 
 import java.lang.annotation.ElementType;
@@ -11,6 +11,6 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface TenantRestrictedForUser {
+public @interface TenantRestrictedForAttribute {
 
 }

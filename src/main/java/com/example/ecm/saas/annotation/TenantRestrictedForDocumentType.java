@@ -1,4 +1,4 @@
-package com.example.ecm.saas;
+package com.example.ecm.saas.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
