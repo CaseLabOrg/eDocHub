@@ -77,12 +77,18 @@ public class VotingService {
         votingRepository.findByStatus("ACTIVE").forEach(voting -> {
             int all = voting.getSignatureRequests().size();
             long inFavor = voting.getSignatureRequests().stream()
-                    .filter(signatureRequest -> signatureRequest.getStatus().equals("FOR"))
+                    .filter(signatureRequest -> signatureRequest.getStatus().equals(SignatureRequestState.APPROVED))
                     .count();
             voting.setCurrentApprovalRate(all / (float) inFavor);
 
             if (LocalDateTime.now().isAfter(voting.getDeadline().atStartOfDay())) {
                 voting.setStatus("COMPLETED");
+                if (voting.getCurrentApprovalRate() >= voting.getApprovalThreshold()) {
+                    voting.getDocumentVersion().getDocument().setState(DocumentState.APPROVED_BY_VOTING);
+                } else {
+                    voting.getDocumentVersion().getDocument().setState(DocumentState.REJECTED_BY_VOTING);
+                }
+                documentRepository.save(voting.getDocumentVersion().getDocument());
                 notifyParticipants(voting);
             }
 
