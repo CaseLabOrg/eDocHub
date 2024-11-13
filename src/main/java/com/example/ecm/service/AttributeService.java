@@ -89,6 +89,7 @@ public class AttributeService {
         if(!userPrincipal.isAdmin()) {
                 attributeStream = attributeStream.filter(attribute ->  attribute.getTenant().getId().equals(TenantContext.getCurrentTenantId()));
         }
+
         return new PageImpl<>(
                 attributeStream
                         .map(attributeMapper::toAttributeResponse)
@@ -170,13 +171,6 @@ public class AttributeService {
         return attributeMapper.toAttributeResponse(attributeRepository.save(attribute));
     }
 
-
-    public void deleteAllAttribute( ) {
-        Stream<Attribute> attributeStream = attributeRepository.findAll().stream();
-        attributeStream.filter(attribute -> attribute.getTenant().getId().equals(TenantContext.getCurrentTenantId()));
-
-        attributeRepository.deleteAll(attributeStream.collect(Collectors.toList()));
-    }
     public Optional<Attribute> findAttributeByName(String name) {
         return attributeRepository.findByName(name);
     }

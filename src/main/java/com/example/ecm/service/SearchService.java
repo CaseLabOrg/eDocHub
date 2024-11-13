@@ -1,6 +1,5 @@
 package com.example.ecm.service;
 
-import com.example.ecm.mapper.DocumentMapper;
 import com.example.ecm.model.elasticsearch.DocumentElasticsearch;
 import com.example.ecm.parser.Base64Manager;
 import com.example.ecm.parser.DocumentManager;
@@ -40,9 +39,6 @@ public class SearchService {
 
     private final ObjectMapper mapper;
     private final RestHighLevelClient client;
-    private final DocumentMapper documentMapper;
-    private final UserService userService;
-    private final DocumentTypeService documentTypeService;
     private final DocumentManager documentManager;
     private final Base64Manager base64Manager;
     private final DocumentParser documentParser;

@@ -48,7 +48,7 @@ public class MinioService {
      * Документ загружается в виде Base64-строки, которая декодируется перед отправкой.
      *
      * @param id идентификатор документа
-     * @param createDocumentRequest запрос с данными документа
+     * @param request запрос с данными документа
      * @return true, если загрузка прошла успешно, иначе false
      */
     public boolean addDocument(Long id, CreateDocumentVersionRequest request) {
