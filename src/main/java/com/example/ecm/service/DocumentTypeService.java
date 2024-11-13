@@ -11,7 +11,7 @@ import com.example.ecm.repository.AttributeRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
 import com.example.ecm.repository.TenantRepository;
 import com.example.ecm.saas.TenantContext;
-import com.example.ecm.saas.TenantRestrictedForDocumentType;
+import com.example.ecm.saas.annotation.TenantRestrictedForDocumentType;
 import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -149,6 +149,7 @@ public class DocumentTypeService {
 
         return documentTypeMapper.toCreateDocumentTypeResponse(documentTypeRepository.save(documentType));
     }
+
 
 
 }

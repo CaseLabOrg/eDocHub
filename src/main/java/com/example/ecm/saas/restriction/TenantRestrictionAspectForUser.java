@@ -1,21 +1,16 @@
-package com.example.ecm.saas;
+package com.example.ecm.saas.restriction;
 
 import com.example.ecm.exception.NotFoundException;
-import com.example.ecm.model.Attribute;
-import com.example.ecm.model.DocumentType;
 import com.example.ecm.model.Tenant;
-import com.example.ecm.repository.AttributeRepository;
-import com.example.ecm.repository.DocumentTypeRepository;
 import com.example.ecm.repository.TenantRepository;
+import com.example.ecm.saas.TenantContext;
+import com.example.ecm.saas.annotation.TenantRestrictedForUser;
 import com.example.ecm.security.UserPrincipal;
-import com.example.ecm.service.DocumentTypeService;
 import lombok.RequiredArgsConstructor;
-import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 
-import org.aspectj.lang.annotation.Before;
 import org.springframework.stereotype.Component;
 
 

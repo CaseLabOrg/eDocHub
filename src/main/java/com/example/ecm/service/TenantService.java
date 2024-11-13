@@ -17,6 +17,7 @@ import java.util.List;
 public class TenantService {
     private final TenantRepository tenantRepository;
     private final TenantMapper tenantMapper;
+    private final UserService userService;
 
     public TenantResponse createTenant(CreateTenantRequest createTenantRequest) {
         Tenant tenant = tenantMapper.toTenant(createTenantRequest);
@@ -34,6 +35,8 @@ public class TenantService {
     }
 
     public void deleteTenant(Long id) {
+
         tenantRepository.deleteById(id);
+
     }
 }
