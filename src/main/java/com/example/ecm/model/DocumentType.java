@@ -46,5 +46,5 @@ public class DocumentType {
     )
     private List<Attribute> attributes = new ArrayList<>();
 
-    private Boolean isAlive;
+    private Boolean isAlive = true;
 }

@@ -6,7 +6,6 @@ import com.example.ecm.dto.requests.CreateDocumentTypeRequest;
 import com.example.ecm.dto.responses.CreateDocumentTypeResponse;
 import com.example.ecm.service.DocumentTypeService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;

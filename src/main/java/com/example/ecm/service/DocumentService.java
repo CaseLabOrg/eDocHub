@@ -8,8 +8,10 @@ import com.example.ecm.dto.responses.AddCommentResponse;
 import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
 import com.example.ecm.dto.requests.CreateDocumentRequest;
 import com.example.ecm.dto.responses.CreateDocumentResponse;
+import com.example.ecm.exception.ConflictException;
 import com.example.ecm.mapper.*;
 import com.example.ecm.model.*;
+import com.example.ecm.model.enums.DocumentState;
 import com.example.ecm.repository.*;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.security.UserPrincipal;
@@ -45,6 +47,7 @@ public class DocumentService {
     private final ValueRepository valueRepository;
     private final CommentMapper commentMapper;
     private final CommentRepository commentRepository;
+    private final DocumentStateService documentStateService;
 
     /**
      * Создает новый документ.
@@ -126,7 +129,7 @@ public class DocumentService {
         Optional<DocumentVersion> documentVersion = documentVersionRepository.findByDocumentIdAndVersionId(documentId, versionId);
 
         if (showOnlyAlive) {
-            documentVersion = documentVersion.filter(DocumentVersion::getIsAlive);
+            documentVersion = documentVersion.filter(v -> v.getDocument().getIsAlive());
         }
 
         DocumentVersion version = documentVersion.orElseThrow(() -> new NotFoundException("Document Version with id: " + versionId + " or Document id " + documentId + " not found"));
@@ -204,6 +207,10 @@ public class DocumentService {
         Document document = documentRepository.findById(id)
                 .filter(Document::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
+        if (!documentStateService.checkTransition(document, DocumentState.DELETED)) {
+            throw new ConflictException("You cannot delete document with id: " + id + " check available transitions");
+        }
+        document.setState(DocumentState.DELETED);
         document.setIsAlive(false);
         documentRepository.save(document);
     }
@@ -212,6 +219,10 @@ public class DocumentService {
         Document document = documentRepository.findById(id)
                 .filter(d -> !d.getIsAlive())
                 .orElseThrow(() -> new NotFoundException("Deleted Document with id: " + id + " not found"));
+        if (!documentStateService.checkTransition(document, DocumentState.CREATED)) {
+            throw new ConflictException("You cannot recover document with id: " + id + " check available transitions");
+        }
+        document.setState(DocumentState.CREATED);
         document.setIsAlive(true);
         documentRepository.save(document);
     }
@@ -234,6 +245,11 @@ public class DocumentService {
                 .filter(Document::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
 
+        if (!documentStateService.checkTransition(document, DocumentState.MODIFIED)) {
+            throw new ConflictException("You cannot modify document with id: " + id + " check available transitions");
+        }
+
+        document.setState(DocumentState.MODIFIED);
         DocumentVersion documentVersion = documentVersionMapper.toDocumentVersion(createDocumentVersionRequest);
         documentVersion.setVersionId((long) document.getDocumentVersions().size() + 1);
         documentVersion.setCreatedAt(LocalDateTime.now());
@@ -285,7 +301,11 @@ public class DocumentService {
      */
     public CreateDocumentVersionResponse patchDocument(Long id, PatchDocumentVersionRequest request) {
         Document document= documentRepository.findById(id).orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
+        if (!documentStateService.checkTransition(document, DocumentState.MODIFIED)) {
+            throw new ConflictException("You cannot modify document with id: " + id + " check available transitions");
+        }
 
+        document.setState(DocumentState.MODIFIED);
         DocumentVersion documentVersion = document.getDocumentVersions().getLast();
 
         if (request.getDescription() != null) {

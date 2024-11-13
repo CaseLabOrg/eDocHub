@@ -5,11 +5,13 @@ import com.example.ecm.dto.patch_requests.PatchUserRequest;
 import com.example.ecm.dto.requests.CreateUserRequest;
 import com.example.ecm.dto.responses.CreateUserResponse;
 import com.example.ecm.dto.requests.PutRoleRequest;
+import com.example.ecm.security.UserPrincipal;
 import com.example.ecm.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -126,8 +128,8 @@ public class UserController {
     @Operation(summary = "Удалить пользователя", description = "Удаляет пользователя по его идентификатору.")
     @ApiResponse(responseCode = "204", description = "Пользователь успешно удален")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        userService.deleteUser(id, userPrincipal);
         return ResponseEntity.noContent().build();
     }
 

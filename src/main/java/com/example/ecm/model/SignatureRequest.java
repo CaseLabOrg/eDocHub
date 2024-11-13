@@ -1,5 +1,6 @@
 package com.example.ecm.model;
 
+import com.example.ecm.model.enums.SignatureRequestState;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,5 +26,6 @@ public class SignatureRequest {
     @JoinColumn(name = "document_version_id")
     private DocumentVersion documentVersion;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private SignatureRequestState status = SignatureRequestState.PENDING;
 }

@@ -41,5 +41,5 @@ public class Attribute {
     /** Флаг, указывающий, является ли данный атрибут обязательным для заполнения */
     private Boolean required;
 
-    private Boolean isAlive;
+    private Boolean isAlive = true;
 }

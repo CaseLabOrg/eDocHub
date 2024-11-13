@@ -91,8 +91,11 @@ public class SignatureController {
     @Operation(summary = "Подписать документ", description = "Подписывает документ на основе предоставленных данных.")
     @ApiResponse(responseCode = "200", description = "Документ успешно подписан")
     @PostMapping("/{id}")
-    public ResponseEntity<GetSignatureResponse> sendToSign(@PathVariable Long id, @Valid @RequestBody CreateSignatureRequest request, @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return ResponseEntity.ok(signatureService.sign(id, request, userPrincipal));
+    public ResponseEntity<GetSignatureResponse> sendToSign(@PathVariable Long id,
+                                                           @RequestParam(defaultValue = "true") Boolean signByRequest,
+                                                           @Valid @RequestBody CreateSignatureRequest request,
+                                                           @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return ResponseEntity.ok(signatureService.sign(id, request, signByRequest, userPrincipal));
     }
 
     /**

@@ -1,8 +1,6 @@
 package com.example.ecm.controller;
 
-import com.example.ecm.exception.ForbiddenException;
-import com.example.ecm.exception.NotFoundException;
-import com.example.ecm.exception.ServerException;
+import com.example.ecm.exception.*;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -90,5 +88,15 @@ public class ControllerExceptionHandler {
     @ApiResponse(responseCode = "403", description = "Доступ к ресурсу запрещен")
     public ResponseEntity<String> handleForbiddenException(ForbiddenException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<String> handleConflictException(ConflictException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(AuthException.class)
+    public ResponseEntity<String> handleAuthException(AuthException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNAUTHORIZED);
     }
 }

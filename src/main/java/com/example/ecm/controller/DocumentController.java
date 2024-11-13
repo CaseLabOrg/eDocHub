@@ -8,11 +8,12 @@ import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
 import com.example.ecm.dto.responses.AddCommentResponse;
 import com.example.ecm.dto.responses.CreateDocumentResponse;
 import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
+import com.example.ecm.model.enums.DocumentState;
 import com.example.ecm.security.UserPrincipal;
 import com.example.ecm.service.DocumentService;
+import com.example.ecm.service.DocumentStateService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +32,7 @@ import java.util.List;
 public class DocumentController {
 
     private final DocumentService documentService;
+    private final DocumentStateService documentStateService;
 
     /**
      * Создает новый документ.
@@ -67,6 +69,14 @@ public class DocumentController {
             @RequestParam(defaultValue = "true") Boolean showOnlyAlive,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         return ResponseEntity.ok(documentService.getDocumentById(id, showOnlyAlive, userPrincipal));
+    }
+
+    @GetMapping("/{id}/transitions")
+    public ResponseEntity<List<DocumentState>> getTransitions(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "true") Boolean showOnlyAlive,
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return ResponseEntity.ok(documentStateService.getTransitionsByDocumentId(id, showOnlyAlive, userPrincipal));
     }
 
     /**
