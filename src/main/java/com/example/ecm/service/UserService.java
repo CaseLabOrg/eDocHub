@@ -13,7 +13,6 @@ import com.example.ecm.repository.RoleRepository;
 import com.example.ecm.repository.TenantRepository;
 import com.example.ecm.repository.UserRepository;
 import com.example.ecm.saas.TenantContext;
-import com.example.ecm.saas.annotation.CheckAdmin;
 import com.example.ecm.saas.annotation.TenantRestrictedForUser;
 import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -70,7 +69,7 @@ public class UserService {
         user.setPassword(encoder.encode(createUserRequest.getPassword()));
 
         Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> new NotFoundException("Tenant not found"));
-        tenant.setAdminUser(user);
+        tenant.setOwner(user);
         User savedUser = userRepository.save(user);
 
         return userMapper.toCreateUserResponse(savedUser);

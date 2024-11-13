@@ -46,7 +46,7 @@ public class TenantRestrictionAspectForUser {
         if (userPrincipal != null) {
             Tenant tenant = tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow( () -> new NotFoundException("Tenant not found"));
             if (tenant != null) {
-                return userPrincipal.getId().equals(tenant.getAdminUser().getId());
+                return userPrincipal.getId().equals(tenant.getOwner().getId());
             }
             throw new NotFoundException("Tenant не найден.");
         }
