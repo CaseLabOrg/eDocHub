@@ -111,6 +111,12 @@ public class SignatureController {
         return ResponseEntity.ok(votingService.startVoting(request));
     }
 
+
+    @GetMapping("/voting")
+    public ResponseEntity<List<StartVotingResponse>> getVoting() {
+        return ResponseEntity.ok(votingService.getAllVotings());
+    }
+
     /**
      * Отменяет голосование по идентификатору голосования.
      *
