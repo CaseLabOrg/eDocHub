@@ -1,8 +1,6 @@
 package com.example.ecm.dto.requests;
 
 import com.example.ecm.model.enums.SignatureRequestState;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 

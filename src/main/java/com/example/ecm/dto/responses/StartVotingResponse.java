@@ -10,6 +10,8 @@ public class StartVotingResponse {
 
     private List<CreateUserResponse> participants;
 
+    private Long documentId;
+
     private CreateDocumentVersionResponse documentVersion;
 
     private Float approvalThreshold;

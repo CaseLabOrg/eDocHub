@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +41,16 @@ public class VotingService {
     private final DocumentVersionRepository documentVersionRepository;
     private final MailNotificationService mailNotificationService;
     private final DocumentStateService documentStateService;
+    private final MinioService minioService;
+
+
+    public List<StartVotingResponse> getAllVotings() {
+        List<Voting> votings = votingRepository.findAll();
+        List<String> contents = votings.stream().map(v -> minioService.getBase64DocumentByName(v.getDocumentVersion().getId() + "_" + v.getDocumentVersion().getTitle())).toList();
+
+        return IntStream.range(0, Math.min(votings.size(), contents.size()))
+                .mapToObj(i -> votingMapper.toStartVotingResponse(votings.get(i), contents.get(i))).toList();
+    }
 
     public StartVotingResponse startVoting(StartVotingRequest startVotingRequest) {
         DocumentVersion documentVersion = documentVersionRepository.findByDocumentIdAndVersionId(startVotingRequest.getDocumentId(), startVotingRequest.getDocumentVersionId())
@@ -50,8 +61,12 @@ public class VotingService {
             throw new ConflictException("You cannot send on voting document with id: " + documentVersion.getDocument().getId() + " check available transitions");
         }
 
+
         List<SignatureRequest> signatureRequests = sendAllParticipantsToVote(startVotingRequest);
         Voting voting = votingMapper.toVoting(startVotingRequest, documentVersion, "ACTIVE");
+
+        voting.getDocumentVersion().getDocument().setState(DocumentState.SENT_ON_VOTING);
+
         signatureRequests.forEach(r -> r.setVoting(voting));
         voting.setSignatureRequests(signatureRequests);
         votingRepository.save(voting);
@@ -115,15 +130,15 @@ public class VotingService {
         }
     }
 
-    private SignatureRequest sendToVote(Long id, CreateSignatureRequestRequest request) {
-        Document document = documentRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Document with id: " + id +" not found"));
+    private SignatureRequest sendToVote(CreateSignatureRequestRequest request) {
+        Document document = documentRepository.findById(request.getDocumentId())
+                .orElseThrow(() -> new NotFoundException("Document with id: " + request.getDocumentId() +" not found"));
 
         DocumentVersion documentVersion = document.getDocumentVersions().stream()
                 .filter(v -> v.getVersionId().equals(request.getDocumentVersionId()))
-                .findFirst().orElseThrow(() -> new NotFoundException("Document version with id: " + id +" not found"));
+                .findFirst().orElseThrow(() -> new NotFoundException("Document version with id: " + request.getDocumentVersionId() +" not found"));
 
-        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
+        User user = userRepository.findById(request.getUserIdTo()).orElseThrow(() -> new NotFoundException("User with id: " + request.getUserIdTo() + " not found"));
 
         SignatureRequest signatureRequest = new SignatureRequest();
         signatureRequest.setUserTo(user);
@@ -134,16 +149,16 @@ public class VotingService {
     }
 
     private List<SignatureRequest> sendAllParticipantsToVote(StartVotingRequest startVotingRequest) {
-        long documentId = startVotingRequest.getDocumentId();
         long documentVersionId = startVotingRequest.getDocumentVersionId();
 
         List<SignatureRequest> signatureRequests = new ArrayList<>();
         for (long participantId : startVotingRequest.getParticipantIds()) {
             CreateSignatureRequestRequest createSignatureRequestRequest = new CreateSignatureRequestRequest();
+            createSignatureRequestRequest.setDocumentId(startVotingRequest.getDocumentId());
             createSignatureRequestRequest.setDocumentVersionId(documentVersionId);
             createSignatureRequestRequest.setUserIdTo(participantId);
 
-            signatureRequests.add(sendToVote(documentId, createSignatureRequestRequest));
+            signatureRequests.add(sendToVote(createSignatureRequestRequest));
         }
         return signatureRequests;
     }
