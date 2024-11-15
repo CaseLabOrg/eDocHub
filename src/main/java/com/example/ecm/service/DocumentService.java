@@ -21,10 +21,7 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
 
@@ -48,6 +45,7 @@ public class DocumentService {
     private final CommentMapper commentMapper;
     private final CommentRepository commentRepository;
     private final DocumentStateService documentStateService;
+    private final SignatureRequestRepository signatureRequestRepository;
 
     /**
      * Создает новый документ.
@@ -82,8 +80,7 @@ public class DocumentService {
         createDocumentVersionRequest.setTitle(documentVersion.getTitle());
         createDocumentVersionRequest.setBase64Content(createDocumentRequest.getBase64Content());
 
-        boolean success = minioService.addDocument(documentVersionSaved.getId(), createDocumentVersionRequest);
-        if (!success) {
+        if (!minioService.addDocument(documentVersionSaved.getId(), createDocumentVersionRequest)) {
             documentRepository.deleteById(documentVersionSaved.getId());
             throw new ServerException("Could not add document");
         }
@@ -115,21 +112,37 @@ public class DocumentService {
         }
 
         if (!userPrincipal.isAdmin()) {
-            document = document.filter(d -> d.getUser().getId().equals(userPrincipal.getId()));
+            document = document
+                    .filter(d ->
+                            Objects.equals(d.getUser().getId(), userPrincipal.getId())
+                                    ||
+                                    d.getDocumentVersions().stream()
+                                            .anyMatch(version ->
+                                                    signatureRequestRepository.existsByUserToIdAndDocumentVersionId(
+                                                            userPrincipal.getId(), version.getId()
+                                                    )
+                                            ));
         }
 
         Document doc = document.orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
 
         CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(doc);
 
-        return getCreateDocumentResponse(doc, response);
+        return getCreateDocumentResponse(doc, response, userPrincipal);
     }
 
-    public CreateDocumentVersionResponse getDocumentVersionById(Long documentId, Long versionId, Boolean showOnlyAlive) {
+    public CreateDocumentVersionResponse getDocumentVersionById(Long documentId, Long versionId, Boolean showOnlyAlive, UserPrincipal userPrincipal) {
         Optional<DocumentVersion> documentVersion = documentVersionRepository.findByDocumentIdAndVersionId(documentId, versionId);
 
         if (showOnlyAlive) {
             documentVersion = documentVersion.filter(v -> v.getDocument().getIsAlive());
+        }
+
+        if (!userPrincipal.isAdmin()) {
+            documentVersion = documentVersion.filter(version ->
+                    Objects.equals(version.getDocument().getUser().getId(), userPrincipal.getId())
+                            ||
+                            signatureRequestRepository.existsByUserToIdAndDocumentVersionId(userPrincipal.getId(), version.getId()));
         }
 
         DocumentVersion version = documentVersion.orElseThrow(() -> new NotFoundException("Document Version with id: " + versionId + " or Document id " + documentId + " not found"));
@@ -169,13 +182,22 @@ public class DocumentService {
         }
 
         if (!userPrincipal.isAdmin()) {
-            documentStream = documentStream.filter(d -> d.getUser().getId().equals(userPrincipal.getId()));
+            documentStream = documentStream
+                    .filter(document ->
+                            Objects.equals(document.getUser().getId(), userPrincipal.getId())
+                                    ||
+                                    document.getDocumentVersions().stream()
+                                            .anyMatch(version ->
+                                                    signatureRequestRepository.existsByUserToIdAndDocumentVersionId(
+                                                            userPrincipal.getId(), version.getId()
+                                                    )
+                                            ));
         }
 
         List<CreateDocumentResponse> createDocumentResponses = documentStream
                 .map(document -> {
                     CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document);
-                    return getCreateDocumentResponse(document, response);
+                    return getCreateDocumentResponse(document, response, userPrincipal);
                 })
                 .toList();
         return new PageImpl<>(
@@ -184,15 +206,21 @@ public class DocumentService {
         ).getContent();
     }
 
-    private CreateDocumentResponse getCreateDocumentResponse(Document document, CreateDocumentResponse response) {
-        response.setDocumentVersions(document.getDocumentVersions().stream()
+    private CreateDocumentResponse getCreateDocumentResponse(Document document, CreateDocumentResponse response, UserPrincipal userPrincipal) {
+        Stream<DocumentVersion> documentStream = document.getDocumentVersions().stream();
+        if (!userPrincipal.isAdmin()) {
+                documentStream = documentStream.filter(version ->
+                    Objects.equals(version.getDocument().getUser().getId(), userPrincipal.getId())
+                            ||
+                            signatureRequestRepository.existsByUserToIdAndDocumentVersionId(userPrincipal.getId(), version.getVersionId()));
+        }
+        response.setDocumentVersions(documentStream
                 .map(version -> {
                     CreateDocumentVersionResponse versionResponse = documentVersionMapper.toCreateDocumentVersionResponse(version);
                     String base64Content = minioService.getBase64DocumentByName(version.getId() + "_" + version.getTitle());
                     versionResponse.setBase64Content(base64Content);
                     return versionResponse;
-                })
-                .toList());
+                }).toList());
         return response;
     }
 
