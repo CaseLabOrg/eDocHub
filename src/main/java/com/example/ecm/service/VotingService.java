@@ -19,6 +19,7 @@ import com.example.ecm.repository.DocumentVersionRepository;
 import com.example.ecm.repository.SignatureRequestRepository;
 import com.example.ecm.repository.UserRepository;
 import com.example.ecm.repository.VotingRepository;
+import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -55,7 +56,7 @@ public class VotingService {
     public StartVotingResponse startVoting(StartVotingRequest startVotingRequest) {
         DocumentVersion documentVersion = documentVersionRepository.findByDocumentIdAndVersionId(startVotingRequest.getDocumentId(), startVotingRequest.getDocumentVersionId())
                 .orElseThrow(() -> new NotFoundException("Document Version with id: " + startVotingRequest.getDocumentId() + " or Document id " + startVotingRequest.getDocumentVersionId() + " not found"));
-        String base64Content = documentService.getDocumentVersionById(startVotingRequest.getDocumentId(), startVotingRequest.getDocumentVersionId(), true).getBase64Content();
+        String base64Content = minioService.getBase64DocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle());
 
         if (!documentStateService.checkTransition(documentVersion.getDocument(), DocumentState.SENT_ON_VOTING)) {
             throw new ConflictException("You cannot send on voting document with id: " + documentVersion.getDocument().getId() + " check available transitions");

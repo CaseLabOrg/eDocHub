@@ -107,7 +107,8 @@ public class SignatureController {
     @Operation(summary = "Начать голосование", description = "Начинает процесс голосования для запроса на подпись.")
     @ApiResponse(responseCode = "200", description = "Голосование успешно начато")
     @PostMapping("/voting")
-    public ResponseEntity<StartVotingResponse> startVoting(@Valid @RequestBody StartVotingRequest request) {
+    public ResponseEntity<StartVotingResponse> startVoting(
+            @Valid @RequestBody StartVotingRequest request) {
         return ResponseEntity.ok(votingService.startVoting(request));
     }
 

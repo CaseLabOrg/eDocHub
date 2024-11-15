@@ -68,10 +68,7 @@ public class MinioService {
             );
 
             return true;
-        } catch (MinioException e) {
-            e.printStackTrace();
-            return false;
-        } catch (IOException | NoSuchAlgorithmException | InvalidKeyException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
@@ -91,10 +88,7 @@ public class MinioService {
                     .object(name)
                     .build());
             return Base64.getEncoder().encodeToString(stream.readAllBytes());
-        } catch (MinioException e) {
-            e.printStackTrace();
-            return null;
-        } catch (IOException | NoSuchAlgorithmException | InvalidKeyException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         } finally {

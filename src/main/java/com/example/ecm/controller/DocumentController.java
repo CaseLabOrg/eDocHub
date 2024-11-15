@@ -96,8 +96,9 @@ public class DocumentController {
     public ResponseEntity<CreateDocumentVersionResponse> getDocumentVersion(
             @PathVariable Long documentId,
             @PathVariable Long versionId,
-            @RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
-        return ResponseEntity.ok(documentService.getDocumentVersionById(documentId, versionId, showOnlyAlive));
+            @RequestParam(defaultValue = "true") Boolean showOnlyAlive,
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return ResponseEntity.ok(documentService.getDocumentVersionById(documentId, versionId, showOnlyAlive, userPrincipal));
     }
 
     /**
