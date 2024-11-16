@@ -8,12 +8,11 @@ import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
 import com.example.ecm.dto.responses.AddCommentResponse;
 import com.example.ecm.dto.responses.CreateDocumentResponse;
 import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
-import com.example.ecm.model.enums.DocumentState;
 import com.example.ecm.security.UserPrincipal;
 import com.example.ecm.service.DocumentService;
-import com.example.ecm.service.DocumentStateService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +21,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import java.io.IOException;
 import java.util.List;
 
 @Tag(name = "Document Controller", description = "Контроллер для управления документами")
@@ -32,7 +32,6 @@ import java.util.List;
 public class DocumentController {
 
     private final DocumentService documentService;
-    private final DocumentStateService documentStateService;
 
     /**
      * Создает новый документ.
@@ -54,7 +53,7 @@ public class DocumentController {
      * Получает документ по его ID.
      *
      * @param id Идентификатор документа.
-     * @param isAlive Параметр для отображения только активных документов.
+     * @param showOnlyAlive Параметр для отображения только активных документов.
      * @param userPrincipal Аутентифицированный пользователь.
      * @return Ответ с данными документа.
      */
@@ -66,17 +65,9 @@ public class DocumentController {
     @GetMapping("/{id}")
     public ResponseEntity<CreateDocumentResponse> getDocument(
             @PathVariable Long id,
-            @RequestParam(defaultValue = "true") Boolean isAlive,
+            @RequestParam(defaultValue = "true") Boolean showOnlyAlive,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return ResponseEntity.ok(documentService.getDocumentById(id, isAlive, userPrincipal));
-    }
-
-    @GetMapping("/{id}/transitions")
-    public ResponseEntity<List<DocumentState>> getTransitions(
-            @PathVariable Long id,
-            @RequestParam(defaultValue = "true") Boolean isAlive,
-            @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return ResponseEntity.ok(documentStateService.getTransitionsByDocumentId(id, isAlive, userPrincipal));
+        return ResponseEntity.ok(documentService.getDocumentById(id, showOnlyAlive, userPrincipal));
     }
 
     /**
@@ -84,7 +75,7 @@ public class DocumentController {
      *
      * @param documentId Идентификатор документа.
      * @param versionId Идентификатор версии.
-     * @param isAlive Параметр для отображения только активных версий.
+     * @param showOnlyAlive Параметр для отображения только активных версий.
      * @return Ответ с данными версии документа.
      */
     @Operation(summary = "Получение версии документа", description = "Возвращает данные определенной версии документа")
@@ -96,9 +87,8 @@ public class DocumentController {
     public ResponseEntity<CreateDocumentVersionResponse> getDocumentVersion(
             @PathVariable Long documentId,
             @PathVariable Long versionId,
-            @RequestParam(defaultValue = "true") Boolean isAlive,
-            @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return ResponseEntity.ok(documentService.getDocumentVersionById(documentId, versionId, isAlive, userPrincipal));
+            @RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
+        return ResponseEntity.ok(documentService.getDocumentVersionById(documentId, versionId, showOnlyAlive));
     }
 
     /**
@@ -133,7 +123,7 @@ public class DocumentController {
             @ApiResponse(responseCode = "404", description = "Документ не найден")
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDocument(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteDocument(@PathVariable Long id) throws IOException {
         documentService.deleteDocument(id);
         return ResponseEntity.noContent().build();
     }
@@ -165,24 +155,14 @@ public class DocumentController {
             @ApiResponse(responseCode = "200", description = "Список документов успешно получен"),
             @ApiResponse(responseCode = "404", description = "Документы не найдены")
     })
-
     @GetMapping
     public ResponseEntity<List<CreateDocumentResponse>> getAllDocuments(
-            @RequestParam(defaultValue = "true") Boolean isAlive,
+            @RequestParam(defaultValue = "true") Boolean showOnlyAlive,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "false") boolean ascending,
-            @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return ResponseEntity.ok(documentService.getAllDocuments(page, size, ascending, isAlive, userPrincipal));
+            @RequestParam(defaultValue = "false") boolean ascending) {
+        return ResponseEntity.ok(documentService.getAllDocuments(page, size, ascending, showOnlyAlive));
     }
-
-    @GetMapping("/countDocuments")
-    public int getCountDocuments(
-            @RequestParam(defaultValue = "true") Boolean isAlive,
-            @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return documentService.getCountDocuments(isAlive, userPrincipal);
-    }
-
 
     /**
      * Частично обновляет документ.

@@ -1,6 +1,6 @@
-INSERT INTO tenants (name, created_at, owner_id) VALUES ('Tenant1', NOW(), 1);
+INSERT INTO tenants (name, created_at, owner_id, is_alive) VALUES ('Tenant1', NOW(), 1, true);
 
-INSERT INTO tenants (name, created_at, owner_id) VALUES ('Tenant2', NOW(), 2);
+INSERT INTO tenants (name, created_at, owner_id, is_alive) VALUES ('Tenant2', NOW(), 2, true);
 
 INSERT INTO users (name, surname, email, password, is_alive, tenant_id)
 VALUES ('super_admin', 'admin', 'admin@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', true, 1);
@@ -16,11 +16,13 @@ INSERT INTO attributes(name, required, is_alive, tenant_id) VALUES('testAttr2', 
 
 
 INSERT INTO documents(user_id, type_id, is_alive) VALUES (1, 1, true);
+INSERT INTO documents(user_id, type_id, is_alive) VALUES (1, 2, true);
 
 INSERT INTO values(attribute_id, document_version_id, value) VALUES (2,1, '52');
 
 INSERT INTO roles(name) VALUES ('SUPER_ADMIN');
 INSERT INTO roles(name) VALUES ('ADMIN');
+INSERT INTO roles(name) VALUES ('OWNER');
 INSERT INTO roles(name) VALUES ('USER');
 
 INSERT INTO user_roles VALUES (1, 1);
