@@ -27,6 +27,10 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne
+    @JoinColumn(name = "tenant_id", nullable = false)  // Указываем связь с Tenant
+    private Tenant tenant;
+
     /**
      * Имя пользователя. Не может быть null.
      */

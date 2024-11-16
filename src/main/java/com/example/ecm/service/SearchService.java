@@ -1,7 +1,6 @@
 package com.example.ecm.service;
 
 import com.example.ecm.dto.requests.CreateDocumentRequest;
-import com.example.ecm.mapper.DocumentMapper;
 import com.example.ecm.model.elasticsearch.DocumentElasticsearch;
 import com.example.ecm.parser.Base64Manager;
 import com.example.ecm.parser.DocumentManager;
@@ -42,6 +41,7 @@ public class SearchService {
     private final ObjectMapper mapper;
     private final RestHighLevelClient client;
     private final DocumentManager documentManager;
+    private final Base64Manager base64Manager;
     private final DocumentParser documentParser;
 
     public void addIndexDocumentElasticsearch(DocumentElasticsearch document, CreateDocumentRequest request, Long documentVersionId) {

@@ -9,16 +9,22 @@ import com.example.ecm.model.Attribute;
 import com.example.ecm.model.DocumentType;
 import com.example.ecm.repository.AttributeRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
+import com.example.ecm.repository.TenantRepository;
+import com.example.ecm.saas.TenantContext;
+import com.example.ecm.saas.annotation.TenantRestrictedForAttribute;
+import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 /**
  * Сервис для работы с атрибутами документов.
@@ -30,8 +36,8 @@ public class AttributeService {
 
     private final AttributeRepository attributeRepository;
     private final DocumentTypeRepository documentTypeRepository;
+    private final TenantRepository tenantRepository;
     private final AttributeMapper attributeMapper;
-
     /**
      * Создает новый атрибут документа.
      *
@@ -43,6 +49,7 @@ public class AttributeService {
 
         Attribute attribute = attributeMapper.toAttribute(request);
         attribute.getDocumentTypes().addAll(documentTypes);
+        attribute.setTenant(tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow( () -> new NotFoundException("Tenant not found")));
         return attributeMapper.toAttributeResponse(
                 attributeRepository.save(attribute)
         );
@@ -54,6 +61,7 @@ public class AttributeService {
      * @param id идентификатор атрибута документа
      * @return ответ с данными атрибута документа
      */
+    @TenantRestrictedForAttribute
     public CreateAttributeResponse getAttributeById(Long id, Boolean showOnlyALive) {
         Optional<Attribute> attribute = attributeRepository.findById(id);
 
@@ -74,9 +82,15 @@ public class AttributeService {
     public List<CreateAttributeResponse> getAllAttributes(Pageable pageable, Boolean showOnlyALive) {
         Page<Attribute> attributePage = attributeRepository.findAll(pageable);
         Stream<Attribute> attributeStream = attributePage.stream();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
         if (showOnlyALive) {
             attributeStream = attributeStream.filter(Attribute::getIsAlive);
+        }
+
+        if(!userPrincipal.isAdmin()) {
+                attributeStream = attributeStream.filter(attribute ->  attribute.getTenant().getId().equals(TenantContext.getCurrentTenantId()));
         }
 
         return new PageImpl<>(
@@ -91,10 +105,11 @@ public class AttributeService {
     /**
      * Обновляет атрибут документа по идентификатору.
      *
-     * @param id идентификатор атрибута документа
+     * @param id      идентификатор атрибута документа
      * @param request запрос на обновление атрибута документа
      * @return ответ с данными обновленного атрибута документа
      */
+    @TenantRestrictedForAttribute
     public CreateAttributeResponse updateAttribute(Long id, CreateAttributeRequest request) {
         Attribute attribute = attributeRepository.findById(id)
                 .filter(Attribute::getIsAlive)
@@ -112,6 +127,7 @@ public class AttributeService {
      *
      * @param id идентификатор атрибута документа
      */
+    @TenantRestrictedForAttribute
     public void deleteAttribute(Long id) {
         Attribute attribute = attributeRepository.findById(id)
                 .filter(Attribute::getIsAlive)
@@ -120,6 +136,7 @@ public class AttributeService {
         attributeRepository.save(attribute);
     }
 
+    @TenantRestrictedForAttribute
     public void recoverAttribute(Long id) {
         Attribute attribute = attributeRepository.findById(id)
                 .filter(attr -> !attr.getIsAlive())
@@ -128,6 +145,14 @@ public class AttributeService {
         attributeRepository.save(attribute);
     }
 
+    /**
+     * Частичное обновление атрибута документа по идентификатору.
+     *
+     * @param id      идентификатор атрибута документа
+     * @param request запрос на частичное обновление атрибута документа
+     * @return ответ с данными обновленного атрибута документа
+     */
+    @TenantRestrictedForAttribute
     public CreateAttributeResponse patchAttribute(Long id, PatchAttributeRequest request) {
         Attribute attribute = attributeRepository.findById(id)
                 .filter(Attribute::getIsAlive)
