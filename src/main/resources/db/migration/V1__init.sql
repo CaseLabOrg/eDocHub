@@ -3,6 +3,7 @@ CREATE TABLE Tenants (
                          id BIGSERIAL PRIMARY KEY,
                          name TEXT NOT NULL,
                          created_at TIMESTAMP NOT NULL,
+                         is_alive BOOLEAN,
                          owner_id BIGSERIAL NOT NULL
 );
 

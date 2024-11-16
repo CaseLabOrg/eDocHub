@@ -1,9 +1,9 @@
 package com.example.ecm.saas;
 
 
-
 public class TenantContext {
     private static final ThreadLocal<Long> currentTenantId = new ThreadLocal<>();
+
 
     public static Long getCurrentTenantId() {
         return currentTenantId.get();

@@ -16,6 +16,8 @@ import com.example.ecm.saas.TenantContext;
 import com.example.ecm.saas.annotation.TenantRestrictedForUser;
 import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +40,7 @@ public class UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder encoder;
     private final TenantRepository tenantRepository;
+    private final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
     /**
      * Создание нового пользователя на основе данных из DTO.
@@ -47,7 +50,7 @@ public class UserService {
      */
     @TenantRestrictedForUser
     @Transactional
-    public CreateUserResponse createUser(CreateUserRequest createUserRequest, UserPrincipal userPrincipal) {
+    public CreateUserResponse createUser(CreateUserRequest createUserRequest) {
         User user = userMapper.toUser(createUserRequest);
         user.setTenant(tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow(() -> new NotFoundException("Tenant not found")));
         user.setRoles(Set.of(roleRepository.findByName("USER").orElseThrow(() -> new NotFoundException("Role with name: USER not found"))));
@@ -60,20 +63,40 @@ public class UserService {
 
 
     @Transactional
-    public CreateUserResponse createUserAdmin(CreateUserRequest createUserRequest, UserPrincipal userPrincipal, Long tenantId) {
+    public CreateUserResponse createUserAdmin(CreateUserRequest createUserRequest, Long tenantId) {
         User user = userMapper.toUser(createUserRequest);
 
         user.setTenant(tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow(() -> new NotFoundException("Tenant not found")));
 
         user.setRoles(Set.of(roleRepository.findByName("ADMIN").orElseThrow(() -> new NotFoundException("Role with name: ADMIN not found"))));
         user.setPassword(encoder.encode(createUserRequest.getPassword()));
-
-        Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> new NotFoundException("Tenant not found"));
-        tenant.setOwner(user);
         User savedUser = userRepository.save(user);
 
         return userMapper.toCreateUserResponse(savedUser);
     }
+
+    @Transactional
+    public CreateUserResponse createUserOwner(CreateUserRequest createUserRequest, Long tenantId) {
+        User user = userMapper.toUser(createUserRequest);
+
+        user.setTenant(tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow(() -> new NotFoundException("Tenant not found")));
+
+        user.setRoles(Set.of(
+                roleRepository.findByName("OWNER").orElseThrow(() -> new NotFoundException("Role with name: OWNER not found")),
+                roleRepository.findByName("ADMIN").orElseThrow(() -> new NotFoundException("Role with name: ADMIN not found"))
+        ));
+
+
+        user.setPassword(encoder.encode(createUserRequest.getPassword()));
+
+        Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> new NotFoundException("Tenant not found"));
+        tenant.setOwner(user);
+
+        User savedUser = userRepository.save(user);
+
+        return userMapper.toCreateUserResponse(savedUser);
+    }
+
 
     /**
      * Получение пользователя по его ID.
@@ -82,20 +105,6 @@ public class UserService {
      * @return Optional с объектом пользователя, если найден
      */
     @TenantRestrictedForUser
-    public CreateUserResponse getUserById(Long id, Boolean showOnlyALive, UserPrincipal userPrincipal) {
-
-        Optional<User> attribute = userRepository.findById(id);
-
-        if (showOnlyALive) {
-            attribute = attribute.filter(User::getIsAlive);
-        }
-
-        return attribute
-                .map(userMapper::toCreateUserResponse)
-                .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
-    }
-
-
     public CreateUserResponse getUserById(Long id, Boolean showOnlyALive) {
 
         Optional<User> attribute = userRepository.findById(id);
@@ -109,8 +118,9 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
     }
 
+
     @TenantRestrictedForUser
-    public CreateUserResponse addRole(Long id, PutRoleRequest request, UserPrincipal userPrincipal) {
+    public CreateUserResponse addRole(Long id, PutRoleRequest request) {
         Role role = roleRepository.findByName(request.getName().toUpperCase()).orElseThrow(() -> new NotFoundException("Role with name: " + request.getName().toUpperCase() + " not found"));
         User user = userRepository.findById(id)
                 .filter(User::getIsAlive)
@@ -120,7 +130,7 @@ public class UserService {
     }
 
     @TenantRestrictedForUser
-    public CreateUserResponse removeRole(Long id, PutRoleRequest request, UserPrincipal userPrincipal) {
+    public CreateUserResponse removeRole(Long id, PutRoleRequest request) {
         Role role = roleRepository.findByName(request.getName().toUpperCase()).orElseThrow(() -> new NotFoundException("Role with name: " + request.getName().toUpperCase() + " not found"));
         User user = userRepository.findById(id)
                 .filter(User::getIsAlive)
@@ -135,14 +145,16 @@ public class UserService {
      * @return Список DTO с данными пользователей
      */
     @TenantRestrictedForUser
-    public List<CreateUserResponse> getAllUsers(Boolean showOnlyALive, UserPrincipal userPrincipal) {
+    public List<CreateUserResponse> getAllUsers(Boolean showOnlyALive) {
         Stream<User> userStream = userRepository.findAll().stream();
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
         if (showOnlyALive) {
             userStream = userStream.filter(User::getIsAlive);
+        }
+        if(!userPrincipal.isAdmin()) {
             userStream = userStream.filter(user -> user.getTenant().getId().equals(TenantContext.getCurrentTenantId()));
         }
-
         return userStream
                 .map(userMapper::toCreateUserResponse)
                 .toList();
@@ -156,7 +168,7 @@ public class UserService {
      * @return Обновленный объект пользователя в виде DTO
      */
     @TenantRestrictedForUser
-    public CreateUserResponse updateUser(Long id, CreateUserRequest updateUserRequest, UserPrincipal userPrincipal) {
+    public CreateUserResponse updateUser(Long id, CreateUserRequest updateUserRequest) {
         User user = userRepository.findById(id)
                 .filter(User::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
@@ -175,7 +187,7 @@ public class UserService {
      * @param id Идентификатор пользователя
      */
     @TenantRestrictedForUser
-    public void deleteUser(Long id, UserPrincipal userPrincipal) {
+    public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .filter(User::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
@@ -184,7 +196,7 @@ public class UserService {
     }
 
     @TenantRestrictedForUser
-    public void recoverUser(Long id, UserPrincipal userPrincipal) {
+    public void recoverUser(Long id) {
         User user = userRepository.findById(id)
                 .filter(u -> !u.getIsAlive())
                 .orElseThrow(() -> new NotFoundException("Deleted User with id: " + id + " not found"));
@@ -213,7 +225,7 @@ public class UserService {
      * @return ответ с данными обновленного пользователя
      */
     @TenantRestrictedForUser
-    public CreateUserResponse patchUser(Long id, PatchUserRequest request, UserPrincipal userPrincipal) {
+    public CreateUserResponse patchUser(Long id, PatchUserRequest request) {
         User user = userRepository.findById(id)
                 .filter(User::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));

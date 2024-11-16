@@ -51,6 +51,8 @@ public class UserPrincipal implements UserDetails {
     }
 
     public boolean isAdmin() {
-        return authorities.contains(new SimpleGrantedAuthority("ADMIN"));
+        return authorities.contains(new SimpleGrantedAuthority("SUPER_ADMIN"));
     }
+
+
 }

@@ -15,6 +15,7 @@ import com.example.ecm.repository.*;
 import com.example.ecm.dto.requests.CreateDocumentRequest;
 import com.example.ecm.dto.responses.CreateDocumentResponse;
 import com.example.ecm.exception.NotFoundException;
+import com.example.ecm.saas.annotation.TenantRestrictedForDocument;
 import com.example.ecm.security.UserPrincipal;
 import com.example.ecm.exception.ServerException;
 import com.example.ecm.mapper.DocumentMapper;
@@ -26,6 +27,8 @@ import com.example.ecm.parser.Base64Manager;
 import com.example.ecm.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -55,11 +58,10 @@ public class DocumentService {
     private final ValueRepository valueRepository;
     private final CommentMapper commentMapper;
     private final CommentRepository commentRepository;
-    private final SignatureMapper signatureMapper;
     private final SearchService searchService;
     private final Base64Manager base64Manager;
+    private final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-    private final UserService userService;
 
 
     /**
@@ -127,6 +129,7 @@ public class DocumentService {
      * @return ответ с данными документа
      * @throws RuntimeException если документ не найден
      */
+    @TenantRestrictedForDocument
     public CreateDocumentResponse getDocumentById(Long id, Boolean showOnlyAlive, UserPrincipal userPrincipal) {
         Optional<Document> document = documentRepository.findById(id);
 
@@ -145,6 +148,7 @@ public class DocumentService {
         return getCreateDocumentResponse(doc, response);
     }
 
+    @TenantRestrictedForDocument
     public CreateDocumentVersionResponse getDocumentVersionById(Long documentId, Long versionId, Boolean showOnlyAlive) {
         Optional<DocumentVersion> documentVersion = documentVersionRepository.findByDocumentIdAndVersionId(documentId, versionId);
 
@@ -167,8 +171,8 @@ public class DocumentService {
      *
      * @return список ответов с данными всех документов
      */
-    public List<CreateDocumentResponse> getAllDocuments(Integer page, Integer size, Boolean ascending, Boolean showOnlyAlive, UserPrincipal userPrincipal) {
-
+    public List<CreateDocumentResponse> getAllDocuments(Integer page, Integer size, Boolean ascending, Boolean showOnlyAlive) {
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
         List<DocumentVersion> latestVersions = documentVersionRepository.findLatestDocumentVersions();
 
         latestVersions.sort(Comparator.comparing(DocumentVersion::getCreatedAt)
@@ -204,6 +208,7 @@ public class DocumentService {
         ).getContent();
     }
 
+
     private CreateDocumentResponse getCreateDocumentResponse(Document document, CreateDocumentResponse response) {
         response.setDocumentVersions(document.getDocumentVersions().stream()
                 .map(version -> {
@@ -224,6 +229,7 @@ public class DocumentService {
      *
      * @param id идентификатор документа
      */
+    @TenantRestrictedForDocument
     public void deleteDocument(Long id) {
         Document document = documentRepository.findById(id)
                 .filter(Document::getIsAlive)
@@ -232,6 +238,7 @@ public class DocumentService {
         documentRepository.save(document);
     }
 
+    @TenantRestrictedForDocument
     public void recoverDocument(Long id) {
         Document document = documentRepository.findById(id)
                 .filter(d -> !d.getIsAlive())
@@ -253,6 +260,7 @@ public class DocumentService {
      * @return объект {@link CreateDocumentVersionResponse}, содержащий данные о созданной версии
      * @throws NotFoundException если документ с указанным ID не найден
      */
+    @TenantRestrictedForDocument
     public CreateDocumentVersionResponse updateDocumentVersion(Long id, CreateDocumentVersionRequest createDocumentVersionRequest) {
         Document document = documentRepository.findById(id)
                 .filter(Document::getIsAlive)
@@ -307,6 +315,7 @@ public class DocumentService {
      * @return объект {@link CreateDocumentVersionResponse}, содержащий обновленные данные о версии документа
      * @throws NotFoundException если версия документа с указанным ID не найдена
      */
+    @TenantRestrictedForDocument
     public CreateDocumentVersionResponse patchDocument(Long id, PatchDocumentVersionRequest request) {
         Document document= documentRepository.findById(id).orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
 
@@ -335,6 +344,7 @@ public class DocumentService {
 
     }
 
+    @TenantRestrictedForDocument
     public AddCommentResponse addComment(Long id, AddCommentRequest addCommentRequest, UserPrincipal userPrincipal) {
         Comment comment = commentMapper.toComment(addCommentRequest);
         Document document = documentRepository.findById(id)

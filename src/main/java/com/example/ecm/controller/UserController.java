@@ -32,30 +32,62 @@ public class UserController {
     private final UserService userService;
 
     /**
-     * Создание нового пользователя.
+     * Создает нового пользователя.
      *
      * @param createUserRequest DTO с данными для создания нового пользователя.
+     * @param userPrincipal     Информация о текущем аутентифицированном пользователе.
      * @return DTO с данными созданного пользователя.
      */
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Создать пользователя", description = "Создает нового пользователя с указанными данными.")
     @ApiResponse(responseCode = "200", description = "Пользователь успешно создан")
     @PostMapping
-    public ResponseEntity<CreateUserResponse> createUser(@Valid @RequestBody CreateUserRequest createUserRequest,
-                                                         @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        CreateUserResponse userResponse = userService.createUser(createUserRequest, userPrincipal);
+    public ResponseEntity<CreateUserResponse> createUser(
+            @Valid @RequestBody CreateUserRequest createUserRequest,
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        CreateUserResponse userResponse = userService.createUser(createUserRequest);
         return ResponseEntity.ok(userResponse);
     }
 
-    @PreAuthorize("hasAuthority('SUPER_ADMIN')")
+    /**
+     * Создает администратора в указанной тенантной среде.
+     *
+     * @param createUserRequest DTO с данными для создания пользователя.
+     * @param userPrincipal     Информация о текущем аутентифицированном пользователе.
+     * @param tenantId          Идентификатор тенанта.
+     * @return DTO с данными созданного администратора.
+     */
+    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'OWNER')")
     @PostMapping("/createAdmin")
-    @Operation(summary = "Создать пользователя", description = "Создает нового пользователя с указанными данными.")
-    @ApiResponse(responseCode = "200", description = "Пользователь успешно создан")
-    public ResponseEntity<CreateUserResponse> createAdminUser(@Valid @RequestBody CreateUserRequest createUserRequest,
-                                                         @AuthenticationPrincipal UserPrincipal userPrincipal, Long tenantId) {
-        CreateUserResponse userResponse = userService.createUserAdmin(createUserRequest, userPrincipal, tenantId);
+    @Operation(summary = "Создать администратора", description = "Создает нового администратора в указанной тенантной среде.")
+    @ApiResponse(responseCode = "200", description = "Администратор успешно создан")
+    public ResponseEntity<CreateUserResponse> createAdminUser(
+            @Valid @RequestBody CreateUserRequest createUserRequest,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            Long tenantId) {
+        CreateUserResponse userResponse = userService.createUserAdmin(createUserRequest, tenantId);
         return ResponseEntity.ok(userResponse);
     }
+
+    /**
+     * Создает владельца в указанной тенантной среде.
+     *
+     * @param createUserRequest DTO с данными для создания пользователя.
+     * @param tenantId          Идентификатор тенанта.
+     * @return DTO с данными созданного владельца.
+     */
+    @PreAuthorize("hasAuthority('SUPER_ADMIN')")
+    @PostMapping("/createOwner")
+    @Operation(summary = "Создать владельца", description = "Создает нового владельца в указанной тенантной среде.")
+    @ApiResponse(responseCode = "200", description = "Владелец успешно создан")
+    public ResponseEntity<CreateUserResponse> createOwner(
+            @Valid @RequestBody CreateUserRequest createUserRequest,
+            Long tenantId) {
+        CreateUserResponse userResponse = userService.createUserOwner(createUserRequest, tenantId);
+        return ResponseEntity.ok(userResponse);
+    }
+
+
     /**
      * Получение пользователя по его ID с возвратом данных в виде DTO.
      *
@@ -67,9 +99,8 @@ public class UserController {
     @Operation(summary = "Получить пользователя по ID", description = "Возвращает данные пользователя по его идентификатору.")
     @ApiResponse(responseCode = "200", description = "Пользователь найден")
     @GetMapping("/{id}")
-    public ResponseEntity<CreateUserResponse> getUserById(@PathVariable Long id, @RequestParam(defaultValue = "true") Boolean showOnlyAlive,
-                                                          @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return ResponseEntity.ok(userService.getUserById(id, showOnlyAlive, userPrincipal));
+    public ResponseEntity<CreateUserResponse> getUserById(@PathVariable Long id, @RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
+        return ResponseEntity.ok(userService.getUserById(id, showOnlyAlive));
     }
 
     /**
@@ -82,16 +113,14 @@ public class UserController {
     @Operation(summary = "Получить всех пользователей", description = "Возвращает список всех пользователей.")
     @ApiResponse(responseCode = "200", description = "Список пользователей успешно возвращен")
     @GetMapping
-    public ResponseEntity<List<CreateUserResponse>> getAllUsers(@RequestParam(defaultValue = "true") Boolean showOnlyAlive,
-                                                                @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        List<CreateUserResponse> users = userService.getAllUsers(showOnlyAlive, userPrincipal);
+    public ResponseEntity<List<CreateUserResponse>> getAllUsers(@RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
+        List<CreateUserResponse> users = userService.getAllUsers(showOnlyAlive);
         return ResponseEntity.ok(users);
     }
 
     /**
      * Добавление роли пользователю.
      *
-     * @param id Идентификатор пользователя.
      * @param role DTO с данными роли для добавления.
      * @return DTO с обновленными данными пользователя.
      */
@@ -99,9 +128,8 @@ public class UserController {
     @Operation(summary = "Добавить роль пользователю", description = "Добавляет указанную роль пользователю по его идентификатору.")
     @ApiResponse(responseCode = "200", description = "Роль успешно добавлена")
     @PutMapping("/{id}/role")
-    public ResponseEntity<CreateUserResponse> addRole(@PathVariable Long id, @Valid @RequestBody PutRoleRequest role,
-                                                      @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return ResponseEntity.ok(userService.addRole(id, role, userPrincipal));
+    public ResponseEntity<CreateUserResponse> addRole(@PathVariable Long id, @Valid @RequestBody PutRoleRequest role) {
+        return ResponseEntity.ok(userService.addRole(id, role));
     }
 
     /**
@@ -115,9 +143,9 @@ public class UserController {
     @Operation(summary = "Удалить роль у пользователя", description = "Удаляет указанную роль у пользователя по его идентификатору.")
     @ApiResponse(responseCode = "200", description = "Роль успешно удалена")
     @DeleteMapping("/{id}/role")
-    public ResponseEntity<CreateUserResponse> removeRole(@PathVariable Long id, @Valid @RequestBody PutRoleRequest role,
-                                                         @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return ResponseEntity.ok(userService.removeRole(id, role, userPrincipal));
+    public ResponseEntity<CreateUserResponse> removeRole(@PathVariable Long id, @Valid @RequestBody PutRoleRequest role
+                                                      ) {
+        return ResponseEntity.ok(userService.removeRole(id, role));
     }
 
     /**
@@ -131,9 +159,8 @@ public class UserController {
     @Operation(summary = "Обновить данные пользователя", description = "Обновляет данные пользователя по его идентификатору.")
     @ApiResponse(responseCode = "200", description = "Данные пользователя успешно обновлены")
     @PutMapping("/{id}")
-    public ResponseEntity<CreateUserResponse> updateUser(@PathVariable Long id, @Valid @RequestBody CreateUserRequest updateUserRequest,
-                                                         @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        CreateUserResponse updatedUser = userService.updateUser(id, updateUserRequest, userPrincipal);
+    public ResponseEntity<CreateUserResponse> updateUser(@PathVariable Long id, @Valid @RequestBody CreateUserRequest updateUserRequest) {
+        CreateUserResponse updatedUser = userService.updateUser(id, updateUserRequest);
         return ResponseEntity.ok(updatedUser);
     }
 
@@ -147,9 +174,8 @@ public class UserController {
     @Operation(summary = "Удалить пользователя", description = "Удаляет пользователя по его идентификатору.")
     @ApiResponse(responseCode = "204", description = "Пользователь успешно удален")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id,
-                                           @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        userService.deleteUser(id, userPrincipal);
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -163,9 +189,8 @@ public class UserController {
     @Operation(summary = "Восстановить пользователя", description = "Восстанавливает пользователя по его идентификатору.")
     @ApiResponse(responseCode = "204", description = "Пользователь успешно восстановлен")
     @PatchMapping("/{id}/recover")
-    public ResponseEntity<Void> recoverUser(@PathVariable Long id,
-                                            @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        userService.recoverUser(id, userPrincipal);
+    public ResponseEntity<Void> recoverUser(@PathVariable Long id) {
+        userService.recoverUser(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -184,9 +209,8 @@ public class UserController {
     @Operation(summary = "Частичное обновление пользователя", description = "Обновляет только указанные поля пользователя по его идентификатору.")
     @ApiResponse(responseCode = "200", description = "Данные пользователя успешно обновлены")
     @PatchMapping("/{id}")
-    public ResponseEntity<CreateUserResponse> patchUser(@PathVariable Long id, @Valid @RequestBody PatchUserRequest request,
-                                                        @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        CreateUserResponse response = userService.patchUser(id, request, userPrincipal);
+    public ResponseEntity<CreateUserResponse> patchUser(@PathVariable Long id, @Valid @RequestBody PatchUserRequest request) {
+        CreateUserResponse response = userService.patchUser(id, request);
         return ResponseEntity.ok(response);
     }
 }

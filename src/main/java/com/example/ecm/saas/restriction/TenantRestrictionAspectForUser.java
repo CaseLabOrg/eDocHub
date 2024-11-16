@@ -10,48 +10,49 @@ import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-
+/**
+ * Aspect для проверки доступа к Tenant ресурсам на основе текущего пользователя.
+ */
 @Aspect
 @Component
 @RequiredArgsConstructor
 public class TenantRestrictionAspectForUser {
 
-    private final TenantRepository tenantRepository ;
+    private final TenantRepository tenantRepository;
 
+    /**
+     * Проверяет доступ к Tenant.
+     *
+     * @param joinPoint текущая точка выполнения метода.
+     * @param tenantRestrictedForUser аннотация, указывающая на проверку.
+     * @return результат выполнения метода, если проверка успешна.
+     * @throws Throwable если доступ запрещен или метод генерирует исключение.
+     */
     @Around("@annotation(tenantRestrictedForUser)")
     public Object checkTenantAccess(ProceedingJoinPoint joinPoint, TenantRestrictedForUser tenantRestrictedForUser) throws Throwable {
-
         if (hasAccess(joinPoint.getArgs())) {
             return joinPoint.proceed();
         } else {
-            throw new NotFoundException("У вас нет доступа к этому ресурсу");
+            throw new SecurityException("Доступ запрещен: у вас нет прав на этот ресурс.");
         }
     }
-
-
 
     private boolean hasAccess(Object[] args) {
-        UserPrincipal userPrincipal = null;
-
-        for (int i = 0; i < args.length; i++) {
-            if (args[i] instanceof UserPrincipal) {
-                userPrincipal = (UserPrincipal) args[i];
-                break;
-            }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal userPrincipal)) {
+            throw new SecurityException("Ошибка авторизации: пользователь не найден.");
         }
 
-        if (userPrincipal != null) {
-            Tenant tenant = tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow( () -> new NotFoundException("Tenant not found"));
-            if (tenant != null) {
-                return userPrincipal.getId().equals(tenant.getOwner().getId());
-            }
-            throw new NotFoundException("Tenant не найден.");
+        if (userPrincipal.isAdmin()) {
+            return true;
         }
-        throw new NotFoundException("Ничего не выйдет");
+
+        Tenant tenant = tenantRepository.findById(TenantContext.getCurrentTenantId())
+                .orElseThrow(() -> new NotFoundException("Тенант не найден."));
+        return tenant.getOwner().getId().equals(userPrincipal.getId());
     }
-
-
 }
