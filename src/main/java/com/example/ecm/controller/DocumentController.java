@@ -160,9 +160,8 @@ public class DocumentController {
             @RequestParam(defaultValue = "true") Boolean showOnlyAlive,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "false") boolean ascending,
-            @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return ResponseEntity.ok(documentService.getAllDocuments(page, size, ascending, showOnlyAlive, userPrincipal));
+            @RequestParam(defaultValue = "false") boolean ascending) {
+        return ResponseEntity.ok(documentService.getAllDocuments(page, size, ascending, showOnlyAlive));
     }
 
     /**

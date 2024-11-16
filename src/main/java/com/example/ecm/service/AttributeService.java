@@ -17,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -36,7 +38,6 @@ public class AttributeService {
     private final DocumentTypeRepository documentTypeRepository;
     private final TenantRepository tenantRepository;
     private final AttributeMapper attributeMapper;
-
     /**
      * Создает новый атрибут документа.
      *
@@ -81,10 +82,13 @@ public class AttributeService {
     public List<CreateAttributeResponse> getAllAttributes(Pageable pageable, Boolean showOnlyALive) {
         Page<Attribute> attributePage = attributeRepository.findAll(pageable);
         Stream<Attribute> attributeStream = attributePage.stream();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
         if (showOnlyALive) {
             attributeStream = attributeStream.filter(Attribute::getIsAlive);
         }
+
         if(!userPrincipal.isAdmin()) {
                 attributeStream = attributeStream.filter(attribute ->  attribute.getTenant().getId().equals(TenantContext.getCurrentTenantId()));
         }

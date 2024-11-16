@@ -2,14 +2,14 @@ GET http://localhost:8080/users/1
 ###
 
 GET http://localhost:8080/users/1
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImlkIjoxLCJhIjpbIkFETUlOIl0sImV4cCI6MTczMTQyNjczNH0.c6YRq8RB6F5rgX7zSCE8uCmdvVBn0Yl4FWiM3iuQoZc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImlkIjoxLCJhIjpbIkFETUlOIl0sImV4cCI6MTcyODgyMTcyNH0.ssyWciJ1S1J7a-1od761PArLbOT6yeD2b_7lZgtF4cA
 ###
 
 POST http://localhost:8080/auth/login
 Content-Type: application/json
 
 {
-  "email": "admin",
+  "email": "admin@example.com",
   "password": "admin"
 }
 ###

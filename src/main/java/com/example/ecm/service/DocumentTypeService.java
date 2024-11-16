@@ -14,6 +14,8 @@ import com.example.ecm.saas.TenantContext;
 import com.example.ecm.saas.annotation.TenantRestrictedForDocumentType;
 import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,7 +29,7 @@ public class DocumentTypeService {
     private final AttributeRepository attributeRepository;
     private final DocumentTypeMapper documentTypeMapper;
     private final TenantRepository tenantRepository;
-
+    private final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     /**
      * Создает новый тип документа.
      *
@@ -67,15 +69,17 @@ public class DocumentTypeService {
      * @return список ответов с данными всех типов документов
      */
 
-    public List<CreateDocumentTypeResponse> getAllDocumentTypes(Boolean showOnlyAlive, UserPrincipal userPrincipal) {
+    public List<CreateDocumentTypeResponse> getAllDocumentTypes(Boolean showOnlyAlive) {
         Stream<DocumentType> documentTypeStream = documentTypeRepository.findAll().stream();
-
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
         if (showOnlyAlive) {
             documentTypeStream = documentTypeStream.filter(DocumentType::getIsAlive);
         }
 
-        documentTypeStream = documentTypeStream.filter(d -> d.getTenant().getId().equals(TenantContext.getCurrentTenantId()));
+        if(!userPrincipal.isAdmin()) {
+            documentTypeStream = documentTypeStream.filter(d -> d.getTenant().getId().equals(TenantContext.getCurrentTenantId()));
+        }
 
         return documentTypeStream
                 .map(documentTypeMapper::toCreateDocumentTypeResponse)
@@ -137,6 +141,7 @@ public class DocumentTypeService {
      * @return объект {@link CreateDocumentTypeResponse}, содержащий обновленные данные о типе документа
      * @throws NotFoundException если тип документа с указанным ID не найден
      */
+    @TenantRestrictedForDocumentType
     public CreateDocumentTypeResponse patchDocumentType(Long id, PatchDocumentTypeRequest request) {
         DocumentType documentType = documentTypeRepository.findById(id)
                 .filter(DocumentType::getIsAlive)

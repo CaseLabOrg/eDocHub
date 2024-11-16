@@ -75,9 +75,8 @@ public class DocumentTypeController {
     @ApiResponse(responseCode = "200", description = "Успешное получение списка типов документов")
     @GetMapping
     public List<CreateDocumentTypeResponse> getAllDocumentTypes(
-            @RequestParam(defaultValue = "true") Boolean showOnlyAlive,
-            @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return documentTypeService.getAllDocumentTypes(showOnlyAlive, userPrincipal);
+            @RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
+        return documentTypeService.getAllDocumentTypes(showOnlyAlive);
     }
 
     /**

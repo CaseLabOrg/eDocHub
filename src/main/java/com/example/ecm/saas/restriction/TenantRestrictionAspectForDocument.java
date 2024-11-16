@@ -1,10 +1,10 @@
 package com.example.ecm.saas.restriction;
 
 import com.example.ecm.exception.NotFoundException;
-import com.example.ecm.model.DocumentType;
-import com.example.ecm.repository.DocumentTypeRepository;
+import com.example.ecm.model.Document;
+import com.example.ecm.repository.DocumentRepository;
 import com.example.ecm.saas.TenantContext;
-import com.example.ecm.saas.annotation.TenantRestrictedForDocumentType;
+import com.example.ecm.saas.annotation.TenantRestrictedForDocument;
 import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -14,15 +14,17 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+
+
 /**
  * Aspect для проверки доступа к ресурсам DocumentType на основе текущего Tenant.
  */
 @Aspect
 @Component
 @RequiredArgsConstructor
-public class TenantRestrictionAspectForDocumentType {
+public class TenantRestrictionAspectForDocument {
 
-    private final DocumentTypeRepository documentTypeRepository;
+    private final DocumentRepository documentRepository;
 
     /**
      * Проверяет доступ к ресурсу DocumentType.
@@ -33,7 +35,7 @@ public class TenantRestrictionAspectForDocumentType {
      * @throws Throwable если доступ запрещен или метод генерирует исключение.
      */
     @Around("@annotation(tenantRestricted)")
-    public Object checkTenantAccess(ProceedingJoinPoint joinPoint, TenantRestrictedForDocumentType tenantRestricted) throws Throwable {
+    public Object checkTenantAccess(ProceedingJoinPoint joinPoint, TenantRestrictedForDocument tenantRestricted) throws Throwable {
         if (hasAccess(joinPoint)) {
             return joinPoint.proceed();
         } else {
@@ -57,10 +59,10 @@ public class TenantRestrictionAspectForDocumentType {
 
     private Long getResourceTenantId(Object[] args) {
         if (args.length > 0 && args[0] instanceof Long id) {
-            DocumentType documentType = documentTypeRepository.findById(id)
+            Document document = documentRepository.findById(id)
                     .orElseThrow(() -> new NotFoundException("DocumentType не найден для ID: " + id));
-            if (documentType.getTenant() != null) {
-                return documentType.getTenant().getId();
+            if (document.getDocumentType().getTenant() != null) {
+                return document.getDocumentType().getTenant().getId();
             } else {
                 throw new NotFoundException("У Организации нет такого типа документов");
             }
