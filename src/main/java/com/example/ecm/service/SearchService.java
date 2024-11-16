@@ -1,7 +1,6 @@
 package com.example.ecm.service;
 
 import com.example.ecm.dto.requests.CreateDocumentRequest;
-import com.example.ecm.mapper.DocumentMapper;
 import com.example.ecm.model.elasticsearch.DocumentElasticsearch;
 import com.example.ecm.parser.Base64Manager;
 import com.example.ecm.parser.DocumentManager;
