@@ -82,10 +82,9 @@ public class AttributeController {
     public ResponseEntity<List<CreateAttributeResponse>> getAllAttributes(
             @RequestParam(defaultValue = "0") @Parameter(description = "Номер страницы") int page,
             @RequestParam(defaultValue = "10") @Parameter(description = "Количество записей на странице") int size,
-            @RequestParam(defaultValue = "true") @Parameter(description = "Отображать только активные атрибуты") Boolean showOnlyAlive,
-            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+            @RequestParam(defaultValue = "true") @Parameter(description = "Отображать только активные атрибуты") Boolean showOnlyAlive) {
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(attributeService.getAllAttributes(pageable, showOnlyAlive, userPrincipal));
+        return ResponseEntity.ok(attributeService.getAllAttributes(pageable, showOnlyAlive));
     }
 
     /**

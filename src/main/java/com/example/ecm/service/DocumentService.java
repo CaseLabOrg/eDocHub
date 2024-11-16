@@ -12,14 +12,19 @@ import com.example.ecm.mapper.*;
 import com.example.ecm.model.*;
 import com.example.ecm.repository.*;
 
+import com.example.ecm.dto.requests.CreateDocumentRequest;
+import com.example.ecm.dto.responses.CreateDocumentResponse;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.saas.annotation.TenantRestrictedForDocument;
 import com.example.ecm.security.UserPrincipal;
 import com.example.ecm.exception.ServerException;
 import com.example.ecm.mapper.DocumentMapper;
+import com.example.ecm.mapper.SignatureMapper;
 import com.example.ecm.model.Document;
 import com.example.ecm.model.DocumentType;
 import com.example.ecm.model.User;
+import com.example.ecm.parser.Base64Manager;
+import com.example.ecm.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.security.core.Authentication;
@@ -54,6 +59,7 @@ public class DocumentService {
     private final CommentMapper commentMapper;
     private final CommentRepository commentRepository;
     private final SearchService searchService;
+    private final Base64Manager base64Manager;
     private final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
 
@@ -89,7 +95,7 @@ public class DocumentService {
 
         createDocumentVersionRequest.setDescription(documentVersion.getDescription());
         createDocumentVersionRequest.setTitle(documentVersion.getTitle());
-        createDocumentVersionRequest.setBase64Content(createDocumentRequest.getBase64Content());
+        createDocumentVersionRequest.setBase64Content(base64Manager.removeMetadataPrefix(createDocumentRequest.getBase64Content()));
 
         boolean success = minioService.addDocument(documentVersionSaved.getId(), createDocumentVersionRequest);
         if (!success) {
@@ -97,17 +103,18 @@ public class DocumentService {
             throw new ServerException("Could not add document");
         }
 
-        // There add to elastic
-        searchService.addIndexDocumentElasticsearch(
-                DocumentMapper.toDocumentElasticsearch(createDocumentRequest),
-                createDocumentRequest,
-                documentVersionSaved.getId());
-
         List<CreateDocumentVersionResponse> documentVersions = new ArrayList<>();
         CreateDocumentVersionResponse createDocumentVersionResponse = documentVersionMapper.toCreateDocumentVersionResponse(documentVersionSaved);
         createDocumentVersionResponse.setBase64Content(createDocumentRequest.getBase64Content());
         createDocumentVersionResponse.setValues(createDocumentRequest.getValues());
         documentVersions.add(createDocumentVersionResponse);
+
+        // There add to elastic
+        searchService.addIndexDocumentElasticsearch(
+                DocumentMapper.toDocumentElasticsearch(createDocumentRequest),
+                createDocumentRequest.getBase64Content(),
+                documentVersionSaved.getId()
+        );
 
         CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(documentSaved);
         response.setDocumentVersions(documentVersions);
@@ -201,6 +208,7 @@ public class DocumentService {
         ).getContent();
     }
 
+
     private CreateDocumentResponse getCreateDocumentResponse(Document document, CreateDocumentResponse response) {
         response.setDocumentVersions(document.getDocumentVersions().stream()
                 .map(version -> {
@@ -237,7 +245,6 @@ public class DocumentService {
                 .orElseThrow(() -> new NotFoundException("Deleted Document with id: " + id + " not found"));
         document.setIsAlive(true);
         documentRepository.save(document);
-        //searchService.recoverByDocumentVersionId(document.getDocumentVersions().getLast().getId());
     }
 
     /**
