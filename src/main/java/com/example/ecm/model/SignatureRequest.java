@@ -19,6 +19,10 @@ public class SignatureRequest {
     private User userTo;
 
     @ManyToOne
+    @JoinColumn(name = "delegated_id_to")
+    private User delegatedTo;
+
+    @ManyToOne
     @JoinColumn(name = "voting_id")
     private Voting voting;
 

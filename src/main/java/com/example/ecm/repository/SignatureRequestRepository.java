@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface SignatureRequestRepository extends JpaRepository<SignatureRequest, Long> {
     List<SignatureRequest> findAllByUserToId(Long userIdTo);
-    boolean existsByUserToIdAndDocumentVersionId(Long userToId, Long documentVersionId);
+    List<SignatureRequest> findAllByDelegatedToId(Long delegatedIdTo);
 }
