@@ -1,12 +1,17 @@
 INSERT INTO tenants (name, created_at, owner_id, is_alive) VALUES ('Tenant1', NOW(), 1, true);
-
 INSERT INTO tenants (name, created_at, owner_id, is_alive) VALUES ('Tenant2', NOW(), 2, true);
 
-INSERT INTO users (name, surname, email, password, is_alive, tenant_id)
-VALUES ('super_admin', 'admin', 'admin@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', true, 1);
+INSERT INTO plans (name, description, price, max_users) VALUES ('Test5', 'Plan test for 5 users', 100, 5);
 
-INSERT INTO users (name, surname, email, password, is_alive, tenant_id)
-VALUES ('super_admin2', 'admin2', 'admin2@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', true, 2);
+INSERT INTO subscriptions (plan_id, tenant_id, status) VALUES (1, 1, 'INACTIVE');
+INSERT INTO subscriptions (plan_id, tenant_id, status) VALUES (1, 2, 'INACTIVE');
+
+INSERT INTO invoices(subscription_id, description, amount, status, created_date) VALUES (1, 'Test', 100, 'AWAITING_PAYMENT', '2024-10-27');
+
+INSERT INTO payments(payment_id, invoice_id, payment_method, status, created_at, idempotence_key) VALUES ('2eb2ef08-000f-5000-b000-1e1b56d1529a', 1, 'YOO_MONEY', 'PENDING', '2024-10-27T23:59:59.425Z', 'e92aba65-9678-4389-a484-68bd3deddf57');
+
+INSERT INTO users (name, surname, email, password, is_alive, tenant_id) VALUES ('super_admin', 'admin', 'admin@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', true, 1);
+INSERT INTO users (name, surname, email, password, is_alive, tenant_id) VALUES ('super_admin2', 'admin2', 'admin2@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', true, 2);
 
 INSERT INTO document_types(name, is_alive, tenant_id) VALUES ('testType', true, 1);
 INSERT INTO document_types(name, is_alive, tenant_id) VALUES ('testTpe', true, 2);
