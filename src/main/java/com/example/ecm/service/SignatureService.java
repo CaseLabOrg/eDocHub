@@ -7,7 +7,7 @@ import com.example.ecm.dto.responses.GetSignatureResponse;
 import com.example.ecm.exception.ForbiddenException;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.kafka.event.DocumentSignedEvent;
-import com.example.ecm.kafka.service.EventProducerService;
+import com.example.ecm.kafka.service.DocumentEventProducer;
 import com.example.ecm.mapper.SignatureMapper;
 import com.example.ecm.model.*;
 import com.example.ecm.repository.*;
@@ -29,7 +29,7 @@ public class SignatureService {
     private final SignatureRepository signatureRepository;
     private final UserRepository userRepository;
     private final SignatureMapper signatureMapper;
-    private final EventProducerService eventProducerService;
+    private final DocumentEventProducer documentEventProducer;
     private final MailNotificationService mailNotificationService;
 
     public CreateSignatureRequestResponse sendToSign(CreateSignatureRequestRequest request, UserPrincipal currentUser) {
@@ -87,7 +87,7 @@ public class SignatureService {
         signature.setHash(signRequest.getUserTo().hashCode());
 
         DocumentSignedEvent event = new DocumentSignedEvent(id, currentUser.getId(), signRequest.getUserTo().getId(), request.getPlaceholderTitle());
-        eventProducerService.sendDocumentSignedEvent(event);
+        documentEventProducer.sendDocumentSignedEvent(event);
 
         signature = signatureRepository.save(signature);
 

@@ -29,12 +29,14 @@ public class Tenant {
     private LocalDateTime createdAt;
 
     @OneToOne
-    @JoinColumn(name = "owner_id", nullable = true)
+    @JoinColumn(name = "owner_id")
     private User owner;
+
+    @OneToOne(mappedBy = "tenant", cascade = CascadeType.ALL)
+    private Subscription subscription;
 
     private Boolean isAlive;
 
-    // Связь с пользователями, принадлежащими арендатору
     @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<User> users;
 
