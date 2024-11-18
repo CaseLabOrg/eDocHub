@@ -32,10 +32,6 @@ public class Document {
     @JoinColumn(name = "type_id", nullable = false)
     private DocumentType documentType;
 
-    @ManyToOne
-    @JoinColumn(name = "department_id")
-    private Department department;
-
     @OneToMany(mappedBy = "document", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.REMOVE})
     private List<DocumentVersion> documentVersions = new ArrayList<>();
 

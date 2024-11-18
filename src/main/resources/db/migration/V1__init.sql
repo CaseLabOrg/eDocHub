@@ -1,6 +1,5 @@
 CREATE TABLE Documents(
                           id BIGSERIAL PRIMARY KEY,
-                          department_id BIGSERIAL,
                           user_id BIGINT,
                           type_id BIGINT,
                           is_alive BOOLEAN
@@ -102,11 +101,14 @@ CREATE TABLE Comments (
 
 CREATE TABLE Departments (
                           id BIGSERIAL PRIMARY KEY,
-                          name TEXT
-);
+                          name TEXT,
+                          is_alive BOOLEAN,
+                          leader_id BIGINT
 
+);
 CREATE TABLE Department_Departments (
                              id BIGSERIAL PRIMARY KEY,
                              root_id BIGSERIAL NOT NULL,
                              children_id BIGSERIAL
 );
+ALTER TABLE users ALTER COLUMN department_id DROP NOT NULL;

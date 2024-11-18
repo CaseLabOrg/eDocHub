@@ -58,4 +58,17 @@ public class SignatureController {
         return ResponseEntity.ok(votingService.cancelVoting(votingId));
     }
 
+    /**
+     * Делегировать подпись другому пользователю
+     * @param signatureRequestId идентификатор подписи, для которой делегируется ответственность
+     * @param id идентификатор пользователя, которому делегируется подпись
+     * @param currentUser текущий пользователь, выполняющий делегирование
+     */
+    @PostMapping("/{signatureRequestId}/delegate/{id}")
+    public ResponseEntity<Void> delegateSignature(@PathVariable Long signatureRequestId,
+                                                  @PathVariable Long id,
+                                                  @AuthenticationPrincipal UserPrincipal currentUser) {
+        signatureService.delegateSignature(signatureRequestId, id, currentUser);
+        return ResponseEntity.noContent().build();
+    }
 }

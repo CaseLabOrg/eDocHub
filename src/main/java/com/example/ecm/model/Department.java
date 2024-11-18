@@ -19,7 +19,14 @@ public class Department {
 
     private String name;
 
-    @OneToMany(mappedBy = "department")
+    @ManyToOne
+    @JoinColumn(name = "leader_id")
+    private User leader;
+
+    private Boolean isAlive;
+
+    @OneToMany
+    @JoinColumn(name = "department_id")
     private List<User> users = new ArrayList<>();
 
     @ManyToMany
@@ -28,8 +35,4 @@ public class Department {
             inverseJoinColumns = @JoinColumn(name = "children_id")
     )
     private List<Department> children = new ArrayList<>();
-
-
-    @OneToMany(mappedBy = "department")
-    private List<Document> documents = new ArrayList<>();
 }

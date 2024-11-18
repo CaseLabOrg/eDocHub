@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface SignatureRequestRepository extends JpaRepository<SignatureRequest, Long> {
     List<SignatureRequest> findAllByUserToId(Long userIdTo);
+    List<SignatureRequest> findAllByDelegatedToId(Long delegatedIdTo);
 }
