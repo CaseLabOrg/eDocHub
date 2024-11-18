@@ -14,7 +14,7 @@ public class CreateSubscriptionResponse {
 
     private String status;
 
-    private Long tenant_id;
+    private Long tenantId;
 
     private LocalDate startDate;
 

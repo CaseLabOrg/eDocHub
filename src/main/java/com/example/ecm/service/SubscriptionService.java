@@ -9,6 +9,7 @@ import com.example.ecm.kafka.service.SubscriptionEventProducer;
 import com.example.ecm.mapper.SubscriptionMapper;
 import com.example.ecm.model.Subscription;
 import com.example.ecm.repository.SubscriptionRepository;
+import com.example.ecm.saas.annotation.TenantRestrictedForSubscription;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ public class SubscriptionService {
     private final SubscriptionMapper subscriptionMapper;
     private final SubscriptionEventProducer subscriptionEventProducer;
 
+    @TenantRestrictedForSubscription
     public CreateSubscriptionResponse getSubscriptionById(Long id) {
         Subscription subscription = subscriptionRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(ExceptionMessage.ENTITY_NOT_FOUND.generateNotFoundEntityMessage("Subscription", id)));

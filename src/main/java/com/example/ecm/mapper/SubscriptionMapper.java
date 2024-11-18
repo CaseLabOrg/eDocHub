@@ -37,7 +37,7 @@ public class SubscriptionMapper {
     public CreateSubscriptionResponse toCreateSubscriptionResponse(Subscription subscription) {
         CreateSubscriptionResponse response = new CreateSubscriptionResponse();
         response.setId(subscription.getId());
-        response.setTenant_id(subscription.getTenant().getId());
+        response.setTenantId(subscription.getTenant().getId());
         response.setPlan(planMapper.toCreatePlanResponse(subscription.getPlan()));
         response.setStatus(subscription.getStatus().name());
         response.setStartDate(subscription.getStartDate());
