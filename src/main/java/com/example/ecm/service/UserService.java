@@ -4,11 +4,12 @@ import com.example.ecm.dto.patch_requests.PatchUserRequest;
 import com.example.ecm.dto.requests.CreateUserRequest;
 import com.example.ecm.dto.responses.CreateUserResponse;
 import com.example.ecm.dto.requests.PutRoleRequest;
+import com.example.ecm.enums.ExceptionMessage;
+import com.example.ecm.exception.ForbiddenException;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.mapper.UserMapper;
-import com.example.ecm.model.Role;
-import com.example.ecm.model.Tenant;
-import com.example.ecm.model.User;
+import com.example.ecm.model.*;
+import com.example.ecm.repository.PlanRepository;
 import com.example.ecm.repository.RoleRepository;
 import com.example.ecm.repository.TenantRepository;
 import com.example.ecm.repository.UserRepository;
@@ -40,6 +41,7 @@ public class UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder encoder;
     private final TenantRepository tenantRepository;
+    private final PlanRepository planRepository;
     private final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
     /**
@@ -51,6 +53,8 @@ public class UserService {
     @TenantRestrictedForUser
     @Transactional
     public CreateUserResponse createUser(CreateUserRequest createUserRequest) {
+        checkPlan();
+
         User user = userMapper.toUser(createUserRequest);
         user.setTenant(tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow(() -> new NotFoundException("Tenant not found")));
         user.setRoles(Set.of(roleRepository.findByName("USER").orElseThrow(() -> new NotFoundException("Role with name: USER not found"))));
@@ -64,6 +68,7 @@ public class UserService {
 
     @Transactional
     public CreateUserResponse createUserAdmin(CreateUserRequest createUserRequest, Long tenantId) {
+        checkPlan();
         User user = userMapper.toUser(createUserRequest);
 
         user.setTenant(tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow(() -> new NotFoundException("Tenant not found")));
@@ -77,6 +82,7 @@ public class UserService {
 
     @Transactional
     public CreateUserResponse createUserOwner(CreateUserRequest createUserRequest, Long tenantId) {
+        checkPlan();
         User user = userMapper.toUser(createUserRequest);
 
         user.setTenant(tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow(() -> new NotFoundException("Tenant not found")));
@@ -249,7 +255,18 @@ public class UserService {
         return userMapper.toCreateUserResponse(updatedUser);
     }
 
-
+    private void checkPlan() {
+        Tenant tenant = tenantRepository.findById(TenantContext.getCurrentTenantId())
+                .orElseThrow(() -> new ForbiddenException(ExceptionMessage.ENTITY_NOT_FOUND.generateNotFoundEntityMessage("Tenant", TenantContext.getCurrentTenantId())));
+        if(tenant.getUsers().size() == tenant.getSubscription().getPlan().getMaxUsers()) {
+            Plan newPlan = planRepository.findFirstByMaxUsersGreaterThanOrderByMaxUsersAsc(tenant.getSubscription().getPlan().getMaxUsers())
+                    .orElseThrow(() -> new ForbiddenException(ExceptionMessage.USERS_LIMIT_REACHED.getMessage()));
+            Subscription subscription = tenant.getSubscription();
+            subscription.setPlan(newPlan);
+            tenant.setSubscription(subscription);
+            tenantRepository.save(tenant);
+        }
+    }
 
 
 }
