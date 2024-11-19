@@ -8,6 +8,8 @@ import com.example.ecm.model.elasticsearch.DocumentElasticsearch;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -75,7 +77,7 @@ public class DocumentVersionMapper {
         elasticDocument.setUserId(documentVersion.getDocument().getId());
         elasticDocument.setTitle(documentVersion.getTitle());
         elasticDocument.setDescription(documentVersion.getDescription());
-        elasticDocument.setCreatedAt(documentVersion.getCreatedAt());
+        elasticDocument.setCreatedAt(documentVersion.getCreatedAt().toInstant(ZoneOffset.UTC).toEpochMilli());
         elasticDocument.setIsAlive(documentVersion.getIsAlive());
 
         // Преобразование карты значений

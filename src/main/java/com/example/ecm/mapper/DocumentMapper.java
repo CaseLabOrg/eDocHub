@@ -9,8 +9,10 @@ import com.example.ecm.service.AttributeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -78,7 +80,7 @@ public class DocumentMapper {
         documentElasticsearch.setUserId(request.getUserId());
         documentElasticsearch.setDocumentTypeId(request.getDocumentTypeId());
         documentElasticsearch.setDescription(request.getDescription());
-        documentElasticsearch.setCreatedAt(LocalDateTime.parse(OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
+        documentElasticsearch.setCreatedAt(OffsetDateTime.now().toEpochSecond());
         documentElasticsearch.setValues(mapValues(request.getValues()));
 
         return documentElasticsearch;
@@ -106,7 +108,7 @@ public class DocumentMapper {
         documentVersion.setDocument(document);
         documentVersion.setTitle(documentElasticsearch.getTitle());
         documentVersion.setDescription(documentElasticsearch.getDescription());
-        documentVersion.setCreatedAt(documentElasticsearch.getCreatedAt());
+        documentVersion.setCreatedAt(Instant.ofEpochMilli(documentElasticsearch.getCreatedAt()).atZone(ZoneId.systemDefault()).toLocalDateTime());
 
         Map<Attribute, Value> values = new HashMap<>();
         for (Map.Entry<String, String> entry : entrySet) {

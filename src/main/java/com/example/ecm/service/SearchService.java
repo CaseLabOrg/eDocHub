@@ -4,38 +4,41 @@ import com.example.ecm.dto.requests.CreateDocumentRequest;
 import com.example.ecm.mapper.DocumentVersionMapper;
 import com.example.ecm.model.DocumentVersion;
 import com.example.ecm.model.elasticsearch.DocumentElasticsearch;
+import com.example.ecm.model.Document;
+import com.example.ecm.parser.Base64Manager;
 import com.example.ecm.parser.DocumentManager;
 import com.example.ecm.parser.DocumentParser;
+import com.example.ecm.repository.DocumentRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.action.get.GetRequest;
-import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.client.ElasticsearchClient;
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.core.CountRequest;
+import org.elasticsearch.client.core.CountResponse;
+import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.sort.SortBuilders;
-import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.xcontent.XContentType;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,6 +54,8 @@ public class SearchService {
     private final DocumentManager documentManager;
     private final DocumentParser documentParser;
     private final DocumentVersionMapper documentVersionMapper;
+    private final DocumentRepository documentRepository;
+    private final MinioService minioService;
 
     private String getFileContent(String id, String title, String base64Content) throws Exception {
 
@@ -106,17 +111,20 @@ public class SearchService {
      * @param updatedFields A map of the fields and values to update.
      * @throws IOException If there's an error with the update.
      */
-    public void updateDocument(String documentId, Map<String, Object> updatedFields) throws IOException {
-        UpdateRequest updateRequest = new UpdateRequest(INDEX_DOCUMENTS, documentId);
+    public void updateDocument(Long documentId, Map<String, Object> updatedFields) throws IOException {
 
+        DocumentElasticsearch documentElasticsearch = searchByDocumentVersionId(documentId);
+        String documentElasticsearchId = documentElasticsearch.getId();
+
+
+        UpdateRequest updateRequest = new UpdateRequest(INDEX_DOCUMENTS, documentElasticsearchId);
         updateRequest.doc(updatedFields, XContentType.JSON);
-
         UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
 
         if (updateResponse.getResult().name().equalsIgnoreCase("UPDATED")) {
-            log.info("Document " + documentId + " updated successfully.");
+            log.info("Document " + documentElasticsearchId + " updated successfully.");
         } else {
-            log.error("Document " + documentId + " was not updated. Status: " + updateResponse.getResult());
+            log.error("Document " + documentElasticsearchId + " was not updated. Status: " + updateResponse.getResult());
         }
     }
 
@@ -126,8 +134,6 @@ public class SearchService {
         if (idDocumentElastic == null || updatedDocument == null) {
             throw new IllegalArgumentException("Document ID and updated document must not be null.");
         }
-
-        System.out.println(updatedDocument);
 
         DocumentElasticsearch documentElastic = documentVersionMapper.mapToElasticsearch(updatedDocument);
 
@@ -180,15 +186,95 @@ public class SearchService {
         }
     }
 
-
-    public void deleteByDocumentVersionId(long documentVersionId) throws IOException {
-        DocumentElasticsearch documentElasticsearch = searchByDocumentVersionId(documentVersionId);
-        updateDocument(documentElasticsearch.getId(), Map.of("isAlive", Boolean.FALSE));
+    public void deleteByDocumentVersionId(Long documentVersionId) throws IOException {
+        updateDocument(documentVersionId, Map.of("isAlive", Boolean.FALSE));
     }
 
-    public void recoverByDocumentVersionId(long documentVersionId) throws IOException {
-        DocumentElasticsearch documentElasticsearch = searchByDocumentVersionId(documentVersionId);
-        updateDocument(documentElasticsearch.getId(), Map.of("isAlive", Boolean.TRUE));
+    public void recoverByDocumentVersionId(Long documentVersionId) throws IOException {
+        updateDocument(documentVersionId, Map.of("isAlive", Boolean.TRUE));
+    }
+
+    public List<DocumentElasticsearch> getAllDocuments() throws Exception {
+        SearchRequest searchRequest = new SearchRequest(INDEX_DOCUMENTS);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        BoolQueryBuilder query = QueryBuilders.boolQuery();
+        searchSourceBuilder.query(query);
+        searchRequest.source(searchSourceBuilder);
+
+        try {
+            SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+            List<DocumentElasticsearch> documents = new ArrayList<>();
+            for (SearchHit hit : searchResponse.getHits().getHits()) {
+                Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+                DocumentElasticsearch document = mapper.convertValue(sourceAsMap, DocumentElasticsearch.class);
+                documents.add(document);
+            }
+            return documents;
+        } catch (Exception e) {
+            log.error("Error executing search request", e);
+            throw e;
+        }
+    }
+
+
+    public Long countRecords() throws IOException {
+
+        CountRequest countRequest = new CountRequest(INDEX_DOCUMENTS);
+        countRequest.query(QueryBuilders.matchAllQuery());
+
+        CountResponse countResponse = client.count(countRequest, RequestOptions.DEFAULT);
+
+        return countResponse.getCount();
+    }
+
+    public void synchronizeSearchEngine() throws Exception {
+
+        if (countRecords() == documentRepository.count()) {
+            log.info("Search engine is synchronized");
+            return;
+        }
+
+        log.warn("Search engine not synchronized");
+
+        List<DocumentElasticsearch> documentElasticsearch = getAllDocuments();
+        List<Document> documents = documentRepository.findAll();
+        List<DocumentVersion> documentVersions = documents.stream()
+                .map(Document::getDocumentVersions)
+                .filter(versions -> versions != null && !versions.isEmpty())
+                .map(versions -> versions.get(versions.size() - 1))
+                .toList();
+
+
+        List<DocumentElasticsearch> documentsForAdd = new ArrayList<>();
+
+        for (DocumentVersion documentVersion : documentVersions) {
+            Long documentVersionId = documentVersion.getVersionId();
+            if (
+                    !documentElasticsearch.contains(documentVersionId) &&
+                    searchByDocumentVersionId(documentVersionId) == null
+            ) {
+                documentsForAdd.add(documentVersionMapper.mapToElasticsearch(documentVersion));
+            }
+        }
+
+        for (DocumentElasticsearch document : documentsForAdd) {
+
+            document.setId(UUID.randomUUID().toString());
+            Long documentVersionId = document.getDocumentVersionId();
+            String base64Content = minioService.getBase64DocumentByName(documentVersionId + "_" + document.getTitle());
+
+            if (base64Content == null) {
+                log.warn("Failed to fetch document content for ID: {}", document.getId());
+                continue;
+            }
+
+            CreateDocumentRequest request = new CreateDocumentRequest();
+            request.setTitle(document.getTitle());
+            request.setBase64Content(base64Content);
+
+            addIndexDocumentElasticsearch(document, request, documentVersionId);
+            log.info("Success synchronized");
+        }
     }
 
     public List<DocumentElasticsearch> search(String searchString, List<String> attributes, List<String> documentTypes) throws Exception {
@@ -197,11 +283,7 @@ public class SearchService {
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder request = QueryBuilders.boolQuery();
 
-        BoolQueryBuilder isAliveQuery = QueryBuilders.boolQuery()
-                .should(QueryBuilders.termQuery("isAlive", true))
-                .should(QueryBuilders.boolQuery().mustNot(QueryBuilders.existsQuery("isAlive")));
-
-        request.must(isAliveQuery);
+        request.filter(QueryBuilders.termQuery("isAlive", true));
 
         if (attributes != null && !attributes.isEmpty()) {
             BoolQueryBuilder valuesQuery = QueryBuilders.boolQuery();
@@ -216,7 +298,7 @@ public class SearchService {
         if (searchString != null) {
             List<QueryBuilder> strictQueries = parseStrictTerms(searchString);
             for (QueryBuilder strictQuery : strictQueries) {
-                request.must(strictQuery);  // Exact matches must be present
+                request.must(strictQuery);
             }
 
             List<String> notInTerms = parseNotInQuery(searchString);

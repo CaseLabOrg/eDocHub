@@ -1,5 +1,8 @@
 package com.example.ecm.init;
 
+import com.example.ecm.service.SearchService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
@@ -7,29 +10,32 @@ import org.elasticsearch.client.indices.CreateIndexResponse;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.xcontent.XContentType;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 
+@Slf4j
 @Component
+@Transactional
+@RequiredArgsConstructor
 public class ElasticsearchIndexInitializer implements CommandLineRunner {
 
     private final RestHighLevelClient client;
+    private final SearchService searchService;
 
-    @Autowired
-    public ElasticsearchIndexInitializer(RestHighLevelClient client) {
-        this.client = client;
-    }
 
     @Override
     public void run(String... args) {
         try {
             createIndexIfNotExists("documents", getDocumentsMapping());
+            searchService.synchronizeSearchEngine();
         } catch (IOException e) {
             System.err.println("Failed to initialize Elasticsearch index: " + e.getMessage());
             e.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -66,12 +72,12 @@ public class ElasticsearchIndexInitializer implements CommandLineRunner {
             CreateIndexResponse response = client.indices().create(createIndexRequest, RequestOptions.DEFAULT);
 
             if (response.isAcknowledged()) {
-                System.out.println("Index " + indexName + " created successfully.");
+                log.info("Index " + indexName + " created successfully.");
             } else {
-                System.err.println("Index creation for " + indexName + " was not acknowledged.");
+                log.warn("Index creation for " + indexName + " was not acknowledged.");
             }
         } else {
-            System.out.println("Index " + indexName + " already exists. No action needed.");
+            log.info("Index " + indexName + " already exists. No action needed.");
         }
     }
 
@@ -93,4 +99,6 @@ public class ElasticsearchIndexInitializer implements CommandLineRunner {
                   }
                 }""";
     }
+
+
 }

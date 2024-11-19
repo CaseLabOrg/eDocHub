@@ -13,29 +13,24 @@ import com.example.ecm.model.*;
 import com.example.ecm.model.elasticsearch.DocumentElasticsearch;
 import com.example.ecm.repository.*;
 
-import com.example.ecm.dto.requests.CreateDocumentRequest;
-import com.example.ecm.dto.responses.CreateDocumentResponse;
 import com.example.ecm.exception.NotFoundException;
+import com.example.ecm.saas.annotation.TenantRestrictedForDocument;
 import com.example.ecm.security.UserPrincipal;
 import com.example.ecm.exception.ServerException;
 import com.example.ecm.mapper.DocumentMapper;
-import com.example.ecm.mapper.SignatureMapper;
 import com.example.ecm.model.Document;
 import com.example.ecm.model.DocumentType;
 import com.example.ecm.model.User;
-import com.example.ecm.parser.Base64Manager;
-import com.example.ecm.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
 
@@ -59,11 +54,10 @@ public class DocumentService {
     private final ValueRepository valueRepository;
     private final CommentMapper commentMapper;
     private final CommentRepository commentRepository;
-    private final SignatureMapper signatureMapper;
     private final SearchService searchService;
-    private final Base64Manager base64Manager;
+    private final VotingMapper votingMapper;
+    private final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-    private final UserService userService;
 
 
     /**
@@ -105,18 +99,18 @@ public class DocumentService {
             throw new ServerException("Could not add document");
         }
 
-        List<CreateDocumentVersionResponse> documentVersions = new ArrayList<>();
-        CreateDocumentVersionResponse createDocumentVersionResponse = documentVersionMapper.toCreateDocumentVersionResponse(documentVersionSaved);
-        createDocumentVersionResponse.setBase64Content(createDocumentRequest.getBase64Content());
-        createDocumentVersionResponse.setValues(createDocumentRequest.getValues());
-        documentVersions.add(createDocumentVersionResponse);
-
         // There add to elastic
         searchService.addIndexDocumentElasticsearch(
                 DocumentMapper.toDocumentElasticsearch(createDocumentRequest),
                 createDocumentRequest,
                 documentVersionSaved.getId()
         );
+
+        List<CreateDocumentVersionResponse> documentVersions = new ArrayList<>();
+        CreateDocumentVersionResponse createDocumentVersionResponse = documentVersionMapper.toCreateDocumentVersionResponse(documentVersionSaved);
+        createDocumentVersionResponse.setBase64Content(createDocumentRequest.getBase64Content());
+        createDocumentVersionResponse.setValues(createDocumentRequest.getValues());
+        documentVersions.add(createDocumentVersionResponse);
 
         CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(documentSaved);
         response.setDocumentVersions(documentVersions);
@@ -131,6 +125,7 @@ public class DocumentService {
      * @return ответ с данными документа
      * @throws RuntimeException если документ не найден
      */
+    @TenantRestrictedForDocument
     public CreateDocumentResponse getDocumentById(Long id, Boolean showOnlyAlive, UserPrincipal userPrincipal) {
         Optional<Document> document = documentRepository.findById(id);
 
@@ -149,6 +144,7 @@ public class DocumentService {
         return getCreateDocumentResponse(doc, response);
     }
 
+    @TenantRestrictedForDocument
     public CreateDocumentVersionResponse getDocumentVersionById(Long documentId, Long versionId, Boolean showOnlyAlive) {
         Optional<DocumentVersion> documentVersion = documentVersionRepository.findByDocumentIdAndVersionId(documentId, versionId);
 
@@ -171,8 +167,8 @@ public class DocumentService {
      *
      * @return список ответов с данными всех документов
      */
-    public List<CreateDocumentResponse> getAllDocuments(Integer page, Integer size, Boolean ascending, Boolean showOnlyAlive, UserPrincipal userPrincipal) {
-
+    public List<CreateDocumentResponse> getAllDocuments(Integer page, Integer size, Boolean ascending, Boolean showOnlyAlive) {
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
         List<DocumentVersion> latestVersions = documentVersionRepository.findLatestDocumentVersions();
 
         latestVersions.sort(Comparator.comparing(DocumentVersion::getCreatedAt)
@@ -229,6 +225,7 @@ public class DocumentService {
      * @param id идентификатор документа
      */
 
+    @TenantRestrictedForDocument
     public void deleteDocument(Long id) throws IOException {
         Document document = documentRepository.findById(id)
                 .filter(Document::getIsAlive)
@@ -238,6 +235,7 @@ public class DocumentService {
         searchService.deleteByDocumentVersionId(document.getDocumentVersions().getLast().getId());
     }
 
+    @TenantRestrictedForDocument
     public void recoverDocument(Long id) throws IOException {
         Document document = documentRepository.findById(id)
                 .filter(d -> !d.getIsAlive())
@@ -260,6 +258,8 @@ public class DocumentService {
      * @return объект {@link CreateDocumentVersionResponse}, содержащий данные о созданной версии
      * @throws NotFoundException если документ с указанным ID не найден
      */
+
+    @TenantRestrictedForDocument
     public CreateDocumentVersionResponse updateDocumentVersion(Long id, CreateDocumentVersionRequest createDocumentVersionRequest) throws Exception {
         Document document = documentRepository.findById(id)
                 .filter(Document::getIsAlive)
@@ -286,14 +286,13 @@ public class DocumentService {
         );
 
         if (existingDocument != null) {
-
             searchService.updateDocument(
                     existingDocument.getId(),
                     documentVersion,
                     response.getBase64Content()
             );
         } else {
-            log.error("Последняя версия документа не найдена в Elasticsearch.");
+            log.error("Document last version not found in Elasticsearch.");
         }
 
         return response;
@@ -333,8 +332,10 @@ public class DocumentService {
      * @return объект {@link CreateDocumentVersionResponse}, содержащий обновленные данные о версии документа
      * @throws NotFoundException если версия документа с указанным ID не найдена
      */
+    @TenantRestrictedForDocument
     public CreateDocumentVersionResponse patchDocument(Long id, PatchDocumentVersionRequest request) {
-        Document document= documentRepository.findById(id).orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
+        Document document = documentRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
 
         DocumentVersion documentVersion = document.getDocumentVersions().getLast();
 
@@ -342,25 +343,65 @@ public class DocumentService {
             documentVersion.setDescription(request.getDescription());
         }
         if (request.getTitle() != null) {
-            CreateDocumentVersionRequest requestDocumentVersion = documentVersionMapper.toCreateDocumentVersionRequest(documentVersion, minioService.getBase64DocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle()));
+            CreateDocumentVersionRequest requestDocumentVersion = documentVersionMapper
+                    .toCreateDocumentVersionRequest(documentVersion, minioService
+                            .getBase64DocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle()));
             documentVersion.setTitle(request.getTitle());
             requestDocumentVersion.setTitle(documentVersion.getTitle());
             minioService.addDocument(documentVersion.getId(), requestDocumentVersion);
         }
         if (request.getBase64Content() != null) {
-            minioService.addDocument(documentVersion.getId(), documentVersionMapper.toCreateDocumentVersionRequest(documentVersion, request.getBase64Content()));
+            minioService.addDocument(documentVersion.getId(), documentVersionMapper
+                    .toCreateDocumentVersionRequest(documentVersion, request.getBase64Content()));
         }
         if (request.getValues() != null) {
             setValues(request.getValues(), documentVersion);
         }
-        CreateDocumentVersionResponse response = documentVersionMapper.toCreateDocumentVersionResponse(documentVersionRepository.save(documentVersion));
-        response.setBase64Content(minioService.getBase64DocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle()));
+
+        // Save the updated document version
+        CreateDocumentVersionResponse response = documentVersionMapper
+                .toCreateDocumentVersionResponse(documentVersionRepository.save(documentVersion));
+        response.setBase64Content(minioService.getBase64DocumentByName(
+                documentVersion.getId() + "_" + documentVersion.getTitle()));
 
         documentVersionRepository.save(documentVersion);
-        return response;
 
+        // Elasticsearch Integration
+        if (request.getValues() != null) {
+            setValues(request.getValues(), documentVersion);
+
+            try {
+                DocumentElasticsearch documentElasticsearch = searchService.searchByDocumentVersionId(documentVersion.getId());
+
+                Map<String, String> elasticValues = votingMapper.toElasticsearchValues(documentVersion.getValues());
+
+                if (documentElasticsearch == null) {
+                    // Document not indexed yet, create a new index entry
+                    DocumentElasticsearch newDocumentElasticsearch = documentVersionMapper.mapToElasticsearch(documentVersion);
+                    newDocumentElasticsearch.setValues(elasticValues);
+
+                    CreateDocumentRequest createDocumentRequest = new CreateDocumentRequest();
+                    createDocumentRequest.setTitle(documentVersion.getTitle());
+                    createDocumentRequest.setBase64Content(request.getBase64Content());
+
+                    searchService.addIndexDocumentElasticsearch(newDocumentElasticsearch, createDocumentRequest, documentVersion.getId());
+                } else {
+                    // Document already indexed, update the existing entry
+                    Map<String, Object> updatedFields = Map.of(
+                            "values", elasticValues
+                    );
+                    searchService.updateDocument(documentElasticsearch.getDocumentVersionId(), updatedFields);
+                }
+            } catch (Exception e) {
+                log.error("Error updating Elasticsearch index for document version ID: " + documentVersion.getId(), e);
+            }
+        }
+
+        return response;
     }
 
+
+    @TenantRestrictedForDocument
     public AddCommentResponse addComment(Long id, AddCommentRequest addCommentRequest, UserPrincipal userPrincipal) {
         Comment comment = commentMapper.toComment(addCommentRequest);
         Document document = documentRepository.findById(id)
@@ -375,4 +416,5 @@ public class DocumentService {
 
         return commentMapper.toAddCommentResponse(comment);
     }
+
 }
