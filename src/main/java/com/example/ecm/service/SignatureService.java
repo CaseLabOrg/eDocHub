@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -127,17 +128,19 @@ public class SignatureService {
         eventProducerService.sendDocumentSignedEvent(event);
 
         signature = signatureRepository.save(signature);
-
         return signatureMapper.toGetSignatureResponse(signature);
     }
 
-    public List<CreateSignatureRequestResponse> getAllSignatureRequests() {
-        return signatureRequestRepository.findAll()
-                .stream().map(signatureMapper::toCreateSignatureRequestResponse).toList();
+    public List<CreateSignatureRequestResponse> getAllSignatureRequests(UserPrincipal userPrincipal, Boolean showAll) {
+        return signatureRequestRepository.findAll().stream()
+                .filter(signatureRequest -> signatureRequest.getDocumentVersion().getDocument().getUser().getId().equals(userPrincipal.getId()) || signatureRequest.getUserTo().getId().equals(userPrincipal.getId()))
+                .map(signatureMapper::toCreateSignatureRequestResponse)
+                .toList();
     }
 
-    public CreateSignatureRequestResponse getSignatureRequestById(Long id) {
-        return signatureRequestRepository.findById(id).map(signatureMapper::toCreateSignatureRequestResponse)
+    public CreateSignatureRequestResponse getSignatureRequestById(Long id, UserPrincipal userPrincipal) {
+        return signatureRequestRepository.findById(id)
+                .map(signatureMapper::toCreateSignatureRequestResponse)
                 .orElseThrow(() -> new NotFoundException("SignatureRequest with id: " + id + " not found"));
 
     }
