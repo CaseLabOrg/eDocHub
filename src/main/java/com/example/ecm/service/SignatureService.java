@@ -13,10 +13,12 @@ import com.example.ecm.model.*;
 import com.example.ecm.repository.*;
 import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SignatureService {
@@ -67,6 +69,7 @@ public class SignatureService {
     }
 
     public GetSignatureResponse sign(Long id, CreateSignatureRequest request, UserPrincipal currentUser) {
+
         List<SignatureRequest> requests = signatureRequestRepository.findAllByUserToId(currentUser.getId());
         requests.addAll(signatureRequestRepository.findAllByDelegatedToId(currentUser.getId()));
         if (requests.isEmpty()) {

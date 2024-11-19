@@ -1,3 +1,24 @@
+
+CREATE TABLE Tenants (
+                         id BIGSERIAL PRIMARY KEY,
+                         name TEXT NOT NULL,
+                         created_at TIMESTAMP NOT NULL,
+                         is_alive BOOLEAN,
+                         owner_id BIGSERIAL NOT NULL
+);
+
+
+CREATE TABLE Users (
+                       id BIGSERIAL PRIMARY KEY,
+                       department_id BIGSERIAL,
+                       name VARCHAR(255) NOT NULL,
+                       surname VARCHAR(255) NOT NULL,
+                       email VARCHAR(255) NOT NULL UNIQUE,
+                       password VARCHAR(255) NOT NULL,
+                       is_alive BOOLEAN,
+                       tenant_id BIGINT NOT NULL
+);
+
 CREATE TABLE Documents(
                           id BIGSERIAL PRIMARY KEY,
                           user_id BIGINT,
@@ -9,13 +30,15 @@ CREATE TABLE Document_Types(
                                id BIGSERIAL PRIMARY KEY,
                                name VARCHAR(255),
                                is_alive BOOLEAN,
-                               constraint uniq_name UNIQUE(name)
+                               constraint uniq_name UNIQUE(name),
+                               tenant_id BIGINT NOT NULL,
+                               CONSTRAINT fk_tenant FOREIGN KEY (tenant_id) REFERENCES Tenants(id)
 );
 
 CREATE TABLE Document_Types_Attributes(
-                               id_attribute BIGSERIAL,
-                               id_document_type BIGSERIAL,
-                               constraint Document_Types_Attributes_pk PRIMARY KEY(id_attribute, id_document_type)
+                                          id_attribute BIGSERIAL,
+                                          id_document_type BIGSERIAL,
+                                          constraint Document_Types_Attributes_pk PRIMARY KEY(id_attribute, id_document_type)
 );
 
 
@@ -23,7 +46,9 @@ CREATE TABLE Attributes(
                            id BIGSERIAL PRIMARY KEY,
                            name VARCHAR(255),
                            required BOOLEAN,
-                           is_alive BOOLEAN
+                           is_alive BOOLEAN,
+                           tenant_id BIGINT NOT NULL,
+                           CONSTRAINT fk_tenant FOREIGN KEY (tenant_id) REFERENCES Tenants(id)
 );
 
 CREATE TABLE Values(
@@ -33,16 +58,6 @@ CREATE TABLE Values(
                        value VARCHAR(255)
 );
 
-CREATE TABLE Users(
-                      id BIGSERIAL PRIMARY KEY,
-                      department_id BIGSERIAL,
-                      name VARCHAR(255),
-                      surname VARCHAR(255),
-                      email VARCHAR(255),
-                      password VARCHAR(255),
-                      is_alive BOOLEAN,
-                      constraint uniq_email UNIQUE(email)
-);
 
 CREATE TABLE User_Roles(
                            user_id BIGINT,
@@ -56,19 +71,19 @@ CREATE TABLE Roles(
 );
 
 CREATE TABLE Signatures(
-                      id BIGSERIAL PRIMARY KEY,
-                      hash INTEGER,
-                      placeholder_title VARCHAR(255),
-                      user_id BIGINT,
-                      document_version_id BIGINT
+                           id BIGSERIAL PRIMARY KEY,
+                           hash INTEGER,
+                           placeholder_title VARCHAR(255),
+                           user_id BIGINT,
+                           document_version_id BIGINT
 );
 
 CREATE TABLE Signature_Requests(
-                           id BIGSERIAL PRIMARY KEY,
-                           user_id_to BIGINT,
-                           voting_id BIGINT,
-                           document_version_id BIGINT,
-                           status VARCHAR(255)
+                                   id BIGSERIAL PRIMARY KEY,
+                                   user_id_to BIGINT,
+                                   voting_id BIGINT,
+                                   document_version_id BIGINT,
+                                   status VARCHAR(255)
 );
 
 
@@ -92,11 +107,11 @@ CREATE TABLE Votings (
 );
 
 CREATE TABLE Comments (
-                         id BIGSERIAL PRIMARY KEY,
-                         document_id BIGINT,
-                         author_id BIGINT,
-                         content TEXT NOT NULL,
-                         created_at TIMESTAMP NOT NULL
+                          id BIGSERIAL PRIMARY KEY,
+                          document_id BIGINT,
+                          author_id BIGINT,
+                          content TEXT NOT NULL,
+                          created_at TIMESTAMP NOT NULL
 );
 
 CREATE TABLE Departments (

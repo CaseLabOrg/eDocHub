@@ -26,6 +26,11 @@ public class DocumentType {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne
+    @JoinColumn(name = "tenant_id", nullable = false)  // Указываем связь с Tenant
+    private Tenant tenant;
+
+
     /**
      * Название типа документа.
      * Это поле является обязательным и должно быть уникальным.

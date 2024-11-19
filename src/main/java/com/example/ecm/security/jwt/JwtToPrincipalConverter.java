@@ -11,8 +11,21 @@ import java.util.List;
 public class JwtToPrincipalConverter {
 
     public UserPrincipal convert(DecodedJWT jwt) {
-        return UserPrincipal.builder().login(jwt.getSubject())
-                .authorities(extractAuth(jwt)).build();
+
+        Long userId = jwt.getClaim("id").asLong();
+        String login = String.valueOf(jwt.getClaim("sub"));
+
+        List<SimpleGrantedAuthority> authorities = jwt.getClaim("a")
+                .asList(String.class)
+                .stream()
+                .map(SimpleGrantedAuthority::new)
+                .toList();
+
+        return UserPrincipal.builder()
+                .id(userId)
+                .login(login)
+                .authorities(authorities)
+                .build();
     }
 
     private List<SimpleGrantedAuthority> extractAuth(DecodedJWT jwt) {

@@ -13,9 +13,5 @@ import java.util.Optional;
  */
 @Repository
 public interface DocumentTypeRepository extends JpaRepository<DocumentType, Long> {
-    // Здесь могут быть добавлены дополнительные методы для специфичных запросов к типам документов, если потребуется
-
-    Optional<DocumentType> findByName(String name);
-
     List<DocumentType> findDocumentTypesByIdIsIn(List<Long> ids);
 }

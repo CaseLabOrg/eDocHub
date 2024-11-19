@@ -47,6 +47,7 @@ public class DocumentMapper {
         documentVersion.setCreatedAt(LocalDateTime.now());
         documentVersion.setDescription(request.getDescription());
         documentVersion.setTitle(request.getTitle());
+        documentVersion.setIsAlive(true);
         return documentVersion;
     }
     /**

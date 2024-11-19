@@ -7,6 +7,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+
 @Getter
 @Builder
 public class UserPrincipal implements UserDetails {
@@ -50,6 +51,8 @@ public class UserPrincipal implements UserDetails {
     }
 
     public boolean isAdmin() {
-        return authorities.contains(new SimpleGrantedAuthority("ADMIN"));
+        return authorities.contains(new SimpleGrantedAuthority("SUPER_ADMIN"));
     }
+
+
 }
