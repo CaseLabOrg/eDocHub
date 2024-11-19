@@ -10,6 +10,7 @@ CREATE TABLE Tenants (
 
 CREATE TABLE Users (
                        id BIGSERIAL PRIMARY KEY,
+                       department_id BIGSERIAL,
                        name VARCHAR(255) NOT NULL,
                        surname VARCHAR(255) NOT NULL,
                        email VARCHAR(255) NOT NULL UNIQUE,
@@ -112,3 +113,17 @@ CREATE TABLE Comments (
                           content TEXT NOT NULL,
                           created_at TIMESTAMP NOT NULL
 );
+
+CREATE TABLE Departments (
+                          id BIGSERIAL PRIMARY KEY,
+                          name TEXT,
+                          is_alive BOOLEAN,
+                          leader_id BIGINT
+
+);
+CREATE TABLE Department_Departments (
+                             id BIGSERIAL PRIMARY KEY,
+                             root_id BIGSERIAL NOT NULL,
+                             children_id BIGSERIAL
+);
+ALTER TABLE users ALTER COLUMN department_id DROP NOT NULL;

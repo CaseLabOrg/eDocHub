@@ -31,6 +31,7 @@ public class SignatureService {
     private final SignatureMapper signatureMapper;
     private final EventProducerService eventProducerService;
     private final MailNotificationService mailNotificationService;
+    private final DepartmentService departmentService;
 
     public CreateSignatureRequestResponse sendToSign(CreateSignatureRequestRequest request, UserPrincipal currentUser) {
         Document document = documentRepository.findById(request.getDocumentId())
@@ -70,6 +71,7 @@ public class SignatureService {
     public GetSignatureResponse sign(Long id, CreateSignatureRequest request, UserPrincipal currentUser) {
 
         List<SignatureRequest> requests = signatureRequestRepository.findAllByUserToId(currentUser.getId());
+        requests.addAll(signatureRequestRepository.findAllByDelegatedToId(currentUser.getId()));
         if (requests.isEmpty()) {
             throw new NotFoundException("You have nothing to sign");
         }
@@ -103,5 +105,25 @@ public class SignatureService {
         return signatureRequestRepository.findById(id).map(signatureMapper::toCreateSignatureRequestResponse)
                 .orElseThrow(() -> new NotFoundException("SignatureRequest with id: " + id + " not found"));
 
+    }
+
+    /**
+     * Делегировать подпись
+     * @param id идентификатор пользователя, которому делегируют
+     * @param currentUser текущий пользователь
+     */
+    public void delegateSignature(Long signatureRequestId, Long id, UserPrincipal currentUser) {
+        SignatureRequest signatureRequest = signatureRequestRepository.findById(signatureRequestId)
+                .orElseThrow(() -> new NotFoundException("SignatureRequest with id: " + signatureRequestId + " not found"));
+
+        User member = userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
+        User leader = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new NotFoundException("User with id: " + currentUser.getId() + " not found"));
+        if(!departmentService.isMemberInAnyDepartmentOfLeader(member, leader))
+            throw new ForbiddenException("User with id: " + member.getId() + " is not a member of any department of the leader with id: " + leader.getId());
+
+        signatureRequest.setDelegatedTo(member);
+        signatureRequestRepository.save(signatureRequest);
     }
 }

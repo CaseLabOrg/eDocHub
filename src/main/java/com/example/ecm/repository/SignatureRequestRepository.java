@@ -89,4 +89,5 @@ public interface SignatureRequestRepository extends JpaRepository<SignatureReque
             FROM signature_requests sr JOIN document_version dv ON sr.document_version_id = dv.id
             GROUP BY dv.document_id""", nativeQuery = true)
     List<DocumentSignatureRequestStatistics> findDocumentSignatureRequestStatistics();
+    List<SignatureRequest> findAllByDelegatedToId(Long delegatedIdTo);
 }

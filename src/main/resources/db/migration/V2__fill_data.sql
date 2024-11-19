@@ -1,9 +1,11 @@
+INSERT INTO departments(name, is_alive) VALUES ('testDepartment', true);
+
 INSERT INTO tenants (name, created_at, owner_id, is_alive) VALUES ('Tenant1', NOW(), 1, true);
 
 INSERT INTO tenants (name, created_at, owner_id, is_alive) VALUES ('Tenant2', NOW(), 2, true);
 
-INSERT INTO users (name, surname, email, password, is_alive, tenant_id)
-VALUES ('super_admin', 'admin', 'admin@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', true, 1);
+INSERT INTO users (name, surname, email, password, department_id, is_alive, tenant_id)
+VALUES ('super_admin', 'admin', 'admin@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', 1, true, 1);
 
 INSERT INTO users (name, surname, email, password, is_alive, tenant_id)
 VALUES ('super_admin2', 'admin2', 'admin2@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', true, 2);
@@ -37,4 +39,3 @@ INSERT INTO document_version(version_id,  document_id, title, description, creat
 INSERT INTO signatures(hash, placeholder_title, user_id, document_version_id) VALUES (1322131231, 'testPlaceholder', 1, 1);
 
 INSERT INTO comments(document_id, author_id, content, created_at) VALUES (1, 1, 'Test comment', '2024-12-12T23:59:59.425Z');
-
