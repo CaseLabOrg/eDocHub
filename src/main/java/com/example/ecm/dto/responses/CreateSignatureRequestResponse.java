@@ -8,5 +8,6 @@ import lombok.Setter;
 public class CreateSignatureRequestResponse {
     private Long id;
     private CreateUserResponse userTo;
+    private Long documentId;
     private Long documentVersionId;
 }
