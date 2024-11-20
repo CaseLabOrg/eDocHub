@@ -62,8 +62,8 @@ public class SignatureController {
     @Operation(summary = "Получить все запросы на подпись", description = "Возвращает список всех запросов на подпись.")
     @ApiResponse(responseCode = "200", description = "Список запросов на подпись успешно получен")
     @GetMapping
-    public ResponseEntity<List<CreateSignatureRequestResponse>> getAllSignatureRequests() {
-        return ResponseEntity.ok(signatureService.getAllSignatureRequests());
+    public ResponseEntity<List<CreateSignatureRequestResponse>> getAllSignatureRequests(@AuthenticationPrincipal UserPrincipal userPrincipal, @RequestParam(defaultValue = "true") Boolean showAll) {
+        return ResponseEntity.ok(signatureService.getAllSignatureRequests(userPrincipal, showAll));
     }
 
     /**
