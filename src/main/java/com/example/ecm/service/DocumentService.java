@@ -172,13 +172,68 @@ public class DocumentService {
                 .distinct()
                 .collect(Collectors.toList());
 
-        int start = page * size;
-        int end = Math.min(start + size, latestVersions.size());
+        Stream<Document> documentStream = documentRepository.findAllById(documentIds).stream();
 
-        Stream<Document> documentStream = documentRepository.findAllById(documentIds.subList(start, end)).stream();
 
         if (showOnlyAlive) {
             documentStream = documentStream.filter(Document::getIsAlive);
+        }
+
+
+        if (!userPrincipal.isAdmin()) {
+            documentStream = documentStream
+                    .filter(document ->
+                            Objects.equals(document.getUser().getId(), userPrincipal.getId())
+                                    ||
+                                    document.getDocumentVersions().stream()
+                                            .anyMatch(version ->
+                                                    signatureRequestRepository.existsByUserToIdAndDocumentVersionId(
+                                                            userPrincipal.getId(), version.getId()
+                                                    )
+                                            ));
+        }
+
+
+        List<Document> filteredDocuments = documentStream.toList();
+
+
+        int start = page * size;
+        int end = Math.min(start + size, filteredDocuments.size());
+        List<Document> paginatedDocuments = filteredDocuments.subList(start, end);
+
+
+        List<CreateDocumentResponse> createDocumentResponses = paginatedDocuments.stream()
+                .map(document -> {
+                    CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document);
+                    return getCreateDocumentResponse(document, response, userPrincipal);
+                })
+                .toList();
+
+        return new PageImpl<>(
+                createDocumentResponses, PageRequest.of(page, size),
+                filteredDocuments.size()
+        ).getContent();
+    }
+
+    public int getCountDocuments( Boolean showOnlyAlive, UserPrincipal userPrincipal) {
+
+        List<DocumentVersion> latestVersions = documentVersionRepository.findLatestDocumentVersions();
+
+        latestVersions.sort(Comparator.comparing(DocumentVersion::getCreatedAt)
+                .reversed());
+
+        List<Long> documentIds = latestVersions.stream()
+                .map(version -> version.getDocument().getId())
+                .distinct()
+                .collect(Collectors.toList());
+
+
+        Stream<Document> documentStream = documentRepository.findAllById(documentIds.subList(0, latestVersions.size())).stream();
+
+        if (showOnlyAlive) {
+            documentStream = documentStream.filter(Document::getIsAlive);
+        } else {
+            documentStream = documentStream.filter(document -> document.getIsAlive().equals(Boolean.FALSE));
         }
 
         if (!userPrincipal.isAdmin()) {
@@ -194,17 +249,10 @@ public class DocumentService {
                                             ));
         }
 
-        List<CreateDocumentResponse> createDocumentResponses = documentStream
-                .map(document -> {
-                    CreateDocumentResponse response = documentMapper.toCreateDocumentResponse(document);
-                    return getCreateDocumentResponse(document, response, userPrincipal);
-                })
-                .toList();
-        return new PageImpl<>(
-                createDocumentResponses, PageRequest.of(page, size),
-                latestVersions.size()
-        ).getContent();
+        return documentStream.toList().size();
+
     }
+
 
     private CreateDocumentResponse getCreateDocumentResponse(Document document, CreateDocumentResponse response, UserPrincipal userPrincipal) {
         Stream<DocumentVersion> documentStream = document.getDocumentVersions().stream();

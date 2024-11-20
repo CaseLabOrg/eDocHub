@@ -165,6 +165,7 @@ public class DocumentController {
             @ApiResponse(responseCode = "200", description = "Список документов успешно получен"),
             @ApiResponse(responseCode = "404", description = "Документы не найдены")
     })
+
     @GetMapping
     public ResponseEntity<List<CreateDocumentResponse>> getAllDocuments(
             @RequestParam(defaultValue = "true") Boolean showOnlyAlive,
@@ -174,6 +175,14 @@ public class DocumentController {
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         return ResponseEntity.ok(documentService.getAllDocuments(page, size, ascending, showOnlyAlive, userPrincipal));
     }
+
+    @GetMapping("/countDocuments")
+    public int getCountDocuments(
+            @RequestParam(defaultValue = "true") Boolean showOnlyAlive,
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return documentService.getCountDocuments(showOnlyAlive, userPrincipal);
+    }
+
 
     /**
      * Частично обновляет документ.
