@@ -50,8 +50,8 @@ public class SignatureController {
             @ApiResponse(responseCode = "404", description = "Запрос на подпись не найден")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<CreateSignatureRequestResponse> getSignatureRequestById(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return ResponseEntity.ok(signatureService.getSignatureRequestById(id, userPrincipal));
+    public ResponseEntity<CreateSignatureRequestResponse> getSignatureRequestById(@PathVariable Long id) {
+        return ResponseEntity.ok(signatureService.getSignatureRequestById(id));
     }
 
     /**
@@ -62,8 +62,8 @@ public class SignatureController {
     @Operation(summary = "Получить все запросы на подпись", description = "Возвращает список всех запросов на подпись.")
     @ApiResponse(responseCode = "200", description = "Список запросов на подпись успешно получен")
     @GetMapping
-    public ResponseEntity<List<CreateSignatureRequestResponse>> getAllSignatureRequests(@AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return ResponseEntity.ok(signatureService.getAllSignatureRequests(userPrincipal));
+    public ResponseEntity<List<CreateSignatureRequestResponse>> getAllSignatureRequests(@AuthenticationPrincipal UserPrincipal userPrincipal, @RequestParam(defaultValue = "true") Boolean showAll) {
+        return ResponseEntity.ok(signatureService.getAllSignatureRequests(userPrincipal, showAll));
     }
 
     /**

@@ -133,12 +133,15 @@ public class SignatureService {
 
     public List<CreateSignatureRequestResponse> getAllSignatureRequests(UserPrincipal userPrincipal, Boolean showAll) {
         return signatureRequestRepository.findAll().stream()
-                .filter(signatureRequest -> signatureRequest.getDocumentVersion().getDocument().getUser().getId().equals(userPrincipal.getId()) || signatureRequest.getUserTo().getId().equals(userPrincipal.getId()))
+                .filter(signatureRequest ->
+                        (signatureRequest.getDocumentVersion().getDocument().getUser().getId().equals(userPrincipal.getId()) || signatureRequest.getUserTo().getId().equals(userPrincipal.getId()))
+                                &&
+                                (showAll || signatureRequest.getStatus().equals(SignatureRequestState.PENDING)))
                 .map(signatureMapper::toCreateSignatureRequestResponse)
                 .toList();
     }
 
-    public CreateSignatureRequestResponse getSignatureRequestById(Long id, UserPrincipal userPrincipal) {
+    public CreateSignatureRequestResponse getSignatureRequestById(Long id) {
         return signatureRequestRepository.findById(id)
                 .map(signatureMapper::toCreateSignatureRequestResponse)
                 .orElseThrow(() -> new NotFoundException("SignatureRequest with id: " + id + " not found"));
