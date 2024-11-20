@@ -7,8 +7,7 @@ INSERT INTO subscriptions (plan_id, tenant_id, status) VALUES (1, 1, 'INACTIVE')
 INSERT INTO subscriptions (plan_id, tenant_id, status) VALUES (1, 2, 'INACTIVE');
 
 INSERT INTO invoices(subscription_id, description, amount, status, created_date) VALUES (1, 'Test', 100, 'AWAITING_PAYMENT', '2024-10-27');
-
-INSERT INTO payments(payment_id, invoice_id, payment_method, status, created_at, idempotence_key) VALUES ('2eb2ef08-000f-5000-b000-1e1b56d1529a', 1, 'YOO_MONEY', 'PENDING', '2024-10-27T23:59:59.425Z', 'e92aba65-9678-4389-a484-68bd3deddf57');
+INSERT INTO invoices(subscription_id, description, amount, status, created_date) VALUES (2, 'Test', 100, 'AWAITING_PAYMENT', '2024-10-27');
 
 INSERT INTO users (name, surname, email, password, is_alive, tenant_id) VALUES ('super_admin', 'admin', 'admin@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', true, 1);
 INSERT INTO users (name, surname, email, password, is_alive, tenant_id) VALUES ('super_admin2', 'admin2', 'admin2@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', true, 2);
