@@ -49,27 +49,27 @@ public class UserController {
      * Получение пользователя по его ID с возвратом данных в виде DTO.
      *
      * @param id Идентификатор пользователя.
-     * @param showOnlyAlive Параметр для фильтрации пользователей по статусу (по умолчанию true).
+     * @param isAlive Параметр для фильтрации пользователей по статусу (по умолчанию true).
      * @return DTO с данными пользователя, если найден, или 404 Not Found.
      */
     @Operation(summary = "Получить пользователя по ID", description = "Возвращает данные пользователя по его идентификатору.")
     @ApiResponse(responseCode = "200", description = "Пользователь найден")
     @GetMapping("/{id}")
-    public ResponseEntity<CreateUserResponse> getUserById(@PathVariable Long id, @RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
-        return ResponseEntity.ok(userService.getUserById(id, showOnlyAlive));
+    public ResponseEntity<CreateUserResponse> getUserById(@PathVariable Long id, @RequestParam(defaultValue = "true") Boolean isAlive) {
+        return ResponseEntity.ok(userService.getUserById(id, isAlive));
     }
 
     /**
      * Получение списка всех пользователей с возвратом данных в виде DTO.
      *
-     * @param showOnlyAlive Параметр для фильтрации пользователей по статусу (по умолчанию true).
+     * @param isAlive Параметр для фильтрации пользователей по статусу (по умолчанию true).
      * @return Список DTO с данными всех пользователей.
      */
     @Operation(summary = "Получить всех пользователей", description = "Возвращает список всех пользователей.")
     @ApiResponse(responseCode = "200", description = "Список пользователей успешно возвращен")
     @GetMapping
-    public ResponseEntity<List<CreateUserResponse>> getAllUsers(@RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
-        List<CreateUserResponse> users = userService.getAllUsers(showOnlyAlive);
+    public ResponseEntity<List<CreateUserResponse>> getAllUsers(@RequestParam(defaultValue = "true") Boolean isAlive) {
+        List<CreateUserResponse> users = userService.getAllUsers(isAlive);
         return ResponseEntity.ok(users);
     }
 

@@ -67,15 +67,17 @@ public class UserService {
      * @param id Идентификатор пользователя
      * @return Optional с объектом пользователя, если найден
      */
-    public CreateUserResponse getUserById(Long id, Boolean showOnlyALive) {
+    public CreateUserResponse getUserById(Long id, Boolean isAlive) {
 
-        Optional<User> attribute = userRepository.findById(id);
+        Optional<User> user = userRepository.findById(id);
 
-        if (showOnlyALive) {
-            attribute = attribute.filter(User::getIsAlive);
+        if (isAlive) {
+            user = user.filter(User::getIsAlive);
+        } else {
+            user = user.filter(u -> !u.getIsAlive());
         }
 
-        return attribute
+        return user
                 .map(userMapper::toCreateUserResponse)
                 .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
     }
@@ -103,11 +105,13 @@ public class UserService {
      *
      * @return Список DTO с данными пользователей
      */
-    public List<CreateUserResponse> getAllUsers(Boolean showOnlyALive) {
+    public List<CreateUserResponse> getAllUsers(Boolean isAlive) {
         Stream<User> userStream = userRepository.findAll().stream();
 
-        if (showOnlyALive) {
+        if (isAlive) {
             userStream = userStream.filter(User::getIsAlive);
+        } else {
+            userStream = userStream.filter(u -> !u.getIsAlive());
         }
 
         return userStream
