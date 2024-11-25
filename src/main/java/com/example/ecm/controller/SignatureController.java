@@ -114,8 +114,8 @@ public class SignatureController {
 
 
     @GetMapping("/voting")
-    public ResponseEntity<List<StartVotingResponse>> getVoting() {
-        return ResponseEntity.ok(votingService.getAllVotings());
+    public ResponseEntity<List<StartVotingResponse>> getVotings(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return ResponseEntity.ok(votingService.getVotings(userPrincipal));
     }
 
     /**
