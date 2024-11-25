@@ -45,8 +45,13 @@ public class VotingService {
     private final MinioService minioService;
 
 
-    public List<StartVotingResponse> getAllVotings() {
-        List<Voting> votings = votingRepository.findAll();
+    public List<StartVotingResponse> getVotings(UserPrincipal userPrincipal) {
+        Long userId = userPrincipal.getId();
+        List<Voting> votings = votingRepository.findAll().stream()
+                .filter(v -> v.getSignatureRequests().stream()
+                        .map(SignatureRequest::getUserTo)
+                        .anyMatch(user -> user.getId().equals(userId))
+                ).toList();
         List<String> contents = votings.stream().map(v -> minioService.getBase64DocumentByName(v.getDocumentVersion().getId() + "_" + v.getDocumentVersion().getTitle())).toList();
 
         return IntStream.range(0, Math.min(votings.size(), contents.size()))
