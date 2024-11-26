@@ -19,6 +19,7 @@ import com.example.ecm.exception.ServerException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -215,7 +216,7 @@ public class DocumentService {
         ).getContent();
     }
 
-    public int getCountDocuments( Boolean showOnlyAlive, UserPrincipal userPrincipal) {
+    public int getCountDocuments(Boolean showOnlyAlive, UserPrincipal userPrincipal) {
 
         List<DocumentVersion> latestVersions = documentVersionRepository.findLatestDocumentVersions();
 
@@ -257,7 +258,7 @@ public class DocumentService {
     private CreateDocumentResponse getCreateDocumentResponse(Document document, CreateDocumentResponse response, UserPrincipal userPrincipal) {
         Stream<DocumentVersion> documentStream = document.getDocumentVersions().stream();
         if (!userPrincipal.isAdmin()) {
-                documentStream = documentStream.filter(version ->
+            documentStream = documentStream.filter(version ->
                     Objects.equals(version.getDocument().getUser().getId(), userPrincipal.getId())
                             ||
                             signatureRequestRepository.existsByUserToIdAndDocumentVersionId(userPrincipal.getId(), version.getVersionId()));
@@ -352,6 +353,7 @@ public class DocumentService {
      * @throws NotFoundException если атрибут с указанным именем не найден
      */
     private void setValues(List<SetValueRequest> values, DocumentVersion documentVersion) {
+        System.out.println(values.toString());
         for (SetValueRequest newValue : values) {
             Attribute attribute = attributeRepository.findByName(newValue.getAttributeName())
                     .orElseThrow(() -> new NotFoundException("Attribute with name: " + newValue.getAttributeName() + " not found"));
@@ -361,6 +363,7 @@ public class DocumentService {
             value.setValue(newValue.getValue());
             valueRepository.save(value);
         }
+        System.out.println(documentVersion.getValues().toString());
     }
 
     /**
@@ -375,8 +378,9 @@ public class DocumentService {
      * @return объект {@link CreateDocumentVersionResponse}, содержащий обновленные данные о версии документа
      * @throws NotFoundException если версия документа с указанным ID не найдена
      */
+    @Transactional
     public CreateDocumentVersionResponse patchDocument(Long id, PatchDocumentVersionRequest request) {
-        Document document= documentRepository.findById(id).orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
+        Document document = documentRepository.findById(id).orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
         if (!documentStateService.checkTransition(document, DocumentState.MODIFIED)) {
             throw new ConflictException("You cannot modify document with id: " + id + " check available transitions");
         }
@@ -384,25 +388,55 @@ public class DocumentService {
         document.setState(DocumentState.MODIFIED);
         DocumentVersion documentVersion = document.getDocumentVersions().getLast();
 
+
+        DocumentVersion newVersion2 = new DocumentVersion();
+        newVersion2.setDocument(document);
+        newVersion2.setVersionId(documentVersion.getVersionId() + 1);
+
+        if (request.getTitle() != null) {
+            newVersion2.setTitle(request.getTitle());
+        } else {
+            newVersion2.setTitle(documentVersion.getTitle());
+        }
+
+        setValues(documentVersion.getValues().entrySet().stream()
+                .map(entry -> {
+                    SetValueRequest setValueRequest = new SetValueRequest();
+                    setValueRequest.setAttributeName(entry.getKey().getName());
+                    setValueRequest.setValue(entry.getValue().getValue());
+                    return setValueRequest;
+                }).toList(), newVersion2);
+
+        newVersion2.setDescription(documentVersion.getDescription());
+        newVersion2.setCreatedAt(LocalDateTime.now());
+        newVersion2.setIsAlive(true);
+
+
+        DocumentVersion newVersion = documentVersionRepository.save(newVersion2);
+        newVersion = documentVersionRepository.findById(newVersion.getId()).orElse(null);
+
+
         if (request.getDescription() != null) {
-            documentVersion.setDescription(request.getDescription());
+            newVersion.setDescription(request.getDescription());
         }
         if (request.getTitle() != null) {
-            CreateDocumentVersionRequest requestDocumentVersion = documentVersionMapper.toCreateDocumentVersionRequest(documentVersion, minioService.getBase64DocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle()));
-            documentVersion.setTitle(request.getTitle());
-            requestDocumentVersion.setTitle(documentVersion.getTitle());
-            minioService.addDocument(documentVersion.getId(), requestDocumentVersion);
+            CreateDocumentVersionRequest requestDocumentVersion = documentVersionMapper.toCreateDocumentVersionRequest(newVersion, minioService.getBase64DocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle()));
+            newVersion.setTitle(request.getTitle());
+            requestDocumentVersion.setTitle(newVersion.getTitle());
+            minioService.addDocument(newVersion.getId(), requestDocumentVersion);
         }
+
         if (request.getBase64Content() != null) {
-            minioService.addDocument(documentVersion.getId(), documentVersionMapper.toCreateDocumentVersionRequest(documentVersion, request.getBase64Content()));
+            minioService.addDocument(newVersion.getId(), documentVersionMapper.toCreateDocumentVersionRequest(newVersion, request.getBase64Content()));
+        } else {
+            minioService.addDocument(newVersion.getId(), documentVersionMapper.toCreateDocumentVersionRequest(newVersion, minioService.getBase64DocumentByName(documentVersion.getId() + "_" + newVersion.getTitle())));
         }
         if (request.getValues() != null) {
-            setValues(request.getValues(), documentVersion);
+            setValues(request.getValues(), newVersion);
         }
-        CreateDocumentVersionResponse response = documentVersionMapper.toCreateDocumentVersionResponse(documentVersionRepository.save(documentVersion));
-        response.setBase64Content(minioService.getBase64DocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle()));
+        CreateDocumentVersionResponse response = documentVersionMapper.toCreateDocumentVersionResponse(documentVersionRepository.save(newVersion));
+        response.setBase64Content(minioService.getBase64DocumentByName(newVersion.getId() + "_" + newVersion.getTitle()));
 
-        documentVersionRepository.save(documentVersion);
         return response;
 
     }
@@ -421,4 +455,5 @@ public class DocumentService {
 
         return commentMapper.toAddCommentResponse(comment);
     }
+
 }
