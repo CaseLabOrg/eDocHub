@@ -5,6 +5,7 @@ import com.example.ecm.dto.requests.CreateUserRequest;
 import com.example.ecm.dto.responses.CreateUserResponse;
 import com.example.ecm.dto.requests.PutRoleRequest;
 import com.example.ecm.exception.ConflictException;
+import com.example.ecm.exception.ForbiddenException;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.mapper.UserMapper;
 import com.example.ecm.model.Role;
@@ -148,6 +149,8 @@ public class UserService {
         User user = userRepository.findById(id)
                 .filter(User::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
+        if (userPrincipal.getId().equals(user.getId())) throw new ForbiddenException("You cannot delete your self");
+
         user.setIsAlive(false);
         userRepository.save(user);
     }

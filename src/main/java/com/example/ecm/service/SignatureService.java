@@ -20,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -74,6 +73,8 @@ public class SignatureService {
     public GetSignatureResponse sign(Long id, CreateSignatureRequest request, Boolean signByRequest, UserPrincipal currentUser) {
 
         if (!signByRequest) {
+
+            if (request.getStatus().equals(SignatureRequestState.REJECTED)) throw new ConflictException("You cannot reject yours document");
             Document document = documentRepository.findById(id)
                     .filter(Document::getIsAlive)
                     .filter(d -> d.getUser().getId().equals(currentUser.getId()))
@@ -112,9 +113,15 @@ public class SignatureService {
         }
         signRequest.setStatus(request.getStatus());
 
+        signatureRequestRepository.save(signRequest);
+
         switch (request.getStatus()) {
             case APPROVED -> signRequest.getDocumentVersion().getDocument().setState(DocumentState.SIGNED);
             case REJECTED -> signRequest.getDocumentVersion().getDocument().setState(DocumentState.SENT_ON_REWORK);
+        }
+
+        if (signRequest.getStatus().equals(SignatureRequestState.REJECTED)) {
+            return new GetSignatureResponse();
         }
 
         documentRepository.save(signRequest.getDocumentVersion().getDocument());
