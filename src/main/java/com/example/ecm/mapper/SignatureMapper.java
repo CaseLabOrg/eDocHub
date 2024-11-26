@@ -7,7 +7,6 @@ import com.example.ecm.model.Document;
 import com.example.ecm.model.DocumentVersion;
 import com.example.ecm.model.Signature;
 import com.example.ecm.model.SignatureRequest;
-import com.example.ecm.repository.DocumentVersionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -52,6 +51,8 @@ public class SignatureMapper {
     public CreateSignatureRequestResponse toCreateSignatureRequestResponse(SignatureRequest signatureRequest) {
         CreateSignatureRequestResponse response = new CreateSignatureRequestResponse();
         response.setId(signatureRequest.getId());
+        response.setStatus(signatureRequest.getStatus());
+        response.setVotingId(signatureRequest.getVoting().getId());
         response.setUserTo(userMapper.toCreateUserResponse(signatureRequest.getUserTo()));
         response.setDocumentId(signatureRequest.getDocumentVersion().getDocument().getId());
         response.setDocumentVersionId(signatureRequest.getDocumentVersion().getId());
