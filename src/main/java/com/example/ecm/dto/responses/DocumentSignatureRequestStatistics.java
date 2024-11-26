@@ -5,4 +5,6 @@ public interface DocumentSignatureRequestStatistics {
     Long getRequestCount();
     Long getApprovedCount();
     Long getRejectedCount();
+    Long getIgnoredCount();
+    Long getPendingCount();
 }

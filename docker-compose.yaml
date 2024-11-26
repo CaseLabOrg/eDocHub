@@ -70,6 +70,30 @@ services:
       KAFKA_LISTENERS: INSIDE://0.0.0.0:10093,OUTSIDE://0.0.0.0:10092
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
 
+  app:
+    image: ecm
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: https://kafka:10093
+      MINIO_URL: http://minio:10000
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 123
+      SPRING_DATA_ELASTICSEARCH_REST_URIS: http://elasticsearch:10200
+      elastic.hostname: elasticsearch
+      elastic.port: 10200
+      elastic.scheme: http
+      elastic.username: elastic
+      elastic.password: F8x6X_xkjA105DiuWTxC
+    entrypoint: [ "sh", "-c", "sleep 60 && java -jar /app/ecm.jar" ]
+
 
 volumes:
   es_data:
