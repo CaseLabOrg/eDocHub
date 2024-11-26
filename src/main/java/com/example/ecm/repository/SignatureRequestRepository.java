@@ -1,9 +1,6 @@
 package com.example.ecm.repository;
 
-import com.example.ecm.dto.responses.DocumentSignatureRequestStatistics;
-import com.example.ecm.dto.responses.IgnoredVotes;
-import com.example.ecm.dto.responses.SignatureStatus;
-import com.example.ecm.dto.responses.UserApproval;
+import com.example.ecm.dto.responses.*;
 import com.example.ecm.model.SignatureRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -42,6 +39,65 @@ public interface SignatureRequestRepository extends JpaRepository<SignatureReque
 
     @Query(value = """
         SELECT
+            EXTRACT(YEAR FROM dv.created_at) AS year,
+            EXTRACT(WEEK FROM dv.created_at) AS week,
+            COUNT(sr.id) AS approvalCount
+        FROM
+            Signature_Requests sr
+        JOIN
+            Document_Version dv ON sr.document_version_id = dv.id
+        WHERE
+            sr.status ILIKE 'approved'
+            AND dv.created_at BETWEEN :startDate AND :endDate
+        GROUP BY
+            EXTRACT(YEAR FROM dv.created_at), EXTRACT(WEEK FROM dv.created_at)
+        ORDER BY
+            year, week
+    """, nativeQuery = true)
+    List<WeeklyApprovalStats> findWeeklyApprovals(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    @Query(value = """
+        WITH DailySignatures AS (
+            SELECT
+                EXTRACT(YEAR FROM dv.created_at) AS year,
+                EXTRACT(MONTH FROM dv.created_at) AS month,
+                EXTRACT(DAY FROM dv.created_at) AS day,
+                COUNT(*) AS approvalsCount
+            FROM
+                Signature_Requests sr
+            JOIN
+                Document_Version dv ON sr.document_version_id = dv.id
+            WHERE
+                sr.status = 'Approved'
+                AND dv.created_at BETWEEN :startDate AND :endDate
+            GROUP BY
+                EXTRACT(YEAR FROM dv.created_at), EXTRACT(MONTH FROM dv.created_at), EXTRACT(DAY FROM dv.created_at)
+        )
+        SELECT
+            year,
+            month,
+            day,
+            approvalsCount,
+            SUM(approvalsCount) OVER (ORDER BY year, month, day) AS cumulativeCount,
+            (approvalsCount - COALESCE(LAG(approvalsCount) OVER (ORDER BY year, month, day), 0)) AS dailyGrowth
+        FROM
+            DailySignatures
+        ORDER BY
+            year, month, day;
+    """, nativeQuery = true)
+    List<DailyApprovalStats> findDailyApprovals(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+
+
+
+    @Query(value = """
+        SELECT
             sr.user_id_to AS userId,
             CONCAT(u.name, ' ', u.surname) AS userName,
             COUNT(sr.id) AS ignoredVoteCount
@@ -54,13 +110,13 @@ public interface SignatureRequestRepository extends JpaRepository<SignatureReque
         JOIN 
             Document_Version dv ON sr.document_version_id = dv.id
         WHERE 
-            sr.status IS NULL
+            sr.status IN ('Pending', 'Ignored')
             AND dv.created_at BETWEEN :startDate AND :endDate
         GROUP BY 
-            sr.user_id_to, userName
+            sr.user_id_to, u.name, u.surname
         ORDER BY 
             ignoredVoteCount DESC
-        """, nativeQuery = true)
+    """, nativeQuery = true)
     List<IgnoredVotes> findIgnoredVotes(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
@@ -83,11 +139,16 @@ public interface SignatureRequestRepository extends JpaRepository<SignatureReque
 
     @Query(value = """
             SELECT dv.document_id AS documentId,
-            COUNT(sr) AS requestCount,
-            SUM(CASE WHEN sr.status = 'approved' THEN 1 ELSE 0 END) AS approvedCount,
-            SUM(CASE WHEN sr.status = 'rejected' THEN 1 ELSE 0 END) AS rejectedCount
-            FROM signature_requests sr JOIN document_version dv ON sr.document_version_id = dv.id
-            GROUP BY dv.document_id""", nativeQuery = true)
+                   COUNT(sr) AS requestCount,
+                   SUM(CASE WHEN sr.status ILIKE 'approved' THEN 1 ELSE 0 END) AS approvedCount,
+                   SUM(CASE WHEN sr.status ILIKE 'rejected' THEN 1 ELSE 0 END) AS rejectedCount,
+                   SUM(CASE WHEN sr.status ILIKE 'ignored' THEN 1 ELSE 0 END) AS ignoredCount,
+                   SUM(CASE WHEN sr.status ILIKE 'pending' THEN 1 ELSE 0 END) AS pendingCount
+            FROM signature_requests sr
+            JOIN document_version dv ON sr.document_version_id = dv.id
+            GROUP BY dv.document_id
+    """, nativeQuery = true)
     List<DocumentSignatureRequestStatistics> findDocumentSignatureRequestStatistics();
+
     List<SignatureRequest> findAllByDelegatedToId(Long delegatedIdTo);
 }
