@@ -52,7 +52,11 @@ public class SignatureMapper {
         CreateSignatureRequestResponse response = new CreateSignatureRequestResponse();
         response.setId(signatureRequest.getId());
         response.setStatus(signatureRequest.getStatus());
-        response.setVotingId(signatureRequest.getVoting().getId());
+        Long votingId = null;
+        if (signatureRequest.getVoting() != null) {
+            votingId = signatureRequest.getVoting().getId();
+        }
+        response.setVotingId(votingId);
         response.setUserTo(userMapper.toCreateUserResponse(signatureRequest.getUserTo()));
         response.setDocumentId(signatureRequest.getDocumentVersion().getDocument().getId());
         response.setDocumentVersionId(signatureRequest.getDocumentVersion().getId());
