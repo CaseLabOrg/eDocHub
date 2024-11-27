@@ -105,11 +105,13 @@ public class DocumentService {
      * @return ответ с данными документа
      * @throws RuntimeException если документ не найден
      */
-    public CreateDocumentResponse getDocumentById(Long id, Boolean showOnlyAlive, UserPrincipal userPrincipal) {
+    public CreateDocumentResponse getDocumentById(Long id, Boolean isAlive, UserPrincipal userPrincipal) {
         Optional<Document> document = documentRepository.findById(id);
 
-        if (showOnlyAlive) {
+        if (isAlive) {
             document = document.filter(Document::getIsAlive);
+        } else {
+            document = document.filter(d -> !d.getIsAlive());
         }
 
         if (!userPrincipal.isAdmin()) {
@@ -132,11 +134,13 @@ public class DocumentService {
         return getCreateDocumentResponse(doc, response, userPrincipal);
     }
 
-    public CreateDocumentVersionResponse getDocumentVersionById(Long documentId, Long versionId, Boolean showOnlyAlive, UserPrincipal userPrincipal) {
+    public CreateDocumentVersionResponse getDocumentVersionById(Long documentId, Long versionId, Boolean isAlive, UserPrincipal userPrincipal) {
         Optional<DocumentVersion> documentVersion = documentVersionRepository.findByDocumentIdAndVersionId(documentId, versionId);
 
-        if (showOnlyAlive) {
+        if (isAlive) {
             documentVersion = documentVersion.filter(v -> v.getDocument().getIsAlive());
+        } else {
+            documentVersion = documentVersion.filter(v -> !v.getDocument().getIsAlive());
         }
 
         if (!userPrincipal.isAdmin()) {
@@ -161,7 +165,7 @@ public class DocumentService {
      *
      * @return список ответов с данными всех документов
      */
-    public List<CreateDocumentResponse> getAllDocuments(Integer page, Integer size, Boolean ascending, Boolean showOnlyAlive, UserPrincipal userPrincipal) {
+    public List<CreateDocumentResponse> getAllDocuments(Integer page, Integer size, Boolean ascending, Boolean isAlive, UserPrincipal userPrincipal) {
 
         List<DocumentVersion> latestVersions = documentVersionRepository.findLatestDocumentVersions();
 
@@ -176,8 +180,10 @@ public class DocumentService {
         Stream<Document> documentStream = documentRepository.findAllById(documentIds).stream();
 
 
-        if (showOnlyAlive) {
+        if (isAlive) {
             documentStream = documentStream.filter(Document::getIsAlive);
+        } else {
+            documentStream = documentStream.filter(d -> !d.getIsAlive());
         }
 
 
