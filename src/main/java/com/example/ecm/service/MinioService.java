@@ -51,19 +51,28 @@ public class MinioService {
         try {
             String base64Content = request.getBase64Content();
 
-            // Проверка формата Base64-строки
-            String[] parts = base64Content.split(",");
-            if (parts.length < 2) {
-                throw new IllegalArgumentException("Некорректный формат Base64-строки: " + base64Content);
-            }
-
-            byte[] fileBytes = Base64.getDecoder().decode(parts[1]);
-            String fileKey = id + "_" + request.getTitle();
-
+            byte[] fileBytes;
             String mimeType = "application/octet-stream";
-            if (parts[0].contains("data:")) {
-                mimeType = parts[0].substring(5, parts[0].indexOf(";"));
+            if (base64Content != null && !base64Content.isEmpty()) {
+                String[] parts = base64Content.split(",");
+                if (parts.length < 2) {
+                    System.err.println("Некорректный формат Base64-строки, будет сохранена пустая строка.");
+                    fileBytes = new byte[0];
+                } else {
+
+                    fileBytes = Base64.getDecoder().decode(parts[1]);
+
+                    if (parts[0].contains("data:")) {
+                        mimeType = parts[0].substring(5, parts[0].indexOf(";"));
+                    }
+                }
+            } else {
+
+                System.err.println("Base64-строка пуста, будет сохранена пустая строка.");
+                fileBytes = new byte[0];
             }
+
+            String fileKey = id + "_" + request.getTitle();
 
             minioClient.putObject(
                     PutObjectArgs.builder()
@@ -75,14 +84,12 @@ public class MinioService {
             );
 
             return true;
-        } catch (IllegalArgumentException e) {
-            System.err.println("Ошибка: " + e.getMessage());
-            return false;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
     }
+
 
 
     /**
