@@ -49,20 +49,20 @@ public class MinioService {
      */
     public boolean addDocument(Long id, CreateDocumentVersionRequest request) {
         try {
-
             String base64Content = request.getBase64Content();
 
-            byte[] fileBytes = Base64.getDecoder().decode(base64Content.split(",")[1]); // Разделение на MIME-тип и данные
+            // Проверка формата Base64-строки
+            String[] parts = base64Content.split(",");
+            if (parts.length < 2) {
+                throw new IllegalArgumentException("Некорректный формат Base64-строки: " + base64Content);
+            }
 
+            byte[] fileBytes = Base64.getDecoder().decode(parts[1]);
             String fileKey = id + "_" + request.getTitle();
 
             String mimeType = "application/octet-stream";
-            if (base64Content.contains("data:")) {
-                String[] parts = base64Content.split(",");
-                String header = parts[0];
-                if (header.contains("base64")) {
-                    mimeType = header.substring(5, header.indexOf(";"));
-                }
+            if (parts[0].contains("data:")) {
+                mimeType = parts[0].substring(5, parts[0].indexOf(";"));
             }
 
             minioClient.putObject(
@@ -75,6 +75,9 @@ public class MinioService {
             );
 
             return true;
+        } catch (IllegalArgumentException e) {
+            System.err.println("Ошибка: " + e.getMessage());
+            return false;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
