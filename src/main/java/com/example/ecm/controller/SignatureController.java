@@ -62,8 +62,8 @@ public class SignatureController {
     @Operation(summary = "Получить все запросы на подпись", description = "Возвращает список всех запросов на подпись.")
     @ApiResponse(responseCode = "200", description = "Список запросов на подпись успешно получен")
     @GetMapping
-    public ResponseEntity<List<CreateSignatureRequestResponse>> getAllSignatureRequests() {
-        return ResponseEntity.ok(signatureService.getAllSignatureRequests());
+    public ResponseEntity<List<CreateSignatureRequestResponse>> getAllSignatureRequests(@AuthenticationPrincipal UserPrincipal userPrincipal, @RequestParam(defaultValue = "true") Boolean showAll) {
+        return ResponseEntity.ok(signatureService.getAllSignatureRequests(userPrincipal, showAll));
     }
 
     /**
@@ -91,8 +91,11 @@ public class SignatureController {
     @Operation(summary = "Подписать документ", description = "Подписывает документ на основе предоставленных данных.")
     @ApiResponse(responseCode = "200", description = "Документ успешно подписан")
     @PostMapping("/{id}")
-    public ResponseEntity<GetSignatureResponse> sendToSign(@PathVariable Long id, @Valid @RequestBody CreateSignatureRequest request, @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return ResponseEntity.ok(signatureService.sign(id, request, userPrincipal));
+    public ResponseEntity<GetSignatureResponse> sendToSign(@PathVariable Long id,
+                                                           @RequestParam(defaultValue = "true") Boolean signByRequest,
+                                                           @Valid @RequestBody CreateSignatureRequest request,
+                                                           @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return ResponseEntity.ok(signatureService.sign(id, request, signByRequest, userPrincipal));
     }
 
     /**
@@ -104,8 +107,15 @@ public class SignatureController {
     @Operation(summary = "Начать голосование", description = "Начинает процесс голосования для запроса на подпись.")
     @ApiResponse(responseCode = "200", description = "Голосование успешно начато")
     @PostMapping("/voting")
-    public ResponseEntity<StartVotingResponse> startVoting(@Valid @RequestBody StartVotingRequest request) {
+    public ResponseEntity<StartVotingResponse> startVoting(
+            @Valid @RequestBody StartVotingRequest request) {
         return ResponseEntity.ok(votingService.startVoting(request));
+    }
+
+
+    @GetMapping("/voting")
+    public ResponseEntity<List<StartVotingResponse>> getVotings(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return ResponseEntity.ok(votingService.getVotings(userPrincipal));
     }
 
     /**

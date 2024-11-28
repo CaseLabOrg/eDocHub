@@ -33,6 +33,7 @@ public class VotingMapper {
         CreateDocumentVersionResponse documentVersionResponse = documentVersionMapper.toCreateDocumentVersionResponse(voting.getDocumentVersion());
         documentVersionResponse.setBase64Content(base64Content);
         response.setDocumentVersion(documentVersionResponse);
+        response.setDocumentId(voting.getDocumentVersion().getDocument().getId());
         response.setDeadline(voting.getDeadline());
         response.setApprovalThreshold(voting.getApprovalThreshold());
         response.setStatus(voting.getStatus());

@@ -4,12 +4,15 @@ import com.example.ecm.dto.patch_requests.PatchUserRequest;
 import com.example.ecm.dto.requests.CreateUserRequest;
 import com.example.ecm.dto.responses.CreateUserResponse;
 import com.example.ecm.dto.requests.PutRoleRequest;
+import com.example.ecm.exception.ConflictException;
+import com.example.ecm.exception.ForbiddenException;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.mapper.UserMapper;
 import com.example.ecm.model.Role;
 import com.example.ecm.model.User;
 import com.example.ecm.repository.RoleRepository;
 import com.example.ecm.repository.UserRepository;
+import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -41,6 +44,16 @@ public class UserService {
      */
     @Transactional
     public CreateUserResponse createUser(CreateUserRequest createUserRequest) {
+        Optional<User> userOptional = userRepository.findByEmail(createUserRequest.getEmail());
+        if (userOptional.isPresent()) {
+            if (!userOptional.get().getIsAlive()) {
+                User user = userOptional.get();
+                user.setIsAlive(true);
+                user = userRepository.save(user);
+                return userMapper.toCreateUserResponse(user);
+            }
+            throw new ConflictException("Email already exists");
+        }
         User user = userMapper.toUser(createUserRequest);
         user.setRoles(Set.of(roleRepository.findByName("USER").orElseThrow(() -> new NotFoundException("Role with name: USER not found"))));
         user.setPassword(encoder.encode(createUserRequest.getPassword()));
@@ -55,15 +68,17 @@ public class UserService {
      * @param id Идентификатор пользователя
      * @return Optional с объектом пользователя, если найден
      */
-    public CreateUserResponse getUserById(Long id, Boolean showOnlyALive) {
+    public CreateUserResponse getUserById(Long id, Boolean isAlive) {
 
-        Optional<User> attribute = userRepository.findById(id);
+        Optional<User> user = userRepository.findById(id);
 
-        if (showOnlyALive) {
-            attribute = attribute.filter(User::getIsAlive);
+        if (isAlive) {
+            user = user.filter(User::getIsAlive);
+        } else {
+            user = user.filter(u -> !u.getIsAlive());
         }
 
-        return attribute
+        return user
                 .map(userMapper::toCreateUserResponse)
                 .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
     }
@@ -91,11 +106,13 @@ public class UserService {
      *
      * @return Список DTO с данными пользователей
      */
-    public List<CreateUserResponse> getAllUsers(Boolean showOnlyALive) {
+    public List<CreateUserResponse> getAllUsers(Boolean isAlive) {
         Stream<User> userStream = userRepository.findAll().stream();
 
-        if (showOnlyALive) {
+        if (isAlive) {
             userStream = userStream.filter(User::getIsAlive);
+        } else {
+            userStream = userStream.filter(u -> !u.getIsAlive());
         }
 
         return userStream
@@ -128,10 +145,12 @@ public class UserService {
      *
      * @param id Идентификатор пользователя
      */
-    public void deleteUser(Long id) {
+    public void deleteUser(Long id, UserPrincipal userPrincipal) {
         User user = userRepository.findById(id)
                 .filter(User::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
+        if (userPrincipal.getId().equals(user.getId())) throw new ForbiddenException("You cannot delete your self");
+
         user.setIsAlive(false);
         userRepository.save(user);
     }

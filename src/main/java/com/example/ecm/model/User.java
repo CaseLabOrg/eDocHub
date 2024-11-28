@@ -63,7 +63,7 @@ public class User {
     )
     private Set<Role> roles;
 
-    private Boolean isAlive;
+    private Boolean isAlive = true;
 
     @Override
     public final boolean equals(Object o) {

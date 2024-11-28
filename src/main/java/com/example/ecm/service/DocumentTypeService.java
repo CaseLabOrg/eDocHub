@@ -34,6 +34,7 @@ public class DocumentTypeService {
         List<Attribute> attributes = attributeRepository.findAttributesByIdIsIn(request.getAttributeIds());
         documentType.setAttributes(attributes);
 
+        documentTypeRepository.save(documentType);
         return documentTypeMapper.toCreateDocumentTypeResponse(documentType);
     }
 

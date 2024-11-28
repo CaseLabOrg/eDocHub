@@ -1,7 +1,6 @@
 package com.example.ecm.dto.requests;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import com.example.ecm.model.enums.SignatureRequestState;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,7 +18,5 @@ public class CreateSignatureRequest {
      */
     private String placeholderTitle;
 
-    @NotNull(message = "Status cannot be null")
-    @NotBlank(message = "Status cannot be blank")
-    private String status;
+    private SignatureRequestState status;
 }

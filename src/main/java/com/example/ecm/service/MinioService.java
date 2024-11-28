@@ -1,10 +1,7 @@
 package com.example.ecm.service;
 
 import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
-import io.minio.GetObjectArgs;
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
-import io.minio.RemoveObjectArgs;
+import io.minio.*;
 import io.minio.errors.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,64 +45,82 @@ public class MinioService {
      * Документ загружается в виде Base64-строки, которая декодируется перед отправкой.
      *
      * @param id идентификатор документа
-     * @param createDocumentRequest запрос с данными документа
      * @return true, если загрузка прошла успешно, иначе false
      */
     public boolean addDocument(Long id, CreateDocumentVersionRequest request) {
         try {
-            // Декодирование Base64-строки в байтовый массив
-            byte[] decodedBytes = Base64.getDecoder().decode(request.getBase64Content());
-            // Получение расширения файла
-            String fileExtension = request.getTitle().substring(request.getTitle().lastIndexOf('.') + 1);
+            String base64Content = request.getBase64Content();
 
+            byte[] fileBytes;
+            String mimeType = "application/octet-stream";
+            if (base64Content != null && !base64Content.isEmpty()) {
+                String[] parts = base64Content.split(",");
+                if (parts.length < 2) {
+                    System.err.println("Некорректный формат Base64-строки, будет сохранена пустая строка.");
+                    fileBytes = new byte[0];
+                } else {
+
+                    fileBytes = Base64.getDecoder().decode(parts[1]);
+
+                    if (parts[0].contains("data:")) {
+                        mimeType = parts[0].substring(5, parts[0].indexOf(";"));
+                    }
+                }
+            } else {
+
+                System.err.println("Base64-строка пуста, будет сохранена пустая строка.");
+                fileBytes = new byte[0];
+            }
+
+            String fileKey = id + "_" + request.getTitle();
 
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
-                            .object(id + "_" + request.getTitle())
-                            .stream(new ByteArrayInputStream(decodedBytes), decodedBytes.length, -1)
-                            .contentType(extensionToMimeType.getOrDefault(fileExtension.toLowerCase(), "application/octet-stream"))
+                            .object(fileKey)
+                            .stream(new ByteArrayInputStream(fileBytes), fileBytes.length, -1)
+                            .contentType(mimeType)
                             .build()
             );
 
             return true;
-        } catch (MinioException e) {
-            e.printStackTrace();
-            return false;
-        } catch (IOException | NoSuchAlgorithmException | InvalidKeyException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
     }
 
+
+
     /**
-     * Получает документ из MinIO по имени и возвращает его содержимое в виде Base64-строки.
+     * Извлекает документ из MinIO по имени и возвращает его содержимое в виде исходной Base64-строки,
+     * сохраняя MIME-тип и префикс (если они были сохранены).
      *
      * @param name имя документа (идентификатор + название файла)
-     * @return содержимое документа в формате Base64 или null в случае ошибки
+     * @return содержимое документа в исходном формате Base64 или null в случае ошибки
      */
     public String getBase64DocumentByName(String name) {
-        InputStream stream = null;
-        try {
-            stream = minioClient.getObject(GetObjectArgs.builder()
-                    .bucket(bucketName)
-                    .object(name)
-                    .build());
-            return Base64.getEncoder().encodeToString(stream.readAllBytes());
-        } catch (MinioException e) {
+        try (InputStream stream = minioClient.getObject(GetObjectArgs.builder()
+                .bucket(bucketName)
+                .object(name)
+                .build())) {
+
+
+            byte[] fileBytes = stream.readAllBytes();
+
+
+            String mimeType = minioClient.statObject(StatObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(name)
+                            .build())
+                    .contentType();
+
+            String base64Content = Base64.getEncoder().encodeToString(fileBytes);
+            return "data:" + mimeType + ";base64," + base64Content;
+
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
-        } catch (IOException | NoSuchAlgorithmException | InvalidKeyException e) {
-            e.printStackTrace();
-            return null;
-        } finally {
-            if (stream != null) {
-                try {
-                    stream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
         }
     }
 

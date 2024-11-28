@@ -6,7 +6,7 @@ INSERT INTO attributes(name, required, is_alive) VALUES('testAttr1', false, true
 INSERT INTO attributes(name, required, is_alive) VALUES('testAttr2', true, true);
 
 
-INSERT INTO documents(user_id, type_id, is_alive) VALUES (1, 1, true);
+INSERT INTO documents(user_id, type_id, is_alive, state) VALUES (1, 1, true, 'CREATED');
 
 INSERT INTO values(attribute_id, document_version_id, value) VALUES (2,1, '52');
 
