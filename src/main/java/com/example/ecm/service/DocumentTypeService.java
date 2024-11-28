@@ -3,6 +3,7 @@ package com.example.ecm.service;
 import com.example.ecm.dto.patch_requests.PatchDocumentTypeRequest;
 import com.example.ecm.dto.requests.CreateDocumentTypeRequest;
 import com.example.ecm.dto.responses.CreateDocumentTypeResponse;
+import com.example.ecm.exception.IsDeadException;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.mapper.DocumentTypeMapper;
 import com.example.ecm.model.Attribute;
@@ -32,6 +33,13 @@ public class DocumentTypeService {
     public CreateDocumentTypeResponse createDocumentType(CreateDocumentTypeRequest request) {
         DocumentType documentType = documentTypeRepository.save(documentTypeMapper.toDocumentType(request));
         List<Attribute> attributes = attributeRepository.findAttributesByIdIsIn(request.getAttributeIds());
+
+        for (Attribute attribute : attributes) {
+            if (attribute.getIsAlive().equals(Boolean.FALSE)) {
+                throw new IsDeadException("Attribute is dead");
+            }
+        }
+
         documentType.setAttributes(attributes);
 
         documentTypeRepository.save(documentType);
@@ -47,9 +55,7 @@ public class DocumentTypeService {
     public CreateDocumentTypeResponse getDocumentTypeById(Long id, Boolean showOnlyAlive) {
         Optional<DocumentType> documentType = documentTypeRepository.findById(id);
 
-        if (showOnlyAlive) {
-            documentType = documentType.filter(DocumentType::getIsAlive);
-        }
+        documentType = documentType.filter(x -> x.getIsAlive().equals(showOnlyAlive));
 
         return documentType
                 .map(documentTypeMapper::toCreateDocumentTypeResponse)
@@ -63,9 +69,8 @@ public class DocumentTypeService {
      */
     public List<CreateDocumentTypeResponse> getAllDocumentTypes(Boolean showOnlyAlive) {
         Stream<DocumentType> documentTypeStream = documentTypeRepository.findAll().stream();
-        if (showOnlyAlive) {
-            documentTypeStream = documentTypeStream.filter(DocumentType::getIsAlive);
-        }
+        documentTypeStream = documentTypeStream.filter(x -> x.getIsAlive().equals(showOnlyAlive));
+
 
         return documentTypeStream
                 .map(documentTypeMapper::toCreateDocumentTypeResponse)
@@ -84,6 +89,13 @@ public class DocumentTypeService {
                 .filter(DocumentType::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("DocumentType with id: " + id + " not found"));
         List<Attribute> attributes = attributeRepository.findAttributesByIdIsIn(request.getAttributeIds());
+
+        for (Attribute attribute : attributes) {
+            if (attribute.getIsAlive().equals(Boolean.FALSE)) {
+                throw new IsDeadException("Attribute is dead");
+            }
+        }
+
         documentType.setAttributes(attributes);
         documentType.setId(id);
         documentType.setName(request.getName());

@@ -57,9 +57,7 @@ public class AttributeService {
     public CreateAttributeResponse getAttributeById(Long id, Boolean showOnlyALive) {
         Optional<Attribute> attribute = attributeRepository.findById(id);
 
-        if (showOnlyALive) {
-            attribute = attribute.filter(Attribute::getIsAlive);
-        }
+        attribute = attribute.filter(x -> x.getIsAlive().equals(showOnlyALive));
 
         return attribute
                 .map(attributeMapper::toAttributeResponse)
@@ -75,9 +73,8 @@ public class AttributeService {
         Page<Attribute> attributePage = attributeRepository.findAll(pageable);
         Stream<Attribute> attributeStream = attributePage.stream();
 
-        if (showOnlyALive) {
-            attributeStream = attributeStream.filter(Attribute::getIsAlive);
-        }
+        attributeStream = attributeStream.filter(x -> x.getIsAlive().equals(showOnlyALive));
+
 
         return new PageImpl<>(
                 attributeStream
