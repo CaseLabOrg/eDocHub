@@ -168,12 +168,12 @@ public class DocumentController {
 
     @GetMapping
     public ResponseEntity<List<CreateDocumentResponse>> getAllDocuments(
-            @RequestParam(defaultValue = "true") Boolean showOnlyAlive,
+            @RequestParam(defaultValue = "true") Boolean isAlive,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "false") boolean ascending,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return ResponseEntity.ok(documentService.getAllDocuments(page, size, ascending, showOnlyAlive, userPrincipal));
+        return ResponseEntity.ok(documentService.getAllDocuments(page, size, ascending, isAlive, userPrincipal));
     }
 
     @GetMapping("/countDocuments")
