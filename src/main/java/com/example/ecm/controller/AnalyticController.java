@@ -41,8 +41,8 @@ public class AnalyticController {
     public ResponseEntity<List<VotingSummary>> getVotingSummaries(
             @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-       // List<VotingSummary> summaries = analyticService.getVotingSummaries(startDate, endDate);
-        return ResponseEntity.ok(new ArrayList<>());
+        List<VotingSummary> summaries = analyticService.getVotingSummaries(startDate, endDate);
+        return ResponseEntity.ok(summaries);
     }
 
     @GetMapping("/active-users")

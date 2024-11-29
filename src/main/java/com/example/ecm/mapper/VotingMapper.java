@@ -6,6 +6,7 @@ import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
 import com.example.ecm.dto.responses.StartVotingResponse;
 import com.example.ecm.model.DocumentVersion;
 import com.example.ecm.model.Voting;
+import com.example.ecm.model.enums.VotingState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +18,7 @@ public class VotingMapper {
     private final UserMapper userMapper;
     private final DocumentVersionMapper documentVersionMapper;
 
-    public Voting toVoting(StartVotingRequest request, DocumentVersion documentVersion, String status) {
+    public Voting toVoting(StartVotingRequest request, DocumentVersion documentVersion, VotingState status) {
         Voting voting = new Voting();
         voting.setDocumentVersion(documentVersion);
         voting.setApprovalThreshold(request.getApprovalThreshold());
@@ -44,7 +45,7 @@ public class VotingMapper {
     public CancelVotingResponse toCancelVotingResponse(Voting voting) {
         CancelVotingResponse response = new CancelVotingResponse();
         response.setId(voting.getId());
-        response.setStatus(voting.getStatus());
+        response.setStatus(voting.getStatus().toString());
         return response;
     }
 }

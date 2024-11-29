@@ -14,6 +14,7 @@ import com.example.ecm.model.User;
 import com.example.ecm.model.Voting;
 import com.example.ecm.model.enums.DocumentState;
 import com.example.ecm.model.enums.SignatureRequestState;
+import com.example.ecm.model.enums.VotingState;
 import com.example.ecm.repository.DocumentRepository;
 import com.example.ecm.repository.DocumentVersionRepository;
 import com.example.ecm.repository.SignatureRequestRepository;
@@ -69,7 +70,7 @@ public class VotingService {
 
 
         List<SignatureRequest> signatureRequests = sendAllParticipantsToVote(startVotingRequest);
-        Voting voting = votingMapper.toVoting(startVotingRequest, documentVersion, "ACTIVE");
+        Voting voting = votingMapper.toVoting(startVotingRequest, documentVersion, VotingState.ACTIVE);
 
         voting.getDocumentVersion().getDocument().setState(DocumentState.SENT_ON_VOTING);
 
@@ -84,10 +85,10 @@ public class VotingService {
         Voting voting = votingRepository.findById(votingId)
                 .orElseThrow(() -> new NotFoundException("Voting with id: " + votingId + " not found"));
 
-        if (!voting.getStatus().equals("ACTIVE")) {
+        if (!voting.getStatus().equals(VotingState.ACTIVE)) {
             throw new NotFoundException("Voting with id: " + votingId + " is not active");
         }
-        voting.setStatus("NEW_CANCELED");
+        voting.setStatus(VotingState.NEW_CANCELLED);
         votingRepository.save(voting);
 
         return votingMapper.toCancelVotingResponse(voting);
@@ -95,7 +96,7 @@ public class VotingService {
 
     @Scheduled(cron = "@daily")
     private void votingsResultsUpdate() {
-        votingRepository.findByStatus("ACTIVE").forEach(voting -> {
+        votingRepository.findByStatus(VotingState.ACTIVE.toString()).forEach(voting -> {
             int all = voting.getSignatureRequests().size();
             long inFavor = voting.getSignatureRequests().stream()
                     .filter(signatureRequest -> signatureRequest.getStatus().equals(SignatureRequestState.APPROVED))
@@ -103,7 +104,7 @@ public class VotingService {
             voting.setCurrentApprovalRate(all / (float) inFavor);
 
             if (LocalDateTime.now().isAfter(voting.getDeadline().atStartOfDay())) {
-                voting.setStatus("COMPLETED");
+                voting.setStatus(VotingState.COMPLETED);
                 if (voting.getCurrentApprovalRate() >= voting.getApprovalThreshold()) {
                     voting.getDocumentVersion().getDocument().setState(DocumentState.APPROVED_BY_VOTING);
                 } else {
@@ -115,8 +116,8 @@ public class VotingService {
 
             votingRepository.save(voting);
         });
-        votingRepository.findByStatus("NEW_CANCELED").forEach(voting -> {
-            voting.setStatus("CANCELED");
+        votingRepository.findByStatus(VotingState.NEW_CANCELLED.toString()).forEach(voting -> {
+            voting.setStatus(VotingState.CANCELLED);
             notifyParticipants(voting);
         });
     }
@@ -125,7 +126,7 @@ public class VotingService {
         for (SignatureRequest signatureRequest : voting.getSignatureRequests()) {
             String text;
             String documentTitle = voting.getDocumentVersion().getTitle();
-            if (voting.getStatus().equals("CANCELED"))  {
+            if (voting.getStatus().equals(VotingState.CANCELLED))  {
                 text = "Голосование по принятию документа \"%s\" было отменено".formatted(documentTitle);
             } else  {
                 text = "Голосование по принятию документа \"%s\"завершилось. Благодарим за участие! Поддержало: %s%%, необходимо для принятия: %s%%."

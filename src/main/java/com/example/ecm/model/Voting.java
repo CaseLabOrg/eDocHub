@@ -1,5 +1,6 @@
 package com.example.ecm.model;
 
+import com.example.ecm.model.enums.VotingState;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,7 +26,8 @@ public class Voting {
     private List<SignatureRequest> signatureRequests;
 
     @Column(nullable = false)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private VotingState status = VotingState.ACTIVE;
 
     @Column(nullable = false)
     private Float approvalThreshold;

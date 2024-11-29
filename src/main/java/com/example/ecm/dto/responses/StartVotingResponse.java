@@ -1,5 +1,6 @@
 package com.example.ecm.dto.responses;
 
+import com.example.ecm.model.enums.VotingState;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -18,5 +19,5 @@ public class StartVotingResponse {
 
     private LocalDate deadline;
 
-    private String status;
+    private VotingState status;
 }
