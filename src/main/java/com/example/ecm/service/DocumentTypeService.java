@@ -51,12 +51,10 @@ public class DocumentTypeService {
      * @return ответ с данными типа документа
      */
     @TenantRestrictedForDocumentType
-    public CreateDocumentTypeResponse getDocumentTypeById(Long id, Boolean showOnlyAlive) {
+    public CreateDocumentTypeResponse getDocumentTypeById(Long id, Boolean isAlive) {
         Optional<DocumentType> documentType = documentTypeRepository.findById(id);
 
-        if (showOnlyAlive) {
-            documentType = documentType.filter(DocumentType::getIsAlive);
-        }
+        documentType = documentType.filter(t -> t.getIsAlive().equals(isAlive));
 
         return documentType
                 .map(documentTypeMapper::toCreateDocumentTypeResponse)
@@ -69,13 +67,11 @@ public class DocumentTypeService {
      * @return список ответов с данными всех типов документов
      */
 
-    public List<CreateDocumentTypeResponse> getAllDocumentTypes(Boolean showOnlyAlive) {
+    public List<CreateDocumentTypeResponse> getAllDocumentTypes(Boolean isAlive) {
         Stream<DocumentType> documentTypeStream = documentTypeRepository.findAll().stream();
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
-        if (showOnlyAlive) {
-            documentTypeStream = documentTypeStream.filter(DocumentType::getIsAlive);
-        }
+        documentTypeStream = documentTypeStream.filter(t -> t.getIsAlive().equals(isAlive));
 
         if(!userPrincipal.isAdmin()) {
             documentTypeStream = documentTypeStream.filter(d -> d.getTenant().getId().equals(TenantContext.getCurrentTenantId()));

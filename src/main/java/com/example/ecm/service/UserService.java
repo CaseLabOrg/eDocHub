@@ -105,15 +105,13 @@ public class UserService {
      * @return Optional с объектом пользователя, если найден
      */
     @TenantRestrictedForUser
-    public CreateUserResponse getUserById(Long id, Boolean showOnlyALive) {
+    public CreateUserResponse getUserById(Long id, Boolean isAlive) {
 
-        Optional<User> attribute = userRepository.findById(id);
+        Optional<User> user = userRepository.findById(id);
 
-        if (showOnlyALive) {
-            attribute = attribute.filter(User::getIsAlive);
-        }
+        user = user.filter(u -> u.getIsAlive().equals(isAlive));
 
-        return attribute
+        return user
                 .map(userMapper::toCreateUserResponse)
                 .orElseThrow(() -> new NotFoundException("User with id: " + id + " not found"));
     }
@@ -145,13 +143,12 @@ public class UserService {
      * @return Список DTO с данными пользователей
      */
     @TenantRestrictedForUser
-    public List<CreateUserResponse> getAllUsers(Boolean showOnlyALive) {
+    public List<CreateUserResponse> getAllUsers(Boolean isAlive) {
         Stream<User> userStream = userRepository.findAll().stream();
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
-        if (showOnlyALive) {
-            userStream = userStream.filter(User::getIsAlive);
-        }
+        userStream = userStream.filter(u -> u.getIsAlive().equals(isAlive));
+
         if(!userPrincipal.isAdmin()) {
             userStream = userStream.filter(user -> user.getTenant().getId().equals(TenantContext.getCurrentTenantId()));
         }

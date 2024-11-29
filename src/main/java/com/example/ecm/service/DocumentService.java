@@ -8,6 +8,7 @@ import com.example.ecm.dto.responses.AddCommentResponse;
 import com.example.ecm.dto.responses.CreateDocumentVersionResponse;
 import com.example.ecm.dto.requests.CreateDocumentRequest;
 import com.example.ecm.dto.responses.CreateDocumentResponse;
+import com.example.ecm.exception.ConflictException;
 import com.example.ecm.mapper.*;
 import com.example.ecm.model.*;
 import com.example.ecm.model.elasticsearch.DocumentElasticsearch;
@@ -29,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -99,8 +101,7 @@ public class DocumentService {
         createDocumentVersionRequest.setTitle(documentVersion.getTitle());
         createDocumentVersionRequest.setBase64Content(createDocumentRequest.getBase64Content());
 
-        boolean success = minioService.addDocument(documentVersionSaved.getId(), createDocumentVersionRequest);
-        if (!success) {
+        if (!minioService.addDocument(documentVersionSaved.getId(), createDocumentVersionRequest)) {
             documentRepository.deleteById(documentVersionSaved.getId());
             throw new ServerException("Could not add document");
         }
@@ -131,12 +132,10 @@ public class DocumentService {
      * @return ответ с данными документа
      * @throws RuntimeException если документ не найден
      */
-    public CreateDocumentResponse getDocumentById(Long id, Boolean showOnlyAlive, UserPrincipal userPrincipal) {
+    public CreateDocumentResponse getDocumentById(Long id, Boolean isAlive, UserPrincipal userPrincipal) {
         Optional<Document> document = documentRepository.findById(id);
 
-        if (showOnlyAlive) {
-            document = document.filter(Document::getIsAlive);
-        }
+        document = document.filter(x -> x.getIsAlive().equals(isAlive));
 
         if (!userPrincipal.isAdmin()) {
             document = document.filter(d -> d.getUser().getId().equals(userPrincipal.getId()));
@@ -149,10 +148,10 @@ public class DocumentService {
         return getCreateDocumentResponse(doc, response);
     }
 
-    public CreateDocumentVersionResponse getDocumentVersionById(Long documentId, Long versionId, Boolean showOnlyAlive) {
+    public CreateDocumentVersionResponse getDocumentVersionById(Long documentId, Long versionId, Boolean isAlive) {
         Optional<DocumentVersion> documentVersion = documentVersionRepository.findByDocumentIdAndVersionId(documentId, versionId);
 
-        if (showOnlyAlive) {
+        if (isAlive) {
             documentVersion = documentVersion.filter(DocumentVersion::getIsAlive);
         }
 
@@ -171,7 +170,7 @@ public class DocumentService {
      *
      * @return список ответов с данными всех документов
      */
-    public List<CreateDocumentResponse> getAllDocuments(Integer page, Integer size, Boolean ascending, Boolean showOnlyAlive, UserPrincipal userPrincipal) {
+    public List<CreateDocumentResponse> getAllDocuments(Integer page, Integer size, Boolean ascending, Boolean isAlive, UserPrincipal userPrincipal) {
 
         List<DocumentVersion> latestVersions = documentVersionRepository.findLatestDocumentVersions();
 
@@ -188,9 +187,7 @@ public class DocumentService {
 
         Stream<Document> documentStream = documentRepository.findAllById(documentIds.subList(start, end)).stream();
 
-        if (showOnlyAlive) {
-            documentStream = documentStream.filter(Document::getIsAlive);
-        }
+        documentStream = documentStream.filter(x -> x.getIsAlive().equals(isAlive));
 
         if (!userPrincipal.isAdmin()) {
             documentStream = documentStream.filter(d -> d.getUser().getId().equals(userPrincipal.getId()));

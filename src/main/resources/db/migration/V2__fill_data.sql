@@ -20,16 +20,16 @@ VALUES
 -- Insert into Users (Some tenants have many users, others few)
 INSERT INTO Users (id, department_id, name, surname, email, password, is_alive, tenant_id)
 VALUES
-(1, 1, 'admin', 'admin', 'admin@example.com', 'pass123', TRUE, 1),
-(2, 1, 'Bob', 'Brown', 'bob.brown@example.com', 'pass234', TRUE, 1),
-(3, 2, 'Charlie', 'Johnson', 'charlie.j@example.com', 'pass345', TRUE, 1),
-(4, NULL, 'Dana', 'White', 'dana.w@example.com', 'pass456', FALSE, 2),
-(5, 3, 'Eve', 'Green', 'eve.g@example.com', 'pass567', TRUE, 3),
-(6, NULL, 'Frank', 'Miller', 'frank.m@example.com', 'pass678', FALSE, 4),
-(7, 4, 'Gina', 'James', 'gina.j@example.com', 'pass789', TRUE, 4),
-(8, 4, 'Hank', 'Gray', 'hank.g@example.com', 'pass890', TRUE, 4),
-(9, 5, 'Ivy', 'Brown', 'ivy.b@example.com', 'pass901', TRUE, 6),
-(10, NULL, 'Jack', 'Hill', 'jack.h@example.com', 'pass012', TRUE, 6);
+(1, 1, 'admin', 'admin', 'admin', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', TRUE, 1),
+(2, 1, 'Bob', 'Brown', 'bob.brown@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', TRUE, 1),
+(3, 2, 'Charlie', 'Johnson', 'charlie.j@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', TRUE, 1),
+(4, NULL, 'Dana', 'White', 'dana.w@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', FALSE, 2),
+(5, 3, 'Eve', 'Green', 'eve.g@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', TRUE, 3),
+(6, NULL, 'Frank', 'Miller', 'frank.m@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', FALSE, 4),
+(7, 4, 'Gina', 'James', 'gina.j@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', TRUE, 4),
+(8, 4, 'Hank', 'Gray', 'hank.g@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', TRUE, 4),
+(9, 5, 'Ivy', 'Brown', 'ivy.b@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', TRUE, 6),
+(10, NULL, 'Jack', 'Hill', 'jack.h@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', TRUE, 6);
 
 -- Insert into Document_Types (Skewed distribution)
 INSERT INTO Document_Types (id, name, is_alive, tenant_id)

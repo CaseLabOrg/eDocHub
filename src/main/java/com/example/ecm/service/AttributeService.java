@@ -62,12 +62,10 @@ public class AttributeService {
      * @return ответ с данными атрибута документа
      */
     @TenantRestrictedForAttribute
-    public CreateAttributeResponse getAttributeById(Long id, Boolean showOnlyALive) {
+    public CreateAttributeResponse getAttributeById(Long id, Boolean isALive) {
         Optional<Attribute> attribute = attributeRepository.findById(id);
 
-        if (showOnlyALive) {
-            attribute = attribute.filter(Attribute::getIsAlive);
-        }
+        attribute = attribute.filter(x -> x.getIsAlive().equals(isALive));
 
         return attribute
                 .map(attributeMapper::toAttributeResponse)
@@ -79,15 +77,13 @@ public class AttributeService {
      *
      * @return список ответов с данными всех атрибутов документов
      */
-    public List<CreateAttributeResponse> getAllAttributes(Pageable pageable, Boolean showOnlyALive) {
+    public List<CreateAttributeResponse> getAllAttributes(Pageable pageable, Boolean isALive) {
         Page<Attribute> attributePage = attributeRepository.findAll(pageable);
         Stream<Attribute> attributeStream = attributePage.stream();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
-        if (showOnlyALive) {
-            attributeStream = attributeStream.filter(Attribute::getIsAlive);
-        }
+        attributeStream = attributeStream.filter(x -> x.getIsAlive().equals(isALive));
 
         if(!userPrincipal.isAdmin()) {
                 attributeStream = attributeStream.filter(attribute ->  attribute.getTenant().getId().equals(TenantContext.getCurrentTenantId()));

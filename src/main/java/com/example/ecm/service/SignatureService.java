@@ -4,19 +4,24 @@ import com.example.ecm.dto.requests.CreateSignatureRequest;
 import com.example.ecm.dto.requests.CreateSignatureRequestRequest;
 import com.example.ecm.dto.responses.CreateSignatureRequestResponse;
 import com.example.ecm.dto.responses.GetSignatureResponse;
+import com.example.ecm.exception.ConflictException;
 import com.example.ecm.exception.ForbiddenException;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.kafka.event.DocumentSignedEvent;
 import com.example.ecm.kafka.service.EventProducerService;
 import com.example.ecm.mapper.SignatureMapper;
 import com.example.ecm.model.*;
+import com.example.ecm.model.enums.DocumentState;
+import com.example.ecm.model.enums.SignatureRequestState;
 import com.example.ecm.repository.*;
 import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SignatureService {

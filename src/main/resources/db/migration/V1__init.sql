@@ -22,6 +22,7 @@ CREATE TABLE Documents(
                           id BIGSERIAL PRIMARY KEY,
                           user_id BIGINT,
                           type_id BIGINT,
+                          state VARCHAR(255),
                           is_alive BOOLEAN
 );
 
@@ -29,8 +30,8 @@ CREATE TABLE Document_Types(
                                id BIGSERIAL PRIMARY KEY,
                                name VARCHAR(255),
                                is_alive BOOLEAN,
-                               constraint uniq_name UNIQUE(name),
                                tenant_id BIGINT NOT NULL,
+                               CONSTRAINT uniq_name UNIQUE(name),
                                CONSTRAINT fk_tenant FOREIGN KEY (tenant_id) REFERENCES Tenants(id)
 );
 
@@ -92,7 +93,8 @@ CREATE TABLE Document_Version(
                                  document_id BIGINT,
                                  title VARCHAR(255),
                                  description VARCHAR(255),
-                                 created_at TIMESTAMP
+                                 created_at TIMESTAMP,
+                                 is_alive BOOLEAN DEFAULT TRUE
 );
 
 CREATE TABLE Votings (
