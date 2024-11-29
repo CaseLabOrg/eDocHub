@@ -1,5 +1,6 @@
 package com.example.ecm.saas.restriction;
 
+import com.example.ecm.exception.AuthException;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.model.Tenant;
 import com.example.ecm.repository.TenantRepository;
@@ -37,14 +38,14 @@ public class TenantRestrictionAspectForUser {
         if (hasAccess(joinPoint.getArgs())) {
             return joinPoint.proceed();
         } else {
-            throw new SecurityException("Доступ запрещен: у вас нет прав на этот ресурс.");
+            throw new NotFoundException("User with given id not found");
         }
     }
 
     private boolean hasAccess(Object[] args) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal userPrincipal)) {
-            throw new SecurityException("Ошибка авторизации: пользователь не найден.");
+            throw new AuthException("Bad credentials");
         }
 
         if (userPrincipal.isAdmin()) {

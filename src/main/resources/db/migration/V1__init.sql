@@ -4,7 +4,7 @@ CREATE TABLE Tenants (
                          name TEXT NOT NULL,
                          created_at TIMESTAMP NOT NULL,
                          is_alive BOOLEAN,
-                         owner_id BIGSERIAL NOT NULL
+                         owner_id BIGINT
 );
 
 
@@ -15,7 +15,8 @@ CREATE TABLE Users (
                        email VARCHAR(255) NOT NULL UNIQUE,
                        password VARCHAR(255) NOT NULL,
                        is_alive BOOLEAN,
-                       tenant_id BIGINT NOT NULL
+                       tenant_id BIGINT NOT NULL,
+                       department_id BIGINT
 );
 
 CREATE TABLE Documents(
@@ -113,4 +114,17 @@ CREATE TABLE Comments (
                           author_id BIGINT,
                           content TEXT NOT NULL,
                           created_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE Departments (
+                             id BIGSERIAL PRIMARY KEY,
+                             name TEXT,
+                             is_alive BOOLEAN,
+                             leader_id BIGINT
+
+);
+CREATE TABLE Department_Departments (
+                                        id BIGSERIAL PRIMARY KEY,
+                                        root_id BIGSERIAL NOT NULL,
+                                        children_id BIGSERIAL
 );

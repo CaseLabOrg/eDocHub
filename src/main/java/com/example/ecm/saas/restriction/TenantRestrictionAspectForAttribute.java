@@ -1,5 +1,6 @@
 package com.example.ecm.saas.restriction;
 
+import com.example.ecm.exception.AuthException;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.model.Attribute;
 import com.example.ecm.repository.AttributeRepository;
@@ -37,7 +38,7 @@ public class TenantRestrictionAspectForAttribute {
         if (hasAccess(joinPoint)) {
             return joinPoint.proceed();
         } else {
-            throw new SecurityException("Доступ запрещен: у вас нет прав на этот ресурс.");
+            throw new NotFoundException("Attribute with given id is not found");
         }
     }
 
@@ -45,7 +46,7 @@ public class TenantRestrictionAspectForAttribute {
         Long resourceTenantId = getResourceTenantId(joinPoint.getArgs());
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal userPrincipal)) {
-            throw new SecurityException("Ошибка авторизации: пользователь не найден.");
+            throw new AuthException("Bad credentials");
         }
 
         if (userPrincipal.isAdmin()) {
@@ -58,11 +59,11 @@ public class TenantRestrictionAspectForAttribute {
     private Long getResourceTenantId(Object[] args) {
         if (args.length > 0 && args[0] instanceof Long id) {
             Attribute attribute = attributeRepository.findById(id)
-                    .orElseThrow(() -> new NotFoundException("Атрибут не найден для ID: " + id));
+                    .orElseThrow(() -> new NotFoundException("Attribute with given id is not found"));
             if (attribute.getTenant() != null) {
                 return attribute.getTenant().getId();
             } else {
-                throw new NotFoundException("У Организации нет такого атрибута");
+                throw new NotFoundException("Attribute with given id is not found");
             }
         }
         throw new IllegalArgumentException("Некорректный аргумент: ID атрибута отсутствует.");
