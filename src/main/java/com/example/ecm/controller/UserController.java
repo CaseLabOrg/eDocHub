@@ -32,19 +32,16 @@ public class UserController {
     private final UserService userService;
 
     /**
-     * Создает нового пользователя.
+     * Создание нового пользователя.
      *
      * @param createUserRequest DTO с данными для создания нового пользователя.
-     * @param userPrincipal     Информация о текущем аутентифицированном пользователе.
      * @return DTO с данными созданного пользователя.
      */
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Создать пользователя", description = "Создает нового пользователя с указанными данными.")
     @ApiResponse(responseCode = "200", description = "Пользователь успешно создан")
     @PostMapping
-    public ResponseEntity<CreateUserResponse> createUser(
-            @Valid @RequestBody CreateUserRequest createUserRequest,
-            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+    public ResponseEntity<CreateUserResponse> createUser(@Valid @RequestBody CreateUserRequest createUserRequest) {
         CreateUserResponse userResponse = userService.createUser(createUserRequest);
         return ResponseEntity.ok(userResponse);
     }
@@ -92,29 +89,29 @@ public class UserController {
      * Получение пользователя по его ID с возвратом данных в виде DTO.
      *
      * @param id Идентификатор пользователя.
-     * @param showOnlyAlive Параметр для фильтрации пользователей по статусу (по умолчанию true).
+     * @param isAlive Параметр для фильтрации пользователей по статусу (по умолчанию true).
      * @return DTO с данными пользователя, если найден, или 404 Not Found.
      */
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Получить пользователя по ID", description = "Возвращает данные пользователя по его идентификатору.")
     @ApiResponse(responseCode = "200", description = "Пользователь найден")
     @GetMapping("/{id}")
-    public ResponseEntity<CreateUserResponse> getUserById(@PathVariable Long id, @RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
-        return ResponseEntity.ok(userService.getUserById(id, showOnlyAlive));
+    public ResponseEntity<CreateUserResponse> getUserById(@PathVariable Long id, @RequestParam(defaultValue = "true") Boolean isAlive) {
+        return ResponseEntity.ok(userService.getUserById(id, isAlive));
     }
 
     /**
      * Получение списка всех пользователей с возвратом данных в виде DTO.
      *
-     * @param showOnlyAlive Параметр для фильтрации пользователей по статусу (по умолчанию true).
+     * @param isAlive Параметр для фильтрации пользователей по статусу (по умолчанию true).
      * @return Список DTO с данными всех пользователей.
      */
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Получить всех пользователей", description = "Возвращает список всех пользователей.")
     @ApiResponse(responseCode = "200", description = "Список пользователей успешно возвращен")
     @GetMapping
-    public ResponseEntity<List<CreateUserResponse>> getAllUsers(@RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
-        List<CreateUserResponse> users = userService.getAllUsers(showOnlyAlive);
+    public ResponseEntity<List<CreateUserResponse>> getAllUsers(@RequestParam(defaultValue = "true") Boolean isAlive) {
+        List<CreateUserResponse> users = userService.getAllUsers(isAlive);
         return ResponseEntity.ok(users);
     }
 
@@ -143,8 +140,7 @@ public class UserController {
     @Operation(summary = "Удалить роль у пользователя", description = "Удаляет указанную роль у пользователя по его идентификатору.")
     @ApiResponse(responseCode = "200", description = "Роль успешно удалена")
     @DeleteMapping("/{id}/role")
-    public ResponseEntity<CreateUserResponse> removeRole(@PathVariable Long id, @Valid @RequestBody PutRoleRequest role
-                                                      ) {
+    public ResponseEntity<CreateUserResponse> removeRole(@PathVariable Long id, @Valid @RequestBody PutRoleRequest role) {
         return ResponseEntity.ok(userService.removeRole(id, role));
     }
 
@@ -174,8 +170,8 @@ public class UserController {
     @Operation(summary = "Удалить пользователя", description = "Удаляет пользователя по его идентификатору.")
     @ApiResponse(responseCode = "204", description = "Пользователь успешно удален")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        userService.deleteUser(id, userPrincipal);
         return ResponseEntity.noContent().build();
     }
 

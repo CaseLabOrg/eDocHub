@@ -39,6 +39,12 @@ public class DocumentTypeService {
     public CreateDocumentTypeResponse createDocumentType(CreateDocumentTypeRequest request) {
         DocumentType documentType = documentTypeRepository.save(documentTypeMapper.toDocumentType(request));
         List<Attribute> attributes = attributeRepository.findAttributesByIdIsIn(request.getAttributeIds());
+
+        if (attributes.stream().anyMatch(a -> !a.getIsAlive())) {
+            Attribute attribute = attributes.stream().filter(a -> !a.getIsAlive()).findFirst().get();
+            throw new NotFoundException("Attribute with id: "+ attribute.getId() + " not found");
+        }
+
         documentType.setAttributes(attributes);
         documentType.setTenant(tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow( () -> new NotFoundException("Tenant not found")));
         return documentTypeMapper.toCreateDocumentTypeResponse(documentType);
@@ -95,6 +101,12 @@ public class DocumentTypeService {
                 .filter(DocumentType::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("DocumentType with id: " + id + " not found"));
         List<Attribute> attributes = attributeRepository.findAttributesByIdIsIn(request.getAttributeIds());
+
+        if (attributes.stream().anyMatch(a -> !a.getIsAlive())) {
+            Attribute attribute = attributes.stream().filter(a -> !a.getIsAlive()).findFirst().get();
+            throw new NotFoundException("Attribute with id: "+ attribute.getId() + " not found");
+        }
+
         documentType.setAttributes(attributes);
         documentType.setId(id);
         documentType.setName(request.getName());
@@ -149,7 +161,4 @@ public class DocumentTypeService {
 
         return documentTypeMapper.toCreateDocumentTypeResponse(documentTypeRepository.save(documentType));
     }
-
-
-
 }

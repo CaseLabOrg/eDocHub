@@ -13,6 +13,8 @@ import java.util.Map;
 public interface SignatureRequestRepository extends JpaRepository<SignatureRequest, Long> {
     List<SignatureRequest> findAllByUserToId(Long userIdTo);
 
+    boolean existsByUserToIdAndDocumentVersionId(Long userToId, Long documentVersionId);
+
     @Query(value = """
         SELECT
             sr.user_id_to AS userId,
