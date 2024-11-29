@@ -32,4 +32,9 @@ public class SignatureRequest {
 
     @Enumerated(EnumType.STRING)
     private SignatureRequestState status = SignatureRequestState.PENDING;
+
+
+    public String getStatusString() {
+        return status.toString();
+    }
 }

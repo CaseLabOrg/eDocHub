@@ -51,9 +51,9 @@ public class AnalyticService {
         return signatureRequestRepository.findApprovalsByUsers(startDate, endDate);
     }
 
-    public List<VotingSummary> getVotingSummaries(LocalDateTime startDate, LocalDateTime endDate) {
-        return votingRepository.findVotingSummaries(startDate, endDate);
-    }
+    //public List<VotingSummary> getVotingSummaries(LocalDateTime startDate, LocalDateTime endDate) {
+   //     return votingRepository.findVotingSummaries(startDate, endDate);
+   // }
 
     public List<ActiveUserProjection> getMostActiveUsers(LocalDateTime startDate, LocalDateTime endDate) {
         return documentRepository.findMostActiveUsers(startDate, endDate);
@@ -80,7 +80,7 @@ public class AnalyticService {
                     var signatureRequestId2status = entry.getValue().stream()
                             .collect(Collectors.toMap(
                                     SignatureRequest::getId,
-                                    SignatureRequest::getStatus
+                                    SignatureRequest::getStatusString
                             ));
 
                     return new UserSignaturesSummary(userId, signatureRequestId2status.entrySet().size(), signatureRequestId2status);
@@ -149,7 +149,7 @@ public class AnalyticService {
         // Aggregate data
         List<UserApproval> approvals = getApprovalsByUsers(startDate, endDate);
         List<DailyApprovalStats> dailyStats = signatureRequestRepository.findDailyApprovals(startDate, endDate);
-        List<VotingSummary> votings = getVotingSummaries(startDate, endDate);
+       // List<VotingSummary> votings = getVotingSummaries(startDate, endDate);
         List<ActiveUserProjection> activeUsers = getMostActiveUsers(startDate, endDate);
         List<IgnoredVotes> ignoredVotes = getIgnoredVotes(startDate, endDate);
         List<SignatureStatus> signatureStatuses = getCountSignatureRequestStatus();
@@ -217,7 +217,7 @@ public class AnalyticService {
         // Section: Voting Summaries
         document.add(new AreaBreak());
         document.add(new Paragraph("2. Voting Summaries").setFontSize(16));
-        div.add(createTableFromVotingSummaries(votings));
+       // div.add(createTableFromVotingSummaries(votings));
         document.add(div);
 
         // Section: Active Users

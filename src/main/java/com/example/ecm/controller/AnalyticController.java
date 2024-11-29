@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -40,8 +41,8 @@ public class AnalyticController {
     public ResponseEntity<List<VotingSummary>> getVotingSummaries(
             @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-        List<VotingSummary> summaries = analyticService.getVotingSummaries(startDate, endDate);
-        return ResponseEntity.ok(summaries);
+       // List<VotingSummary> summaries = analyticService.getVotingSummaries(startDate, endDate);
+        return ResponseEntity.ok(new ArrayList<>());
     }
 
     @GetMapping("/active-users")
