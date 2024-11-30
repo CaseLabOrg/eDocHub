@@ -129,26 +129,26 @@ VALUES
 -- Insert into Votings (Skewed voting status)
 INSERT INTO Votings (document_version_id, status, approval_threshold, current_approval_rate, created_at, deadline)
 VALUES
-(1, 'PENDING', 0.80, 0.40, NOW(), '2024-12-31'),
-( 2, 'APPROVED', 0.90, 0.95, '2024-01-01', '2024-06-30'),
-(3, 'REJECTED', 0.75, 0.20, NOW(), '2024-11-30'),
-( 8, 'APPROVED', 0.85, 0.90, NOW(), '2024-12-31'),
-( 9, 'APPROVED', 0.90, 0.92, '2024-10-01', '2025-01-01'),
-(10, 'APPROVED', 0.80, 0.85, NOW(), '2024-12-15');
+(1, 'CANCELLED', 0.80, 0.40, NOW(), '2024-12-31'),
+( 2, 'ACTIVE', 0.90, 0.95, '2024-01-01', '2024-06-30'),
+(3, 'COMPLETED', 0.75, 0.20, NOW(), '2024-11-30'),
+( 8, 'ACTIVE', 0.85, 0.90, NOW(), '2024-12-31'),
+( 9, 'COMPLETED', 0.90, 0.92, '2024-10-01', '2025-01-01'),
+(10, 'ACTIVE', 0.80, 0.85, NOW(), '2024-12-15');
 
 -- Insert into Signature Requests (Imbalance with ignored and pending)
 INSERT INTO Signature_Requests (user_id_to, voting_id, document_version_id, status)
 VALUES
-(2, 1, 1, 'Pending'),
-(3, 1, 1, 'Ignored'),
-( 3, 2, 7, 'Ignored'),
-( 7, 3, 4, 'Rejected'),
-( 3, 4, 8, 'Ignored'),
-( 8, 5, 9, 'Approved'),
-(7, 6, 10, 'Ignored'),
-( 3, 5, 11, 'Approved'),
-(8, 4, 12, 'Approved'),
-( 7, 6, 13, 'Approved'),
-(2, 5, 14, 'Approved'),
-( 1, 4, 15, 'Approved'),
-(7, 6, 16, 'Approved');
+(2, 1, 1, 'PENDING'),
+(3, 1, 1, 'IGNORED'),
+( 3, 2, 7, 'IGNORED'),
+( 7, 3, 4, 'REJECTED'),
+( 3, 4, 8, 'IGNORED'),
+( 8, 5, 9, 'APPROVED'),
+(7, 6, 10, 'IGNORED'),
+( 3, 5, 11, 'APPROVED'),
+(8, 4, 12, 'APPROVED'),
+( 7, 6, 13, 'APPROVED'),
+(2, 5, 14, 'APPROVED'),
+( 1, 4, 15, 'APPROVED'),
+(7, 6, 16, 'APPROVED');

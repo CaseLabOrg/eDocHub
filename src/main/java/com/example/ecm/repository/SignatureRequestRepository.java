@@ -8,7 +8,6 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 public interface SignatureRequestRepository extends JpaRepository<SignatureRequest, Long> {
     List<SignatureRequest> findAllByUserToId(Long userIdTo);

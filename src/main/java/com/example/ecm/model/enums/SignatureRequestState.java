@@ -4,5 +4,5 @@ public enum SignatureRequestState {
     PENDING,
     APPROVED,
     REJECTED,
-    IGNORED,
+    IGNORED
 }

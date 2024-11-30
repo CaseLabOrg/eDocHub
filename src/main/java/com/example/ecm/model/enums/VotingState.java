@@ -4,5 +4,5 @@ public enum VotingState {
     ACTIVE,
     NEW_CANCELLED,
     CANCELLED,
-    COMPLETED,
+    COMPLETED
 }
