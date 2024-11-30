@@ -1,5 +1,7 @@
 package com.example.ecm.dto.responses;
 
+import lombok.ToString;
+
 public interface DailyApprovalStats {
     int getYear();
     int getMonth();

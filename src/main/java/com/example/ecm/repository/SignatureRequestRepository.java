@@ -26,7 +26,7 @@ public interface SignatureRequestRepository extends JpaRepository<SignatureReque
         JOIN
             Document_Version dv ON sr.document_version_id = dv.id
         WHERE
-            sr.status = 'approved'
+            sr.status ILIKE 'approved'
             AND dv.created_at BETWEEN :startDate AND :endDate
         GROUP BY
             sr.user_id_to, dv.title, dv.version_id, sr.status
@@ -72,7 +72,7 @@ public interface SignatureRequestRepository extends JpaRepository<SignatureReque
             JOIN
                 Document_Version dv ON sr.document_version_id = dv.id
             WHERE
-                sr.status = 'Approved'
+                sr.status ILIKE 'Approved'
                 AND dv.created_at BETWEEN :startDate AND :endDate
             GROUP BY
                 EXTRACT(YEAR FROM dv.created_at), EXTRACT(MONTH FROM dv.created_at), EXTRACT(DAY FROM dv.created_at)
@@ -111,7 +111,7 @@ public interface SignatureRequestRepository extends JpaRepository<SignatureReque
         JOIN 
             Document_Version dv ON sr.document_version_id = dv.id
         WHERE 
-            sr.status IN ('Pending', 'Ignored')
+            sr.status IN ('PENDING', 'IGNORED')
             AND dv.created_at BETWEEN :startDate AND :endDate
         GROUP BY 
             sr.user_id_to, u.name, u.surname
