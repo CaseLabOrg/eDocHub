@@ -75,10 +75,26 @@ public class UserService {
 
 
     @Transactional
-    public CreateUserResponse createUserAdmin(CreateUserRequest createUserRequest, Long tenantId) {
+    public CreateUserResponse createUserAdminFromSuperAdmin(CreateUserRequest createUserRequest, Long tenantId) {
         User user = userMapper.toUser(createUserRequest);
 
-        user.setTenant(tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow(() -> new NotFoundException("Tenant not found")));
+        user.setTenant(tenantRepository.findById(tenantId).orElseThrow(() -> new NotFoundException("Tenant not found")));
+
+        user.setRoles(Set.of(roleRepository.findByName("ADMIN").orElseThrow(() -> new NotFoundException("Role with name: ADMIN not found"))));
+        user.setPassword(encoder.encode(createUserRequest.getPassword()));
+        User savedUser = userRepository.save(user);
+
+        return userMapper.toCreateUserResponse(savedUser);
+    }
+
+    @Transactional
+    public CreateUserResponse createUserAdmin(CreateUserRequest createUserRequest, UserPrincipal userPrincipal) {
+        User user = userMapper.toUser(createUserRequest);
+        Long tenantId = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(() -> new NotFoundException("User with id: " + userPrincipal.getId() + " not found"))
+                .getTenant().getId();
+
+        user.setTenant(tenantRepository.findById(tenantId).orElseThrow(() -> new NotFoundException("Tenant not found")));
 
         user.setRoles(Set.of(roleRepository.findByName("ADMIN").orElseThrow(() -> new NotFoundException("Role with name: ADMIN not found"))));
         user.setPassword(encoder.encode(createUserRequest.getPassword()));
@@ -91,7 +107,7 @@ public class UserService {
     public CreateUserResponse createUserOwner(CreateUserRequest createUserRequest, Long tenantId) {
         User user = userMapper.toUser(createUserRequest);
 
-        user.setTenant(tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow(() -> new NotFoundException("Tenant not found")));
+        user.setTenant(tenantRepository.findById(tenantId).orElseThrow(() -> new NotFoundException("Tenant not found")));
 
         user.setRoles(Set.of(
                 roleRepository.findByName("OWNER").orElseThrow(() -> new NotFoundException("Role with name: OWNER not found")),

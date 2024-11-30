@@ -24,6 +24,7 @@ public class TenantMapper {
         tenantResponse.setCreatedAt(tenant.getCreatedAt());
         tenantResponse.setName(tenant.getName());
         tenantResponse.setAlive(tenant.getIsAlive());
+        tenantResponse.setId(tenant.getId());
         return tenantResponse;
     }
 }

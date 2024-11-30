@@ -54,17 +54,29 @@ public class UserController {
      * @param tenantId          Идентификатор тенанта.
      * @return DTO с данными созданного администратора.
      */
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'OWNER')")
+    @PreAuthorize("hasAuthority('SUPER_ADMIN')")
+    @PostMapping("/createAdminFromSuperAdmin")
+    @Operation(summary = "Создать администратора", description = "Создает нового администратора в указанной тенантной среде.")
+    @ApiResponse(responseCode = "200", description = "Администратор успешно создан")
+    public ResponseEntity<CreateUserResponse> createAdminUserFromSuperAdmin(
+            @Valid @RequestBody CreateUserRequest createUserRequest,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            Long tenantId) {
+        CreateUserResponse userResponse = userService.createUserAdminFromSuperAdmin(createUserRequest, tenantId);
+        return ResponseEntity.ok(userResponse);
+    }
+
+    @PreAuthorize("hasAuthority('OWNER')")
     @PostMapping("/createAdmin")
     @Operation(summary = "Создать администратора", description = "Создает нового администратора в указанной тенантной среде.")
     @ApiResponse(responseCode = "200", description = "Администратор успешно создан")
     public ResponseEntity<CreateUserResponse> createAdminUser(
             @Valid @RequestBody CreateUserRequest createUserRequest,
-            @AuthenticationPrincipal UserPrincipal userPrincipal,
-            Long tenantId) {
-        CreateUserResponse userResponse = userService.createUserAdmin(createUserRequest, tenantId);
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        CreateUserResponse userResponse = userService.createUserAdmin(createUserRequest, userPrincipal);
         return ResponseEntity.ok(userResponse);
     }
+
 
     /**
      * Создает владельца в указанной тенантной среде.
