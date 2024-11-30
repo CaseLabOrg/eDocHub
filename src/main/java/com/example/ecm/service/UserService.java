@@ -78,7 +78,7 @@ public class UserService {
     public CreateUserResponse createUserAdmin(CreateUserRequest createUserRequest, Long tenantId) {
         User user = userMapper.toUser(createUserRequest);
 
-        user.setTenant(tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow(() -> new NotFoundException("Tenant not found")));
+        user.setTenant(tenantRepository.findById(tenantId).orElseThrow(() -> new NotFoundException("Tenant not found")));
 
         user.setRoles(Set.of(roleRepository.findByName("ADMIN").orElseThrow(() -> new NotFoundException("Role with name: ADMIN not found"))));
         user.setPassword(encoder.encode(createUserRequest.getPassword()));
@@ -91,7 +91,7 @@ public class UserService {
     public CreateUserResponse createUserOwner(CreateUserRequest createUserRequest, Long tenantId) {
         User user = userMapper.toUser(createUserRequest);
 
-        user.setTenant(tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow(() -> new NotFoundException("Tenant not found")));
+        user.setTenant(tenantRepository.findById(tenantId).orElseThrow(() -> new NotFoundException("Tenant not found")));
 
         user.setRoles(Set.of(
                 roleRepository.findByName("OWNER").orElseThrow(() -> new NotFoundException("Role with name: OWNER not found")),
