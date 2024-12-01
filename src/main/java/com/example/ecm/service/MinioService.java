@@ -1,6 +1,7 @@
 package com.example.ecm.service;
 
 import com.example.ecm.dto.requests.CreateDocumentVersionRequest;
+import com.example.ecm.exception.ConflictException;
 import io.minio.*;
 import io.minio.errors.*;
 import lombok.RequiredArgsConstructor;
@@ -55,15 +56,14 @@ public class MinioService {
             String mimeType = "application/octet-stream";
             if (base64Content != null && !base64Content.isEmpty()) {
                 String[] parts = base64Content.split(",");
-                if (parts.length < 2) {
+                if (parts.length < 3) {
                     System.err.println("Некорректный формат Base64-строки, будет сохранена пустая строка.");
                     fileBytes = new byte[0];
                 } else {
-
                     fileBytes = Base64.getDecoder().decode(parts[1]);
-
-                    if (parts[0].contains("data:")) {
-                        mimeType = parts[0].substring(5, parts[0].indexOf(";"));
+                    String[] meta = parts[0].split(";");
+                    if (meta[1].contains("data:")) {
+                        mimeType = meta[0].substring(5, meta[0].indexOf(";"));
                     }
                 }
             } else {
@@ -116,7 +116,7 @@ public class MinioService {
                     .contentType();
 
             String base64Content = Base64.getEncoder().encodeToString(fileBytes);
-            return "data:" + mimeType + ";base64," + base64Content;
+            return "filename:" + name.substring(name.indexOf('_') + 1) + ";data:" + mimeType + ";base64," + base64Content;
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -56,6 +56,7 @@ public class DocumentService {
      * @param createDocumentRequest запрос на создание документа
      * @return ответ с данными созданного документа или null в случае ошибки
      */
+    @Transactional
     public CreateDocumentResponse createDocument(CreateDocumentRequest createDocumentRequest) {
         User user = userRepository.findById(createDocumentRequest.getUserId())
                 .orElseThrow(() -> new NotFoundException("User with id: " + createDocumentRequest.getUserId() + " not found"));
@@ -323,6 +324,7 @@ public class DocumentService {
      * @return объект {@link CreateDocumentVersionResponse}, содержащий данные о созданной версии
      * @throws NotFoundException если документ с указанным ID не найден
      */
+    @Transactional
     public CreateDocumentVersionResponse updateDocumentVersion(Long id, CreateDocumentVersionRequest createDocumentVersionRequest) {
         Document document = documentRepository.findById(id)
                 .filter(Document::getIsAlive)
