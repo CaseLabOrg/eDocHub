@@ -171,9 +171,8 @@ public class UserService {
      * @return Список DTO с данными пользователей
      */
     @TenantRestrictedForUser
-    public List<CreateUserResponse> getAllUsers(Boolean isAlive) {
+    public List<CreateUserResponse> getAllUsers(Boolean isAlive, UserPrincipal userPrincipal) {
         Stream<User> userStream = userRepository.findAll().stream();
-        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
         userStream = userStream.filter(u -> u.getIsAlive().equals(isAlive));
 

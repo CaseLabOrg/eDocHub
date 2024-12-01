@@ -122,8 +122,8 @@ public class UserController {
     @Operation(summary = "Получить всех пользователей", description = "Возвращает список всех пользователей.")
     @ApiResponse(responseCode = "200", description = "Список пользователей успешно возвращен")
     @GetMapping
-    public ResponseEntity<List<CreateUserResponse>> getAllUsers(@RequestParam(defaultValue = "true") Boolean isAlive) {
-        List<CreateUserResponse> users = userService.getAllUsers(isAlive);
+    public ResponseEntity<List<CreateUserResponse>> getAllUsers(@RequestParam(defaultValue = "true") Boolean isAlive, @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        List<CreateUserResponse> users = userService.getAllUsers(isAlive, userPrincipal);
         return ResponseEntity.ok(users);
     }
 
