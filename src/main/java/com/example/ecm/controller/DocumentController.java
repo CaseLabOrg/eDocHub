@@ -107,7 +107,7 @@ public class DocumentController {
     @PutMapping("/{id}")
     public ResponseEntity<CreateDocumentVersionResponse> updateDocument(
             @PathVariable Long id,
-            @Valid @RequestBody CreateDocumentVersionRequest document) {
+            @Valid @RequestBody CreateDocumentVersionRequest document) throws Exception {
         return ResponseEntity.ok(documentService.updateDocumentVersion(id, document));
     }
 

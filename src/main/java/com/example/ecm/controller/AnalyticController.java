@@ -3,13 +3,17 @@ package com.example.ecm.controller;
 import com.example.ecm.dto.responses.*;
 import com.example.ecm.service.AnalyticService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -99,4 +103,31 @@ public class AnalyticController {
     public List<DocumentTypePercentageResponse> getDocumentTypePercentages() {
         return analyticService.getDocumentTypePercentages();
     }
+
+
+    @GetMapping("/generate-report")
+    public ResponseEntity<FileSystemResource> generateReport(
+            @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate
+    ) throws Exception {
+
+        if (startDate == null) {
+            startDate = LocalDateTime.now().minusDays(30);
+        }
+        if (endDate == null) {
+            endDate = LocalDateTime.now();
+        }
+
+        String reportPath = analyticService.generateInfographicReport(startDate, endDate);
+        File reportFile = new File(reportPath);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + reportFile.getName());
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(new FileSystemResource(reportFile));
+    }
+
 }

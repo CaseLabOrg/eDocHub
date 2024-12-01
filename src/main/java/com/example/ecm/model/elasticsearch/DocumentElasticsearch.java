@@ -1,12 +1,21 @@
 package com.example.ecm.model.elasticsearch;
 
+import com.example.ecm.deserializer.LocalDateTimeDeserializer;
+import com.example.ecm.deserializer.OffsetDateTimeDeserializer;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Map;
 
 /**
@@ -39,8 +48,8 @@ public class DocumentElasticsearch {
     @Field(type = FieldType.Text)
     private String content;
 
-    @Field(type = FieldType.Date)
-    private String createdAt;
+    @Field(type = FieldType.Date, format = DateFormat.epoch_millis)
+    private Long createdAt;
 
     @Field(type = FieldType.Object)
     private Map<String, String> values;
