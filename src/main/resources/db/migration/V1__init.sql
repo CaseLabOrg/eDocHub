@@ -114,6 +114,42 @@ CREATE TABLE Comments (
                           created_at TIMESTAMP NOT NULL
 );
 
+CREATE TABLE Plans (
+                          id BIGSERIAL PRIMARY KEY,
+                          name VARCHAR(255),
+                          description TEXT NOT NULL,
+                          price DECIMAL NOT NULL,
+                          max_users BIGINT NOT NULL
+);
+
+CREATE TABLE Subscriptions (
+                          id BIGSERIAL PRIMARY KEY,
+                          plan_id BIGINT NOT NULL,
+                          tenant_id BIGINT NOT NULL,
+                          status VARCHAR(255) NOT NULL,
+                          start_date DATE,
+                          end_date DATE
+);
+
+CREATE TABLE Invoices (
+                          id BIGSERIAL PRIMARY KEY,
+                          subscription_id BIGINT NOT NULL,
+                          description VARCHAR(255),
+                          amount DECIMAL NOT NULL,
+                          status VARCHAR(255) NOT NULL,
+                          created_date DATE NOT NULL
+);
+
+CREATE TABLE Payments (
+                          id BIGSERIAL PRIMARY KEY,
+                          payment_id VARCHAR(255),
+                          invoice_id BIGINT NOT NULL,
+                          payment_method VARCHAR(255) NOT NULL,
+                          status VARCHAR(255) NOT NULL,
+                          created_at TIMESTAMP NOT NULL,
+                          idempotence_key VARCHAR(255) NOT NULL
+);
+
 CREATE TABLE Departments (
                           id BIGSERIAL PRIMARY KEY,
                           name TEXT,

@@ -1,3 +1,30 @@
+-- Insert into plans
+INSERT INTO plans (name, description, price, max_users) 
+VALUES 
+('Test2', 'Plan test for 2 users', 1000, 2),
+('Test5', 'Plan test for 5 users', 2000, 5),
+('Test10', 'Plan test for 10 users', 2920, 10);
+
+-- Insert into subscriptions
+INSERT INTO subscriptions (plan_id, tenant_id, status) 
+VALUES 
+(1, 1, 'INACTIVE'),
+(2, 2, 'INACTIVE'),
+(3, 1, 'INACTIVE'),
+(4, 3, 'INACTIVE'),
+(5, 3, 'INACTIVE'),
+(6, 2, 'INACTIVE');
+
+-- Insert into invoices
+INSERT INTO invoices(subscription_id, description, amount, status, created_date) 
+VALUES 
+(1, 'Test', 1000, 'AWAITING_PAYMENT', '2024-11-25'),
+(2, 'Test', 2000, 'AWAITING_PAYMENT', '2024-11-25'),
+(3, 'Test', 1000, 'AWAITING_PAYMENT', '2024-11-26'),
+(4, 'Test', 2920, 'AWAITING_PAYMENT', '2024-11-27'),
+(5, 'Test', 2920, 'AWAITING_PAYMENT', '2024-11-27'),
+(6, 'Test', 2000, 'AWAITING_PAYMENT', '2024-11-27');
+
 -- Insert into Departments
 INSERT INTO Departments (id, name, is_alive)
 VALUES
