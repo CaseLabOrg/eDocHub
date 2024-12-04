@@ -18,7 +18,7 @@ INSERT INTO user_roles VALUES (1, 1);
 INSERT INTO Document_Types_Attributes VALUES (1, 1);
 INSERT INTO Document_Types_Attributes VALUES (2, 1);
 
-INSERT INTO document_version(version_id,  document_id, title, description, created_at) VALUES (1, 1, 'hw.txt', 'test', '2024-12-12T23:59:59.425Z');
+INSERT INTO document_version(version_id,  document_id, title, filename, description, created_at) VALUES (1, 1, 'hw', 'hw.txt', 'test', '2024-12-12T23:59:59.425Z');
 
 INSERT INTO signatures(hash, placeholder_title, user_id, document_version_id) VALUES (1322131231, 'testPlaceholder', 1, 1);
 
