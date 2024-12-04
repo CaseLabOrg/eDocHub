@@ -2,6 +2,7 @@ package com.example.ecm.service;
 
 import com.example.ecm.dto.patch_requests.PatchUserRequest;
 import com.example.ecm.dto.requests.CreateUserRequest;
+import com.example.ecm.dto.requests.LeaderReplacementRequest;
 import com.example.ecm.dto.responses.CreateUserResponse;
 import com.example.ecm.dto.requests.PutRoleRequest;
 import com.example.ecm.enums.ExceptionMessage;
@@ -12,6 +13,7 @@ import com.example.ecm.model.*;
 import com.example.ecm.repository.PlanRepository;
 import com.example.ecm.repository.RoleRepository;
 import com.example.ecm.repository.TenantRepository;
+import com.example.ecm.repository.UserReplacementsRepository;
 import com.example.ecm.repository.UserRepository;
 import com.example.ecm.saas.TenantContext;
 import com.example.ecm.saas.annotation.TenantRestrictedForUser;
@@ -43,6 +45,8 @@ public class UserService {
     private final TenantRepository tenantRepository;
     private final PlanRepository planRepository;
     private final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    private final DepartmentService departmentService;
+    private final UserReplacementsRepository userReplacementsRepository;
 
     /**
      * Создание нового пользователя на основе данных из DTO.
@@ -253,6 +257,24 @@ public class UserService {
 
         User updatedUser = userRepository.save(user);
         return userMapper.toCreateUserResponse(updatedUser);
+    }
+
+    public void replaceLeader(LeaderReplacementRequest leaderReplacementRequest, UserPrincipal currentUser) {
+        Long successorId = leaderReplacementRequest.getSuccessorId();
+
+        User successor = userRepository.findById(successorId)
+                .orElseThrow(() -> new NotFoundException("User with id: " + successorId + " not found"));
+        User leader = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new NotFoundException("User with id: " + currentUser.getId() + " not found"));
+        if(!departmentService.isMemberInAnyDepartmentOfLeader(successor, leader))
+            throw new ForbiddenException("User with id: " + successor.getId() + " is not a member of any department of the leader with id: " + leader.getId());
+
+        UserReplacement leaderReplacement = new UserReplacement();
+        leaderReplacement.setSuccessor(successor);
+        leaderReplacement.setPredecessor(leader);
+        leaderReplacement.setUntil(leaderReplacementRequest.getUntil());
+
+        userReplacementsRepository.save(leaderReplacement);
     }
 
     private void checkPlan() {

@@ -163,3 +163,12 @@ CREATE TABLE Department_Departments (
                              children_id BIGSERIAL
 );
 ALTER TABLE users ALTER COLUMN department_id DROP NOT NULL;
+
+CREATE TABLE User_Replacements (
+                                   id BIGSERIAL PRIMARY KEY,
+                                   predecessor_id BIGSERIAL NOT NULL,
+                                   successor_id BIGSERIAL NOT NULL,
+                                   until TIMESTAMP NOT NULL,
+                                   CONSTRAINT fk_predecessor FOREIGN KEY (predecessor_id) REFERENCES Users(id),
+                                   CONSTRAINT fk_successor FOREIGN KEY (successor_id) REFERENCES Users(id)
+);

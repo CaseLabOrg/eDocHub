@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.List;
 
 @Slf4j
@@ -32,6 +33,7 @@ public class SignatureService {
     private final DocumentEventProducer documentEventProducer;
     private final MailNotificationService mailNotificationService;
     private final DepartmentService departmentService;
+    private final UserReplacementsRepository userReplacementsRepository;
 
     public CreateSignatureRequestResponse sendToSign(CreateSignatureRequestRequest request, UserPrincipal currentUser) {
         Document document = documentRepository.findById(request.getDocumentId())
@@ -70,8 +72,14 @@ public class SignatureService {
 
     public GetSignatureResponse sign(Long id, CreateSignatureRequest request, UserPrincipal currentUser) {
 
-        List<SignatureRequest> requests = signatureRequestRepository.findAllByUserToId(currentUser.getId());
-        requests.addAll(signatureRequestRepository.findAllByDelegatedToId(currentUser.getId()));
+        List<SignatureRequest> requests = getAllSignatureRequestsOfUser(currentUser.getId());
+
+        requests.addAll(userReplacementsRepository.findAllCurrentlyReplacedByUser(currentUser.getId())
+                .stream()
+                .map(replacedUser -> getAllSignatureRequestsOfUser(replacedUser.getId()))
+                .flatMap(Collection::stream)
+                .toList()
+        );
         if (requests.isEmpty()) {
             throw new NotFoundException("You have nothing to sign");
         }
@@ -125,5 +133,11 @@ public class SignatureService {
 
         signatureRequest.setDelegatedTo(member);
         signatureRequestRepository.save(signatureRequest);
+    }
+
+    private List<SignatureRequest> getAllSignatureRequestsOfUser(Long userId) {
+        List<SignatureRequest> requests = signatureRequestRepository.findAllByUserToId(userId);
+        requests.addAll(signatureRequestRepository.findAllByDelegatedToId(userId));
+        return requests;
     }
 }

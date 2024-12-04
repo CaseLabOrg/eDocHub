@@ -3,6 +3,7 @@ package com.example.ecm.controller;
 import com.example.ecm.aop.Loggable;
 import com.example.ecm.dto.patch_requests.PatchUserRequest;
 import com.example.ecm.dto.requests.CreateUserRequest;
+import com.example.ecm.dto.requests.LeaderReplacementRequest;
 import com.example.ecm.dto.responses.CreateUserResponse;
 import com.example.ecm.dto.requests.PutRoleRequest;
 import com.example.ecm.security.UserPrincipal;
@@ -212,5 +213,13 @@ public class UserController {
     public ResponseEntity<CreateUserResponse> patchUser(@PathVariable Long id, @Valid @RequestBody PatchUserRequest request) {
         CreateUserResponse response = userService.patchUser(id, request);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/replacement")
+    public ResponseEntity<Void> replaceLeader(
+            @RequestBody LeaderReplacementRequest leaderReplacementRequest,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        userService.replaceLeader(leaderReplacementRequest, currentUser);
+        return ResponseEntity.ok().build();
     }
 }
