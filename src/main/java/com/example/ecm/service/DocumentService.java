@@ -56,6 +56,7 @@ public class DocumentService {
      * @param createDocumentRequest запрос на создание документа
      * @return ответ с данными созданного документа или null в случае ошибки
      */
+    @Transactional
     public CreateDocumentResponse createDocument(CreateDocumentRequest createDocumentRequest) {
         User user = userRepository.findById(createDocumentRequest.getUserId())
                 .orElseThrow(() -> new NotFoundException("User with id: " + createDocumentRequest.getUserId() + " not found"));
@@ -71,6 +72,7 @@ public class DocumentService {
         documentVersion.setDocument(documentSaved);
         documentVersion.setVersionId(1L);
         documentVersion.setCreatedAt(LocalDateTime.now());
+        documentVersion.setFilename(minioService.parseFilename(createDocumentRequest.getBase64Content()));
         DocumentVersion documentVersionSaved = documentVersionRepository.save(documentVersion);
 
         setValues(createDocumentRequest.getValues(), documentVersionSaved);
@@ -153,7 +155,7 @@ public class DocumentService {
         DocumentVersion version = documentVersion.orElseThrow(() -> new NotFoundException("Document Version with id: " + versionId + " or Document id " + documentId + " not found"));
 
         CreateDocumentVersionResponse response = documentVersionMapper.toCreateDocumentVersionResponse(version);
-        String base64Content = minioService.getBase64DocumentByName(version.getId() + "_" + version.getTitle());
+        String base64Content = minioService.getBase64DocumentByName(version.getId() + "_" + version.getFilename());
         response.setBase64Content(base64Content);
         return response;
 
@@ -272,7 +274,7 @@ public class DocumentService {
         response.setDocumentVersions(documentStream
                 .map(version -> {
                     CreateDocumentVersionResponse versionResponse = documentVersionMapper.toCreateDocumentVersionResponse(version);
-                    String base64Content = minioService.getBase64DocumentByName(version.getId() + "_" + version.getTitle());
+                    String base64Content = minioService.getBase64DocumentByName(version.getId() + "_" + version.getFilename());
                     versionResponse.setBase64Content(base64Content);
                     return versionResponse;
                 }).toList());
@@ -323,6 +325,7 @@ public class DocumentService {
      * @return объект {@link CreateDocumentVersionResponse}, содержащий данные о созданной версии
      * @throws NotFoundException если документ с указанным ID не найден
      */
+    @Transactional
     public CreateDocumentVersionResponse updateDocumentVersion(Long id, CreateDocumentVersionRequest createDocumentVersionRequest) {
         Document document = documentRepository.findById(id)
                 .filter(Document::getIsAlive)
@@ -426,7 +429,7 @@ public class DocumentService {
             newVersion.setDescription(request.getDescription());
         }
         if (request.getTitle() != null) {
-            CreateDocumentVersionRequest requestDocumentVersion = documentVersionMapper.toCreateDocumentVersionRequest(newVersion, minioService.getBase64DocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle()));
+            CreateDocumentVersionRequest requestDocumentVersion = documentVersionMapper.toCreateDocumentVersionRequest(newVersion, minioService.getBase64DocumentByName(documentVersion.getId() + "_" + documentVersion.getFilename()));
             newVersion.setTitle(request.getTitle());
             requestDocumentVersion.setTitle(newVersion.getTitle());
             minioService.addDocument(newVersion.getId(), requestDocumentVersion);
@@ -435,13 +438,13 @@ public class DocumentService {
         if (request.getBase64Content() != null) {
             minioService.addDocument(newVersion.getId(), documentVersionMapper.toCreateDocumentVersionRequest(newVersion, request.getBase64Content()));
         } else {
-            minioService.addDocument(newVersion.getId(), documentVersionMapper.toCreateDocumentVersionRequest(newVersion, minioService.getBase64DocumentByName(documentVersion.getId() + "_" + newVersion.getTitle())));
+            minioService.addDocument(newVersion.getId(), documentVersionMapper.toCreateDocumentVersionRequest(newVersion, minioService.getBase64DocumentByName(documentVersion.getId() + "_" + newVersion.getFilename())));
         }
         if (request.getValues() != null) {
             setValues(request.getValues(), newVersion);
         }
         CreateDocumentVersionResponse response = documentVersionMapper.toCreateDocumentVersionResponse(documentVersionRepository.save(newVersion));
-        response.setBase64Content(minioService.getBase64DocumentByName(newVersion.getId() + "_" + newVersion.getTitle()));
+        response.setBase64Content(minioService.getBase64DocumentByName(newVersion.getId() + "_" + newVersion.getFilename()));
 
         return response;
 

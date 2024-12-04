@@ -37,6 +37,10 @@ public class DocumentVersion {
     @Column(name = "title", nullable = false)
     private String title;
 
+    /** Название файла в minio */
+    @Column(name = "filename")
+    private String filename;
+
     /** Описание документа */
     @Column
     private String description;

@@ -52,7 +52,7 @@ public class VotingService {
                         .map(SignatureRequest::getUserTo)
                         .anyMatch(user -> user.getId().equals(userId))
                 ).toList();
-        List<String> contents = votings.stream().map(v -> minioService.getBase64DocumentByName(v.getDocumentVersion().getId() + "_" + v.getDocumentVersion().getTitle())).toList();
+        List<String> contents = votings.stream().map(v -> minioService.getBase64DocumentByName(v.getDocumentVersion().getId() + "_" + v.getDocumentVersion().getFilename())).toList();
 
         return IntStream.range(0, Math.min(votings.size(), contents.size()))
                 .mapToObj(i -> votingMapper.toStartVotingResponse(votings.get(i), contents.get(i))).toList();
@@ -61,7 +61,7 @@ public class VotingService {
     public StartVotingResponse startVoting(StartVotingRequest startVotingRequest) {
         DocumentVersion documentVersion = documentVersionRepository.findByDocumentIdAndVersionId(startVotingRequest.getDocumentId(), startVotingRequest.getDocumentVersionId())
                 .orElseThrow(() -> new NotFoundException("Document Version with id: " + startVotingRequest.getDocumentId() + " or Document id " + startVotingRequest.getDocumentVersionId() + " not found"));
-        String base64Content = minioService.getBase64DocumentByName(documentVersion.getId() + "_" + documentVersion.getTitle());
+        String base64Content = minioService.getBase64DocumentByName(documentVersion.getId() + "_" + documentVersion.getFilename());
 
         if (!documentStateService.checkTransition(documentVersion.getDocument(), DocumentState.SENT_ON_VOTING)) {
             throw new ConflictException("You cannot send on voting document with id: " + documentVersion.getDocument().getId() + " check available transitions");

@@ -77,6 +77,7 @@ CREATE TABLE Document_Version(
                                  version_id BIGINT,
                                  document_id BIGINT,
                                  title VARCHAR(255),
+                                 filename VARCHAR(255),
                                  description VARCHAR(255),
                                  created_at TIMESTAMP,
                                  is_alive BOOLEAN DEFAULT TRUE

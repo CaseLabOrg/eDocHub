@@ -8,10 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -51,28 +48,24 @@ public class MinioService {
         try {
             String base64Content = request.getBase64Content();
 
-            byte[] fileBytes;
-            String mimeType = "application/octet-stream";
+            byte[] fileBytes = new byte[0];
+            String mimeType = null;
+            String filename = null;
             if (base64Content != null && !base64Content.isEmpty()) {
                 String[] parts = base64Content.split(",");
                 if (parts.length < 2) {
                     System.err.println("Некорректный формат Base64-строки, будет сохранена пустая строка.");
-                    fileBytes = new byte[0];
                 } else {
-
                     fileBytes = Base64.getDecoder().decode(parts[1]);
-
-                    if (parts[0].contains("data:")) {
-                        mimeType = parts[0].substring(5, parts[0].indexOf(";"));
-                    }
+                    mimeType = parseData(base64Content);
+                    filename = parseFilename(base64Content);
                 }
             } else {
-
                 System.err.println("Base64-строка пуста, будет сохранена пустая строка.");
-                fileBytes = new byte[0];
             }
-
-            String fileKey = id + "_" + request.getTitle();
+            if(filename == null || mimeType == null)
+                return false;
+            String fileKey = id + "_" + filename;
 
             minioClient.putObject(
                     PutObjectArgs.builder()
@@ -116,7 +109,7 @@ public class MinioService {
                     .contentType();
 
             String base64Content = Base64.getEncoder().encodeToString(fileBytes);
-            return "data:" + mimeType + ";base64," + base64Content;
+            return "filename:" + name.substring(name.indexOf('_') + 1) + ";data:" + mimeType + ";base64," + base64Content;
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -141,5 +134,39 @@ public class MinioService {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public String parseFilename(String base64Content) {
+        String[] parts = base64Content.split(",");
+        if (parts.length == 2) {
+            String[] meta = parts[0].split(";");
+            if (meta[0].contains("filename:")) {
+                String filename = meta[0].substring(9);
+                if(!filename.isEmpty())
+                    return filename;
+            }
+        }
+        return null;
+    }
+
+    public String parseData(String base64Content) {
+        String[] parts = base64Content.split(",");
+        if (parts.length == 2) {
+            String[] meta = parts[0].split(";");
+            if (meta[1].contains("data:")) {
+                String data = meta[1].substring(5);
+                if(!data.isEmpty())
+                    return data;
+            }
+        }
+        return null;
+    }
+
+    public String parseBase64(String base64Content) {
+        String[] parts = base64Content.split(",");
+        if (parts.length == 2) {
+            return parts[1];
+        }
+        return null;
     }
 }
