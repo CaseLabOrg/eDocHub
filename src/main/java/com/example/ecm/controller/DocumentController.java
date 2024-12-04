@@ -46,8 +46,9 @@ public class DocumentController {
             @ApiResponse(responseCode = "400", description = "Некорректный запрос")
     })
     @PostMapping
-    public ResponseEntity<CreateDocumentResponse> createFile(@Valid @RequestBody CreateDocumentRequest createDocumentRequest) {
-        return ResponseEntity.ok(documentService.createDocument(createDocumentRequest));
+    public ResponseEntity<CreateDocumentResponse> createFile(@RequestParam(defaultValue = "false") Boolean isDraft,
+                                                             @Valid @RequestBody CreateDocumentRequest createDocumentRequest) {
+        return ResponseEntity.ok(documentService.createDocument(isDraft, createDocumentRequest));
     }
 
     /**
@@ -200,8 +201,9 @@ public class DocumentController {
     @PatchMapping("/{id}")
     public ResponseEntity<CreateDocumentVersionResponse> patchDocumentType(
             @PathVariable Long id,
+            @RequestParam(defaultValue = "false") Boolean isDone,
             @Valid @RequestBody PatchDocumentVersionRequest request) {
-        return ResponseEntity.ok(documentService.patchDocument(id, request));
+        return ResponseEntity.ok(documentService.patchDocument(id, isDone, request));
     }
 
     /**

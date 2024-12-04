@@ -1,5 +1,6 @@
 package com.example.ecm.dto.responses;
 
+import com.example.ecm.model.enums.DocumentState;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -31,4 +32,6 @@ public class CreateDocumentResponse {
     private List<CreateDocumentVersionResponse> documentVersions;
 
     private List<AddCommentResponse> comments;
+
+    private DocumentState state;
 }

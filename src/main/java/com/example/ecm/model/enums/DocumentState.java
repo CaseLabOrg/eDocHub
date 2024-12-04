@@ -11,4 +11,5 @@ public enum DocumentState {
     SENT_ON_VOTING,
     APPROVED_BY_VOTING,
     REJECTED_BY_VOTING,
+    DRAFT,
 }

@@ -57,7 +57,7 @@ public class DocumentService {
      * @return ответ с данными созданного документа или null в случае ошибки
      */
     @Transactional
-    public CreateDocumentResponse createDocument(CreateDocumentRequest createDocumentRequest) {
+    public CreateDocumentResponse createDocument(Boolean isDraft, CreateDocumentRequest createDocumentRequest) {
         User user = userRepository.findById(createDocumentRequest.getUserId())
                 .orElseThrow(() -> new NotFoundException("User with id: " + createDocumentRequest.getUserId() + " not found"));
         DocumentType documentType = documentTypeRepository.findById(createDocumentRequest.getDocumentTypeId())
@@ -66,13 +66,17 @@ public class DocumentService {
         document.setUser(user);
         document.setDocumentType(documentType);
         document.setIsAlive(true);
+        if(isDraft)
+            document.setState(DocumentState.DRAFT);
         Document documentSaved = documentRepository.save(document);
 
         DocumentVersion documentVersion = documentMapper.toDocumentVersion(createDocumentRequest);
         documentVersion.setDocument(documentSaved);
         documentVersion.setVersionId(1L);
         documentVersion.setCreatedAt(LocalDateTime.now());
-        documentVersion.setFilename(minioService.parseFilename(createDocumentRequest.getBase64Content()));
+        String filename = minioService.parseFilename(createDocumentRequest.getBase64Content());
+        filename = filename != null ? filename : createDocumentRequest.getTitle();
+        documentVersion.setFilename(filename);
         DocumentVersion documentVersionSaved = documentVersionRepository.save(documentVersion);
 
         setValues(createDocumentRequest.getValues(), documentVersionSaved);
@@ -304,10 +308,10 @@ public class DocumentService {
         Document document = documentRepository.findById(id)
                 .filter(d -> !d.getIsAlive())
                 .orElseThrow(() -> new NotFoundException("Deleted Document with id: " + id + " not found"));
-        if (!documentStateService.checkTransition(document, DocumentState.CREATED)) {
+        if (!documentStateService.checkTransition(document, DocumentState.DRAFT)) {
             throw new ConflictException("You cannot recover document with id: " + id + " check available transitions");
         }
-        document.setState(DocumentState.CREATED);
+        document.setState(DocumentState.DRAFT);
         document.setIsAlive(true);
         documentRepository.save(document);
     }
@@ -331,14 +335,19 @@ public class DocumentService {
                 .filter(Document::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
 
+        DocumentVersion lastDocumentVersion = document.getDocumentVersions().getLast();
+
         if (!documentStateService.checkTransition(document, DocumentState.MODIFIED)) {
             throw new ConflictException("You cannot modify document with id: " + id + " check available transitions");
         }
 
-        document.setState(DocumentState.MODIFIED);
         DocumentVersion documentVersion = documentVersionMapper.toDocumentVersion(createDocumentVersionRequest);
         documentVersion.setVersionId((long) document.getDocumentVersions().size() + 1);
         documentVersion.setCreatedAt(LocalDateTime.now());
+        documentVersion.setFilename(lastDocumentVersion.getFilename());
+        document.setState(DocumentState.MODIFIED);
+
+
         documentVersion.setDocument(document);
 
         CreateDocumentVersionResponse response = documentVersionMapper.toCreateDocumentVersionResponse(documentVersionRepository.save(documentVersion));
@@ -388,15 +397,13 @@ public class DocumentService {
      * @throws NotFoundException если версия документа с указанным ID не найдена
      */
     @Transactional
-    public CreateDocumentVersionResponse patchDocument(Long id, PatchDocumentVersionRequest request) {
+    public CreateDocumentVersionResponse patchDocument(Long id, Boolean isDone, PatchDocumentVersionRequest request) {
         Document document = documentRepository.findById(id).orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));
-        if (!documentStateService.checkTransition(document, DocumentState.MODIFIED)) {
+        if (!documentStateService.checkTransition(document, DocumentState.MODIFIED) && !document.getState().equals(DocumentState.DRAFT)) {
             throw new ConflictException("You cannot modify document with id: " + id + " check available transitions");
         }
 
-        document.setState(DocumentState.MODIFIED);
         DocumentVersion documentVersion = document.getDocumentVersions().getLast();
-
 
         DocumentVersion newVersion2 = new DocumentVersion();
         newVersion2.setDocument(document);
@@ -418,7 +425,18 @@ public class DocumentService {
 
         newVersion2.setDescription(documentVersion.getDescription());
         newVersion2.setCreatedAt(LocalDateTime.now());
+        newVersion2.setFilename(documentVersion.getFilename());
         newVersion2.setIsAlive(true);
+
+        if(!document.getState().equals(DocumentState.DRAFT))
+            document.setState(DocumentState.MODIFIED);
+        else {
+            if(isDone)
+                document.setState(DocumentState.CREATED);
+            newVersion2.setId(documentVersion.getId());
+            newVersion2.setVersionId(documentVersion.getId());
+        }
+
 
 
         DocumentVersion newVersion = documentVersionRepository.save(newVersion2);
