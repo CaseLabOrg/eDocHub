@@ -57,6 +57,7 @@ public class DocumentMapper {
         createDocumentResponse.setComments(document.getComments().stream()
                 .map(commentMapper::toAddCommentResponse)
                 .toList());
+        createDocumentResponse.setState(document.getState());
 
         return createDocumentResponse;
     }

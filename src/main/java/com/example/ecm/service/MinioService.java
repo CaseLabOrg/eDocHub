@@ -49,7 +49,7 @@ public class MinioService {
             String base64Content = request.getBase64Content();
 
             byte[] fileBytes = new byte[0];
-            String mimeType = null;
+            String mimeType = "application/octet-stream";
             String filename = null;
             if (base64Content != null && !base64Content.isEmpty()) {
                 String[] parts = base64Content.split(",");
@@ -63,8 +63,8 @@ public class MinioService {
             } else {
                 System.err.println("Base64-строка пуста, будет сохранена пустая строка.");
             }
-            if(filename == null || mimeType == null)
-                return false;
+            if(filename == null)
+                filename = request.getTitle();
             String fileKey = id + "_" + filename;
 
             minioClient.putObject(
