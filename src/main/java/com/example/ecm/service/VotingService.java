@@ -102,7 +102,8 @@ public class VotingService {
                     .count();
             voting.setCurrentApprovalRate(all / (float) inFavor);
 
-            if (LocalDateTime.now().isAfter(voting.getDeadline().atStartOfDay())) {
+            if (LocalDateTime.now().isEqual(voting.getDeadline().atStartOfDay()) ||
+                    LocalDateTime.now().isAfter(voting.getDeadline().atStartOfDay())) {
                 voting.setStatus("COMPLETED");
                 if (voting.getCurrentApprovalRate() >= voting.getApprovalThreshold()) {
                     voting.getDocumentVersion().getDocument().setState(DocumentState.APPROVED_BY_VOTING);
