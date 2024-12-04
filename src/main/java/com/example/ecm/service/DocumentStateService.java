@@ -4,19 +4,18 @@ import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.model.Document;
 import com.example.ecm.model.enums.DocumentState;
 import com.example.ecm.repository.DocumentRepository;
+import com.example.ecm.repository.SignatureRequestRepository;
 import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class DocumentStateService {
     private final DocumentRepository documentRepository;
+    private final SignatureRequestRepository signatureRequestRepository;
     private final Map<DocumentState, List<DocumentState>> transitionMap = new HashMap<>();
     {
         transitionMap.put(DocumentState.DRAFT, List.of(DocumentState.CREATED, DocumentState.DELETED, DocumentState.DRAFT));
@@ -40,7 +39,16 @@ public class DocumentStateService {
         }
 
         if (!userPrincipal.isAdmin()) {
-            document = document.filter(d -> d.getUser().getId().equals(userPrincipal.getId()));
+            document = document
+                    .filter(d ->
+                            Objects.equals(d.getUser().getId(), userPrincipal.getId())
+                                    ||
+                                    d.getDocumentVersions().stream()
+                                            .anyMatch(version ->
+                                                    signatureRequestRepository.existsByUserToIdAndDocumentVersionId(
+                                                            userPrincipal.getId(), version.getId()
+                                                    )
+                                            ));
         }
 
         Document doc = document.orElseThrow(() -> new NotFoundException("Document with id: " + id + " not found"));

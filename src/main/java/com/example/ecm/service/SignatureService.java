@@ -121,6 +121,7 @@ public class SignatureService {
         }
 
         if (signRequest.getStatus().equals(SignatureRequestState.REJECTED)) {
+            documentRepository.save(signRequest.getDocumentVersion().getDocument());
             return new GetSignatureResponse();
         }
 
