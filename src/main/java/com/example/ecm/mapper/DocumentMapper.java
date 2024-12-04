@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 public class DocumentMapper {
 
     private final DocumentTypeMapper documentTypeMapper;
+    private final DocumentVersionMapper documentVersionMapper;
     private final UserMapper userMapper;
     private final CommentMapper commentMapper;
     /**
@@ -52,6 +53,7 @@ public class DocumentMapper {
     public CreateDocumentResponse toCreateDocumentResponse(Document document) {
         CreateDocumentResponse createDocumentResponse = new CreateDocumentResponse();
         createDocumentResponse.setId(document.getId());
+        createDocumentResponse.setDocumentVersions(document.getDocumentVersions().stream().map(documentVersionMapper::toCreateDocumentVersionResponse).toList());
         createDocumentResponse.setUser(userMapper.toCreateUserResponse(document.getUser()));
         createDocumentResponse.setDocumentType(documentTypeMapper.toCreateDocumentTypeResponse(document.getDocumentType()));
         createDocumentResponse.setComments(document.getComments().stream()
