@@ -269,12 +269,7 @@ public class DocumentService {
 
     private CreateDocumentResponse getCreateDocumentResponse(Document document, CreateDocumentResponse response, UserPrincipal userPrincipal) {
         Stream<DocumentVersion> documentStream = document.getDocumentVersions().stream();
-        if (!userPrincipal.isAdmin()) {
-            documentStream = documentStream.filter(version ->
-                    Objects.equals(version.getDocument().getUser().getId(), userPrincipal.getId())
-                            ||
-                            signatureRequestRepository.existsByUserToIdAndDocumentVersionId(userPrincipal.getId(), version.getVersionId()));
-        }
+
         response.setDocumentVersions(documentStream
                 .map(version -> {
                     CreateDocumentVersionResponse versionResponse = documentVersionMapper.toCreateDocumentVersionResponse(version);

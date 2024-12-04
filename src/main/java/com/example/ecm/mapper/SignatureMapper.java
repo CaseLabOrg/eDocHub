@@ -59,7 +59,7 @@ public class SignatureMapper {
         response.setVotingId(votingId);
         response.setUserTo(userMapper.toCreateUserResponse(signatureRequest.getUserTo()));
         response.setDocumentId(signatureRequest.getDocumentVersion().getDocument().getId());
-        response.setDocumentVersionId(signatureRequest.getDocumentVersion().getId());
+        response.setDocumentVersionId(signatureRequest.getDocumentVersion().getVersionId());
         return response;
     }
 }

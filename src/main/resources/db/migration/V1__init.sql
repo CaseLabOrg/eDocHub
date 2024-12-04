@@ -14,8 +14,8 @@ CREATE TABLE Document_Types(
 );
 
 CREATE TABLE Document_Types_Attributes(
-                               id_attribute BIGSERIAL,
-                               id_document_type BIGSERIAL,
+                               id_attribute BIGINT,
+                               id_document_type BIGINT,
                                constraint Document_Types_Attributes_pk PRIMARY KEY(id_attribute, id_document_type)
 );
 
