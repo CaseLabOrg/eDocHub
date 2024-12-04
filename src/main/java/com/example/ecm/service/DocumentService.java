@@ -75,7 +75,7 @@ public class DocumentService {
         documentVersion.setVersionId(1L);
         documentVersion.setCreatedAt(LocalDateTime.now());
         String filename = minioService.parseFilename(createDocumentRequest.getBase64Content());
-        filename = filename != null ? filename : createDocumentRequest.getTitle();
+        filename = filename != null ? filename : "Untitled";
         documentVersion.setFilename(filename);
         DocumentVersion documentVersionSaved = documentVersionRepository.save(documentVersion);
 
