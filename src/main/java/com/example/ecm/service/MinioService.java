@@ -64,7 +64,7 @@ public class MinioService {
                 System.err.println("Base64-строка пуста, будет сохранена пустая строка.");
             }
             if(filename == null)
-                filename = request.getTitle();
+                filename = "Untitled";
             String fileKey = id + "_" + filename;
 
             minioClient.putObject(
