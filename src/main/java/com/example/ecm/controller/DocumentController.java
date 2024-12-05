@@ -173,8 +173,9 @@ public class DocumentController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "false") boolean ascending,
+            @RequestParam(defaultValue = "false") boolean showDraft,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return ResponseEntity.ok(documentService.getAllDocuments(page, size, ascending, isAlive, userPrincipal));
+        return ResponseEntity.ok(documentService.getAllDocuments(page, size, ascending, isAlive,userPrincipal, showDraft));
     }
 
     @GetMapping("/countDocuments")

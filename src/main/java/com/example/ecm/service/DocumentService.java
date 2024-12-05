@@ -171,7 +171,7 @@ public class DocumentService {
      *
      * @return список ответов с данными всех документов
      */
-    public List<CreateDocumentResponse> getAllDocuments(Integer page, Integer size, Boolean ascending, Boolean isAlive, UserPrincipal userPrincipal) {
+    public List<CreateDocumentResponse> getAllDocuments(Integer page, Integer size, Boolean ascending, Boolean isAlive, UserPrincipal userPrincipal, Boolean showDraft) {
 
         List<DocumentVersion> latestVersions = documentVersionRepository.findLatestDocumentVersions();
 
@@ -206,6 +206,13 @@ public class DocumentService {
                                             ));
         }
 
+        if (showDraft != null) {
+            if (showDraft) {
+                documentStream = documentStream.filter(document -> document.getState() == DocumentState.DRAFT);
+            } else {
+                documentStream = documentStream.filter(document -> document.getState() != DocumentState.DRAFT);
+            }
+        }
 
         List<Document> filteredDocuments = documentStream.toList();
 
