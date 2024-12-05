@@ -19,7 +19,7 @@ public class Value {
     private Attribute attribute;
 
     @JsonIgnore
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "document_version_id")
     private DocumentVersion documentVersion;
 

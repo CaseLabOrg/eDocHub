@@ -380,7 +380,7 @@ public class DocumentService {
      * @throws NotFoundException если атрибут с указанным именем не найден
      */
     private void setValues(List<SetValueRequest> values, DocumentVersion documentVersion) {
-        System.out.println(values.toString());
+        Map<Attribute, Value> currentValues =  documentVersion.getValues();
         for (SetValueRequest newValue : values) {
             Attribute attribute = attributeRepository.findByName(newValue.getAttributeName())
                     .orElseThrow(() -> new NotFoundException("Attribute with name: " + newValue.getAttributeName() + " not found"));
@@ -388,9 +388,10 @@ public class DocumentService {
             value.setAttribute(attribute);
             value.setDocumentVersion(documentVersion);
             value.setValue(newValue.getValue());
-            valueRepository.save(value);
+            value = valueRepository.save(value);
+            currentValues.put(attribute, value);
         }
-        System.out.println(documentVersion.getValues().toString());
+        documentVersion.setValues(currentValues);
     }
 
     /**
@@ -415,8 +416,20 @@ public class DocumentService {
         DocumentVersion documentVersion = document.getDocumentVersions().getLast();
 
         DocumentVersion newVersion2 = new DocumentVersion();
-        newVersion2.setDocument(document);
-        newVersion2.setVersionId(documentVersion.getVersionId() + 1);
+        if(!document.getState().equals(DocumentState.DRAFT)) {
+            document.setState(DocumentState.MODIFIED);
+            newVersion2.setDocument(document);
+            newVersion2.setVersionId(documentVersion.getVersionId() + 1);
+            newVersion2.setDescription(documentVersion.getDescription());
+            newVersion2.setCreatedAt(LocalDateTime.now());
+            newVersion2.setFilename(documentVersion.getFilename());
+            newVersion2.setIsAlive(true);
+        }
+        else {
+            if(isDone)
+                document.setState(DocumentState.CREATED);
+            newVersion2 = documentVersion;
+        }
 
         if (request.getTitle() != null) {
             newVersion2.setTitle(request.getTitle());
@@ -432,20 +445,6 @@ public class DocumentService {
                     return setValueRequest;
                 }).toList(), newVersion2);
 
-        newVersion2.setDescription(documentVersion.getDescription());
-        newVersion2.setCreatedAt(LocalDateTime.now());
-        newVersion2.setFilename(documentVersion.getFilename());
-        newVersion2.setIsAlive(true);
-
-        if(!document.getState().equals(DocumentState.DRAFT))
-            document.setState(DocumentState.MODIFIED);
-        else {
-            if(isDone)
-                document.setState(DocumentState.CREATED);
-            newVersion2.setId(documentVersion.getId());
-            newVersion2.setVersionId(documentVersion.getVersionId());
-        }
-
 
 
         DocumentVersion newVersion = documentVersionRepository.save(newVersion2);
@@ -459,14 +458,14 @@ public class DocumentService {
             CreateDocumentVersionRequest requestDocumentVersion = documentVersionMapper.toCreateDocumentVersionRequest(newVersion, minioService.getBase64DocumentByName(documentVersion.getId() + "_" + documentVersion.getFilename()));
             newVersion.setTitle(request.getTitle());
             requestDocumentVersion.setTitle(newVersion.getTitle());
-            minioService.addDocument(newVersion.getId(), requestDocumentVersion);
         }
 
-        if (request.getBase64Content() != null) {
+        if (request.getBase64Content() != null && !request.getBase64Content().isEmpty()) {
             minioService.addDocument(newVersion.getId(), documentVersionMapper.toCreateDocumentVersionRequest(newVersion, request.getBase64Content()));
         } else {
             minioService.addDocument(newVersion.getId(), documentVersionMapper.toCreateDocumentVersionRequest(newVersion, minioService.getBase64DocumentByName(documentVersion.getId() + "_" + newVersion.getFilename())));
         }
+
         if (request.getValues() != null) {
             setValues(request.getValues(), newVersion);
         }
