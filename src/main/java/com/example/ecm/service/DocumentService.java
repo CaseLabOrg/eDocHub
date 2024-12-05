@@ -235,7 +235,7 @@ public class DocumentService {
         ).getContent();
     }
 
-    public int getCountDocuments(Boolean showOnlyAlive, UserPrincipal userPrincipal) {
+    public int getCountDocuments(Boolean showOnlyAlive, UserPrincipal userPrincipal, Boolean showDraft) {
 
         List<DocumentVersion> latestVersions = documentVersionRepository.findLatestDocumentVersions();
 
@@ -254,6 +254,13 @@ public class DocumentService {
             documentStream = documentStream.filter(Document::getIsAlive);
         } else {
             documentStream = documentStream.filter(document -> document.getIsAlive().equals(Boolean.FALSE));
+        }
+        if (showDraft != null) {
+            if (showDraft) {
+                documentStream = documentStream.filter(document -> document.getState() == DocumentState.DRAFT);
+            } else {
+                documentStream = documentStream.filter(document -> document.getState() != DocumentState.DRAFT);
+            }
         }
 
         if (!userPrincipal.isAdmin()) {
