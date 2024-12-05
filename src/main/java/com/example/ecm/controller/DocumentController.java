@@ -181,8 +181,9 @@ public class DocumentController {
     @GetMapping("/countDocuments")
     public int getCountDocuments(
             @RequestParam(defaultValue = "true") Boolean isAlive,
-            @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return documentService.getCountDocuments(isAlive, userPrincipal);
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @RequestParam(defaultValue = "false") boolean showDraft) {
+        return documentService.getCountDocuments(isAlive, userPrincipal, showDraft);
     }
 
 
