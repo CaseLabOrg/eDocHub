@@ -109,7 +109,7 @@ public class MinioService {
                     .contentType();
 
             String base64Content = Base64.getEncoder().encodeToString(fileBytes);
-            return "filename:" + name.substring(name.indexOf('_') + 1) + ";data:" + mimeType + ";base64," + base64Content;
+            return base64Content != null && !base64Content.isEmpty() ? "filename:" + name.substring(name.indexOf('_') + 1) + ";data:" + mimeType + ";base64," + base64Content : null;
 
         } catch (Exception e) {
             e.printStackTrace();
