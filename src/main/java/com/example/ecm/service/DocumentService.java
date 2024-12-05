@@ -443,7 +443,7 @@ public class DocumentService {
             if(isDone)
                 document.setState(DocumentState.CREATED);
             newVersion2.setId(documentVersion.getId());
-            newVersion2.setVersionId(documentVersion.getId());
+            newVersion2.setVersionId(documentVersion.getVersionId());
         }
 
 
