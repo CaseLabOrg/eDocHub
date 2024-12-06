@@ -10,20 +10,14 @@ INSERT INTO subscriptions (plan_id, tenant_id, status)
 VALUES
     (1, 1, 'INACTIVE'),
     (2, 2, 'INACTIVE'),
-    (3, 1, 'INACTIVE'),
-    (3, 3, 'INACTIVE'),
-    (2, 3, 'INACTIVE'),
-    (1, 2, 'INACTIVE');
+    (3, 3, 'INACTIVE');
 
 -- Insert into invoices
 INSERT INTO invoices(subscription_id, description, amount, status, created_date)
 VALUES
     (1, 'Test', 1000, 'AWAITING_PAYMENT', '2024-11-25'),
     (2, 'Test', 2000, 'AWAITING_PAYMENT', '2024-11-25'),
-    (3, 'Test', 1000, 'AWAITING_PAYMENT', '2024-11-26'),
-    (4, 'Test', 2920, 'AWAITING_PAYMENT', '2024-11-27'),
-    (5, 'Test', 2920, 'AWAITING_PAYMENT', '2024-11-27'),
-    (6, 'Test', 2000, 'AWAITING_PAYMENT', '2024-11-27');
+    (3, 'Test', 1000, 'AWAITING_PAYMENT', '2024-11-26');
 
 -- Insert into Departments
 INSERT INTO Departments (name, is_alive)

@@ -58,15 +58,13 @@ public class UserController {
      * @param tenantId          Идентификатор тенанта.
      * @return DTO с данными созданного администратора.
      */
-    @PreAuthorize("hasAnyAuthority('SUPER_ADMIN', 'OWNER')")
+    @PreAuthorize("hasAnyAuthority('OWNER')")
     @PostMapping("/createAdmin")
     @Operation(summary = "Создать администратора", description = "Создает нового администратора в указанной тенантной среде.")
     @ApiResponse(responseCode = "200", description = "Администратор успешно создан")
     public ResponseEntity<CreateUserResponse> createAdminUser(
-            @Valid @RequestBody CreateUserRequest createUserRequest,
-            @AuthenticationPrincipal UserPrincipal userPrincipal,
-            Long tenantId) {
-        CreateUserResponse userResponse = userService.createUserAdmin(createUserRequest, tenantId);
+            @Valid @RequestBody CreateUserRequest createUserRequest) {
+        CreateUserResponse userResponse = userService.createUserAdmin(createUserRequest);
         return ResponseEntity.ok(userResponse);
     }
 
@@ -114,8 +112,8 @@ public class UserController {
     @Operation(summary = "Получить всех пользователей", description = "Возвращает список всех пользователей.")
     @ApiResponse(responseCode = "200", description = "Список пользователей успешно возвращен")
     @GetMapping
-    public ResponseEntity<List<CreateUserResponse>> getAllUsers(@RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
-        List<CreateUserResponse> users = userService.getAllUsers(showOnlyAlive);
+    public ResponseEntity<List<CreateUserResponse>> getAllUsers(@RequestParam(defaultValue = "true") Boolean showOnlyAlive, @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        List<CreateUserResponse> users = userService.getAllUsers(showOnlyAlive, userPrincipal);
         return ResponseEntity.ok(users);
     }
 

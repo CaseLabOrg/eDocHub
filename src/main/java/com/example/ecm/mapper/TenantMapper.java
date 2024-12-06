@@ -21,6 +21,7 @@ public class TenantMapper {
 
     public TenantResponse toTenantResponse(Tenant tenant) {
         TenantResponse tenantResponse = new TenantResponse();
+        tenantResponse.setId(tenant.getId());
         tenantResponse.setCreatedAt(tenant.getCreatedAt());
         tenantResponse.setName(tenant.getName());
         tenantResponse.setAlive(tenant.getIsAlive());

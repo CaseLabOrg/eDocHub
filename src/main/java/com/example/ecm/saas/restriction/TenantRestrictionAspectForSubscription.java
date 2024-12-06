@@ -1,5 +1,6 @@
 package com.example.ecm.saas.restriction;
 
+import com.example.ecm.exception.ForbiddenException;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.model.Invoice;
 import com.example.ecm.model.Subscription;
@@ -35,14 +36,14 @@ public class TenantRestrictionAspectForSubscription {
         if (hasAccess(joinPoint)) {
             return joinPoint.proceed();
         } else {
-            throw new SecurityException("Доступ запрещен: у вас нет прав на этот ресурс.");
+            throw new ForbiddenException("Доступ запрещен: у вас нет прав на этот ресурс.");
         }
     }
 
     private boolean hasAccess(ProceedingJoinPoint joinPoint) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal userPrincipal)) {
-            throw new SecurityException("Ошибка авторизации: пользователь не найден.");
+            throw new ForbiddenException("Ошибка авторизации: пользователь не найден.");
         }
 
         if (userPrincipal.isAdmin()) {

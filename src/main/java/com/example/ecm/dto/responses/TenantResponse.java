@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Setter
 public class TenantResponse {
 
+    private Long id;
     private String name;
     private LocalDateTime createdAt;
     private CreateSubscriptionResponse subscription;
