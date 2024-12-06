@@ -158,10 +158,11 @@ public class DocumentController {
     @GetMapping
     public ResponseEntity<List<CreateDocumentResponse>> getAllDocuments(
             @RequestParam(defaultValue = "true") Boolean showOnlyAlive,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "false") boolean ascending) {
-        return ResponseEntity.ok(documentService.getAllDocuments(page, size, ascending, showOnlyAlive));
+        return ResponseEntity.ok(documentService.getAllDocuments(page, size, ascending, showOnlyAlive, userPrincipal));
     }
 
     /**

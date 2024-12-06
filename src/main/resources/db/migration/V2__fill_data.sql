@@ -6,24 +6,24 @@ VALUES
 ('Test10', 'Plan test for 10 users', 2920, 10);
 
 -- Insert into subscriptions
-INSERT INTO subscriptions (tenant_id, status)
-VALUES 
-(1, 'INACTIVE'),
-(2, 'INACTIVE'),
-(1, 'INACTIVE'),
-(3, 'INACTIVE'),
-(3, 'INACTIVE'),
-(2, 'INACTIVE');
+INSERT INTO subscriptions (plan_id, tenant_id, status)
+VALUES
+    (1, 1, 'INACTIVE'),
+    (2, 2, 'INACTIVE'),
+    (3, 1, 'INACTIVE'),
+    (3, 3, 'INACTIVE'),
+    (2, 3, 'INACTIVE'),
+    (1, 2, 'INACTIVE');
 
 -- Insert into invoices
-INSERT INTO invoices(description, amount, status, created_date)
-VALUES 
-('Test', 1000, 'AWAITING_PAYMENT', '2024-11-25'),
-('Test', 2000, 'AWAITING_PAYMENT', '2024-11-25'),
-('Test', 1000, 'AWAITING_PAYMENT', '2024-11-26'),
-('Test', 2920, 'AWAITING_PAYMENT', '2024-11-27'),
-('Test', 2920, 'AWAITING_PAYMENT', '2024-11-27'),
-('Test', 2000, 'AWAITING_PAYMENT', '2024-11-27');
+INSERT INTO invoices(subscription_id, description, amount, status, created_date)
+VALUES
+    (1, 'Test', 1000, 'AWAITING_PAYMENT', '2024-11-25'),
+    (2, 'Test', 2000, 'AWAITING_PAYMENT', '2024-11-25'),
+    (3, 'Test', 1000, 'AWAITING_PAYMENT', '2024-11-26'),
+    (4, 'Test', 2920, 'AWAITING_PAYMENT', '2024-11-27'),
+    (5, 'Test', 2920, 'AWAITING_PAYMENT', '2024-11-27'),
+    (6, 'Test', 2000, 'AWAITING_PAYMENT', '2024-11-27');
 
 -- Insert into Departments
 INSERT INTO Departments (name, is_alive)
@@ -47,16 +47,16 @@ VALUES
 -- Insert into Users (Some tenants have many users, others few)
 INSERT INTO Users (department_id, name, surname, email, password, is_alive, tenant_id)
 VALUES
-(1, 'admin', 'admin', 'admin@example.com', 'pass123', TRUE, 1),
-(1, 'Bob', 'Brown', 'bob.brown@example.com', 'pass234', TRUE, 1),
-(2, 'Charlie', 'Johnson', 'charlie.j@example.com', 'pass345', TRUE, 1),
-(NULL, 'Dana', 'White', 'dana.w@example.com', 'pass456', FALSE, 2),
-(3, 'Eve', 'Green', 'eve.g@example.com', 'pass567', TRUE, 3),
-(NULL, 'Frank', 'Miller', 'frank.m@example.com', 'pass678', FALSE, 4),
-(4, 'Gina', 'James', 'gina.j@example.com', 'pass789', TRUE, 4),
-(4, 'Hank', 'Gray', 'hank.g@example.com', 'pass890', TRUE, 4),
-(5, 'Ivy', 'Brown', 'ivy.b@example.com', 'pass901', TRUE, 6),
-(NULL, 'Jack', 'Hill', 'jack.h@example.com', 'pass012', TRUE, 6);
+(1, 'admin', 'admin', 'admin', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', TRUE, 1),
+(1, 'Bob', 'Brown', 'bob.brown@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', TRUE, 1),
+(2, 'Charlie', 'Johnson', 'charlie.j@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', TRUE, 1),
+(NULL, 'Dana', 'White', 'dana.w@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', FALSE, 2),
+(3, 'Eve', 'Green', 'eve.g@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', TRUE, 3),
+(NULL, 'Frank', 'Miller', 'frank.m@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', FALSE, 4),
+(4, 'Gina', 'James', 'gina.j@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', TRUE, 4),
+(4, 'Hank', 'Gray', 'hank.g@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', TRUE, 4),
+(5, 'Ivy', 'Brown', 'ivy.b@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', TRUE, 6),
+(NULL, 'Jack', 'Hill', 'jack.h@example.com', '$2a$12$7bm52CEAOmLGDdHzlo9ZFulaFzejGYHqxOfFeSNYxv.jEAMTK5WXa', TRUE, 6);
 
 -- Insert into Document_Types (Skewed distribution)
 INSERT INTO Document_Types (name, is_alive, tenant_id)

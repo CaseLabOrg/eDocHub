@@ -4,13 +4,13 @@ CREATE TABLE Tenants (
                          name TEXT NOT NULL,
                          created_at TIMESTAMP NOT NULL,
                          is_alive BOOLEAN,
-                         owner_id BIGSERIAL NOT NULL
+                         owner_id BIGINT
 );
 
 
 CREATE TABLE Users (
                        id BIGSERIAL PRIMARY KEY,
-                       department_id BIGSERIAL,
+                       department_id BIGINT,
                        name VARCHAR(255) NOT NULL,
                        surname VARCHAR(255) NOT NULL,
                        email VARCHAR(255) NOT NULL UNIQUE,
@@ -36,8 +36,8 @@ CREATE TABLE Document_Types(
 );
 
 CREATE TABLE Document_Types_Attributes(
-                                          id_attribute BIGSERIAL,
-                                          id_document_type BIGSERIAL,
+                                          id_attribute BIGINT,
+                                          id_document_type BIGINT,
                                           constraint Document_Types_Attributes_pk PRIMARY KEY(id_attribute, id_document_type)
 );
 
@@ -159,15 +159,15 @@ CREATE TABLE Departments (
 );
 CREATE TABLE Department_Departments (
                              id BIGSERIAL PRIMARY KEY,
-                             root_id BIGSERIAL NOT NULL,
-                             children_id BIGSERIAL
+                             root_id BIGINT NOT NULL,
+                             children_id BIGINT
 );
 ALTER TABLE users ALTER COLUMN department_id DROP NOT NULL;
 
 CREATE TABLE User_Replacements (
                                    id BIGSERIAL PRIMARY KEY,
-                                   predecessor_id BIGSERIAL NOT NULL,
-                                   successor_id BIGSERIAL NOT NULL,
+                                   predecessor_id BIGINT NOT NULL,
+                                   successor_id BIGINT NOT NULL,
                                    until TIMESTAMP NOT NULL,
                                    CONSTRAINT fk_predecessor FOREIGN KEY (predecessor_id) REFERENCES Users(id),
                                    CONSTRAINT fk_successor FOREIGN KEY (successor_id) REFERENCES Users(id)
