@@ -1,6 +1,7 @@
 package com.example.ecm.aop;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -11,7 +12,9 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Aspect
 @Component
+@RequiredArgsConstructor
 public class Log {
+    private final ObjectMapper mapper;
 
     @Pointcut("@annotation(Loggable)")
     public void logExecutionTimeMethod() {
@@ -26,7 +29,6 @@ public class Log {
         long start = System.currentTimeMillis();
 
         Object proceed = joinPoint.proceed();
-        ObjectMapper objectMapper = new ObjectMapper();
 
         long executionTime = System.currentTimeMillis() - start;
 
@@ -34,7 +36,7 @@ public class Log {
                 joinPoint.getSignature().getName(),
                 joinPoint.getTarget().getClass().getSimpleName(),
                 executionTime,
-                objectMapper.writeValueAsString(joinPoint.getArgs()));
+                mapper.writeValueAsString(joinPoint.getArgs()));
 
         return proceed;
     }
