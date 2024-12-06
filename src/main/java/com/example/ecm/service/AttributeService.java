@@ -153,4 +153,17 @@ public class AttributeService {
 
         return attributeMapper.toAttributeResponse(attributeRepository.save(attribute));
     }
+
+    /**
+     * Подсчет общего количества атрибутов
+     * @param showOnlyAlive Флаг, показывающий, считать ли только активные атрибуты
+     * @return количество атрибутов
+     */
+    public int getCountAttributes(Boolean showOnlyAlive) {
+        Stream<Attribute> attributeStream = attributeRepository.findAll().stream();
+        if(showOnlyAlive)
+            attributeStream = attributeStream.filter(Attribute::getIsAlive);
+
+        return attributeStream.toList().size();
+    }
 }

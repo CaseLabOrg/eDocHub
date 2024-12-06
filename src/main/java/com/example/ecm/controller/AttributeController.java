@@ -139,4 +139,18 @@ public class AttributeController {
         CreateAttributeResponse response = attributeService.patchAttribute(id, request);
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * Получить количество атрибутов
+     * @param showOnlyAlive Флаг, показывающий, считать ли только активные атрибуты (по умолчанию true).
+     * @return количество атрибутов
+     */
+    @GetMapping("/countAttributes")
+    @Operation(summary = "Подсчет всех атрибутов", description = "Возвращает общее количество атрибутов")
+    public int getCountAttributes(
+            @RequestParam(defaultValue = "true")
+            @Parameter(description = "Считать только активные атрибуты")
+            Boolean showOnlyAlive) {
+        return attributeService.getCountAttributes(showOnlyAlive);
+    }
 }
