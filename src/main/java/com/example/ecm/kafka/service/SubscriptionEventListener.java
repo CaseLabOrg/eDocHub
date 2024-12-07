@@ -28,13 +28,13 @@ public class SubscriptionEventListener {
     public void listenStatusUpdateEvent(SubscriptionStatusUpdateEvent event) {
         Subscription subscription = subscriptionRepository.findById(event.getSubscriptionId())
                 .orElseThrow(() -> new RuntimeException("Subscription not found"));
+        subscription.setStatus(event.getStatus());
+        subscriptionRepository.save(subscription);
         if(event.getStatus() == SubscriptionStatus.PAUSED)
             kafkaTemplate.send("subscription-paused-events", new SubscriptionPausedEvent(subscription.getId()));
         else if(event.getStatus() == SubscriptionStatus.ACTIVE) {
             kafkaTemplate.send("subscription-activated-events", new SubscriptionActivatedEvent(subscription.getId()));
         }
-        subscription.setStatus(event.getStatus());
-        subscriptionRepository.save(subscription);
     }
 
     @KafkaListener(topics = "subscription-create-events", groupId = "default", containerFactory = "kafkaListenerContainerFactory")

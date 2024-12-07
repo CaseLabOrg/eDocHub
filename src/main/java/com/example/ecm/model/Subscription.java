@@ -23,7 +23,6 @@ public class Subscription {
     private Plan plan;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private SubscriptionStatus status;
 
     @OneToOne
