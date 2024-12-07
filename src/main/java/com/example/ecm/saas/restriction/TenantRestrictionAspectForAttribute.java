@@ -1,5 +1,6 @@
 package com.example.ecm.saas.restriction;
 
+import com.example.ecm.exception.ForbiddenException;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.model.Attribute;
 import com.example.ecm.repository.AttributeRepository;
@@ -37,7 +38,7 @@ public class TenantRestrictionAspectForAttribute {
         if (hasAccess(joinPoint)) {
             return joinPoint.proceed();
         } else {
-            throw new SecurityException("Доступ запрещен: у вас нет прав на этот ресурс.");
+            throw new ForbiddenException("Доступ запрещен: у вас нет прав на этот ресурс.");
         }
     }
 
@@ -45,7 +46,7 @@ public class TenantRestrictionAspectForAttribute {
         Long resourceTenantId = getResourceTenantId(joinPoint.getArgs());
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal userPrincipal)) {
-            throw new SecurityException("Ошибка авторизации: пользователь не найден.");
+            throw new ForbiddenException("Ошибка авторизации: пользователь не найден.");
         }
 
         if (userPrincipal.isAdmin()) {

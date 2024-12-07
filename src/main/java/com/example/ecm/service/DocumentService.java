@@ -167,8 +167,7 @@ public class DocumentService {
      *
      * @return список ответов с данными всех документов
      */
-    public List<CreateDocumentResponse> getAllDocuments(Integer page, Integer size, Boolean ascending, Boolean showOnlyAlive) {
-        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+    public List<CreateDocumentResponse> getAllDocuments(Integer page, Integer size, Boolean ascending, Boolean showOnlyAlive, UserPrincipal userPrincipal) {
         List<DocumentVersion> latestVersions = documentVersionRepository.findLatestDocumentVersions();
 
         latestVersions.sort(Comparator.comparing(DocumentVersion::getCreatedAt)

@@ -19,6 +19,7 @@ import java.util.List;
 @Setter
 public class Attribute {
 
+
     /** Уникальный идентификатор атрибута */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

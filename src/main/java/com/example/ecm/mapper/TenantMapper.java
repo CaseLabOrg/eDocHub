@@ -9,7 +9,9 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 
 @Component
+@RequiredArgsConstructor
 public class TenantMapper {
+    private final SubscriptionMapper subscriptionMapper;
 
     public Tenant toTenant(CreateTenantRequest request) {
         Tenant tenant = new Tenant();
@@ -17,13 +19,20 @@ public class TenantMapper {
         tenant.setCreatedAt(LocalDateTime.now());
         tenant.setIsAlive(true);
         return tenant;
+
     }
 
     public TenantResponse toTenantResponse(Tenant tenant) {
         TenantResponse tenantResponse = new TenantResponse();
+        tenantResponse.setId(tenant.getId());
         tenantResponse.setCreatedAt(tenant.getCreatedAt());
         tenantResponse.setName(tenant.getName());
         tenantResponse.setAlive(tenant.getIsAlive());
+        if (tenant.getSubscription() != null) {
+            tenantResponse.setSubscription(subscriptionMapper.toCreateSubscriptionResponse(tenant.getSubscription()));
+        } else {
+            tenantResponse.setSubscription(null);
+        }
         return tenantResponse;
     }
 }

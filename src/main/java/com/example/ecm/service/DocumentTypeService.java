@@ -14,8 +14,6 @@ import com.example.ecm.saas.TenantContext;
 import com.example.ecm.saas.annotation.TenantRestrictedForDocumentType;
 import com.example.ecm.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,7 +27,6 @@ public class DocumentTypeService {
     private final AttributeRepository attributeRepository;
     private final DocumentTypeMapper documentTypeMapper;
     private final TenantRepository tenantRepository;
-    private final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     /**
      * Создает новый тип документа.
      *
@@ -37,10 +34,11 @@ public class DocumentTypeService {
      * @return ответ с данными созданного типа документа
      */
     public CreateDocumentTypeResponse createDocumentType(CreateDocumentTypeRequest request) {
-        DocumentType documentType = documentTypeRepository.save(documentTypeMapper.toDocumentType(request));
+        DocumentType rawType = documentTypeMapper.toDocumentType(request);
+        rawType.setTenant(tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow( () -> new NotFoundException("Tenant not found")));
         List<Attribute> attributes = attributeRepository.findAttributesByIdIsIn(request.getAttributeIds());
-        documentType.setAttributes(attributes);
-        documentType.setTenant(tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow( () -> new NotFoundException("Tenant not found")));
+        rawType.setAttributes(attributes);
+        DocumentType documentType = documentTypeRepository.save(rawType);
         return documentTypeMapper.toCreateDocumentTypeResponse(documentType);
     }
 
@@ -69,9 +67,8 @@ public class DocumentTypeService {
      * @return список ответов с данными всех типов документов
      */
 
-    public List<CreateDocumentTypeResponse> getAllDocumentTypes(Boolean showOnlyAlive) {
+    public List<CreateDocumentTypeResponse> getAllDocumentTypes(Boolean showOnlyAlive, UserPrincipal userPrincipal) {
         Stream<DocumentType> documentTypeStream = documentTypeRepository.findAll().stream();
-        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
         if (showOnlyAlive) {
             documentTypeStream = documentTypeStream.filter(DocumentType::getIsAlive);

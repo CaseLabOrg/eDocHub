@@ -7,7 +7,6 @@ import com.example.ecm.dto.responses.CreateDocumentTypeResponse;
 import com.example.ecm.security.UserPrincipal;
 import com.example.ecm.service.DocumentTypeService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
@@ -75,8 +74,8 @@ public class DocumentTypeController {
     @ApiResponse(responseCode = "200", description = "Успешное получение списка типов документов")
     @GetMapping
     public List<CreateDocumentTypeResponse> getAllDocumentTypes(
-            @RequestParam(defaultValue = "true") Boolean showOnlyAlive) {
-        return documentTypeService.getAllDocumentTypes(showOnlyAlive);
+            @RequestParam(defaultValue = "true") Boolean showOnlyAlive, @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return documentTypeService.getAllDocumentTypes(showOnlyAlive, userPrincipal);
     }
 
     /**

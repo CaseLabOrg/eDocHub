@@ -8,11 +8,9 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -46,7 +44,7 @@ public class SubscriptionController {
 
     @Operation(
             summary = "Pause subscription by id",
-            tags = {"Subscriptions", "SUPER_ADMIN"},
+            tags = {"Subscriptions"},
             parameters = {
                     @Parameter(name = "id", description = "Subscription id", required = true)
             }
@@ -65,7 +63,7 @@ public class SubscriptionController {
 
     @Operation(
             summary = "Activate subscription by id",
-            tags = {"Subscriptions", "SUPER_ADMIN"},
+            tags = {"Subscriptions"},
             parameters = {
                     @Parameter(name = "id", description = "Subscription id", required = true)
             }

@@ -14,6 +14,6 @@ public class TenantEventListener {
 
     @KafkaListener(topics = "tenant-created-events", groupId = "default", containerFactory = "kafkaListenerContainerFactory")
     public void listenTenantCreatedEvent(TenantCreatedEvent event) {
-        kafkaTemplate.send("subscription-create-event", new SubscriptionCreateEvent(event.getTenantId()));
+        kafkaTemplate.send("subscription-create-events", new SubscriptionCreateEvent(event.getTenantId()));
     }
 }

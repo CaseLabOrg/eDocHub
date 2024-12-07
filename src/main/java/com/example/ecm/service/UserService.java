@@ -44,7 +44,6 @@ public class UserService {
     private final PasswordEncoder encoder;
     private final TenantRepository tenantRepository;
     private final PlanRepository planRepository;
-    private final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     private final DepartmentService departmentService;
     private final UserReplacementsRepository userReplacementsRepository;
 
@@ -71,7 +70,7 @@ public class UserService {
 
 
     @Transactional
-    public CreateUserResponse createUserAdmin(CreateUserRequest createUserRequest, Long tenantId) {
+    public CreateUserResponse createUserAdmin(CreateUserRequest createUserRequest) {
         checkPlan();
         User user = userMapper.toUser(createUserRequest);
 
@@ -81,6 +80,7 @@ public class UserService {
         user.setPassword(encoder.encode(createUserRequest.getPassword()));
         User savedUser = userRepository.save(user);
 
+
         return userMapper.toCreateUserResponse(savedUser);
     }
 
@@ -89,7 +89,7 @@ public class UserService {
         checkPlan();
         User user = userMapper.toUser(createUserRequest);
 
-        user.setTenant(tenantRepository.findById(TenantContext.getCurrentTenantId()).orElseThrow(() -> new NotFoundException("Tenant not found")));
+        user.setTenant(tenantRepository.findById(tenantId).orElseThrow(() -> new NotFoundException("Tenant not found")));
 
         user.setRoles(Set.of(
                 roleRepository.findByName("OWNER").orElseThrow(() -> new NotFoundException("Role with name: OWNER not found")),
@@ -155,9 +155,8 @@ public class UserService {
      * @return Список DTO с данными пользователей
      */
     @TenantRestrictedForUser
-    public List<CreateUserResponse> getAllUsers(Boolean showOnlyALive) {
+    public List<CreateUserResponse> getAllUsers(Boolean showOnlyALive, UserPrincipal userPrincipal) {
         Stream<User> userStream = userRepository.findAll().stream();
-        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
         if (showOnlyALive) {
             userStream = userStream.filter(User::getIsAlive);
