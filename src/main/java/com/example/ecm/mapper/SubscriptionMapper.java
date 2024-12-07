@@ -22,10 +22,8 @@ public class SubscriptionMapper {
     private final UserMapper userMapper;
     private final PlanMapper planMapper;
 
-    public Subscription toSubscription(Long planId) {
+    public Subscription toSubscription(Long planId, Tenant tenant) {
         Subscription subscription = new Subscription();
-        Tenant tenant = tenantRepository.findById(TenantContext.getCurrentTenantId())
-                .orElseThrow(() ->  new NotFoundException(ExceptionMessage.ENTITY_NOT_FOUND.generateNotFoundEntityMessage("Tenant", TenantContext.getCurrentTenantId())));
         Plan plan = planRepository.findById(planId)
                 .orElseThrow(() ->  new NotFoundException(ExceptionMessage.ENTITY_NOT_FOUND.generateNotFoundEntityMessage("Plan", planId)));
         tenant.setSubscription(subscription);

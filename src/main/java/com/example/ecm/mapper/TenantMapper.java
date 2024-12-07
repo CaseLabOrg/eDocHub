@@ -28,7 +28,11 @@ public class TenantMapper {
         tenantResponse.setCreatedAt(tenant.getCreatedAt());
         tenantResponse.setName(tenant.getName());
         tenantResponse.setAlive(tenant.getIsAlive());
-        tenantResponse.setSubscription(subscriptionMapper.toCreateSubscriptionResponse(tenant.getSubscription()));
+        if (tenant.getSubscription() != null) {
+            tenantResponse.setSubscription(subscriptionMapper.toCreateSubscriptionResponse(tenant.getSubscription()));
+        } else {
+            tenantResponse.setSubscription(null);
+        }
         return tenantResponse;
     }
 }

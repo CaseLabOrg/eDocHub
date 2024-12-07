@@ -42,7 +42,7 @@ public class SubscriptionEventListener {
         Tenant tenant = tenantRepository.findById(event.getTenantId())
                 .orElseThrow(() -> new NotFoundException(ExceptionMessage.ENTITY_NOT_FOUND.generateNotFoundEntityMessage("Tenant", event.getTenantId())));
 
-        Subscription subscription = subscriptionMapper.toSubscription(1L);
+        Subscription subscription = subscriptionMapper.toSubscription(1L, tenant);
         subscription.setStatus(SubscriptionStatus.INACTIVE);
         subscription.setTenant(tenant);
 
