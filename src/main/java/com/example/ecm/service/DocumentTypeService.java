@@ -3,6 +3,7 @@ package com.example.ecm.service;
 import com.example.ecm.dto.patch_requests.PatchDocumentTypeRequest;
 import com.example.ecm.dto.requests.CreateDocumentTypeRequest;
 import com.example.ecm.dto.responses.CreateDocumentTypeResponse;
+import com.example.ecm.exception.AttributeAlreadyExistsException;
 import com.example.ecm.exception.IsDeadException;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.mapper.DocumentTypeMapper;
@@ -38,6 +39,10 @@ public class DocumentTypeService {
             if (attribute.getIsAlive().equals(Boolean.FALSE)) {
                 throw new IsDeadException("Attribute is dead");
             }
+
+            if (documentType.getAttributes().contains(attribute)) {
+                throw new AttributeAlreadyExistsException("Attribute with id " + attribute.getId() + " is already associated with the DocumentType.");
+            }
         }
 
         documentType.setAttributes(attributes);
@@ -58,8 +63,15 @@ public class DocumentTypeService {
         documentType = documentType.filter(x -> x.getIsAlive().equals(showOnlyAlive));
 
         return documentType
-                .map(documentTypeMapper::toCreateDocumentTypeResponse)
+                .map(dt -> {
+                    List<Attribute> filteredAttributes = dt.getAttributes().stream()
+                            .filter(Attribute::getIsAlive)
+                            .toList();
+                    dt.setAttributes(filteredAttributes);
+                    return documentTypeMapper.toCreateDocumentTypeResponse(dt);
+                })
                 .orElseThrow(() -> new NotFoundException("DocumentType with id: " + id + " not found"));
+
     }
 
     /**
@@ -73,7 +85,13 @@ public class DocumentTypeService {
 
 
         return documentTypeStream
-                .map(documentTypeMapper::toCreateDocumentTypeResponse)
+                .map(dt -> {
+                    List<Attribute> filteredAttributes = dt.getAttributes().stream()
+                            .filter(Attribute::getIsAlive)
+                            .toList();
+                    dt.setAttributes(filteredAttributes);
+                    return documentTypeMapper.toCreateDocumentTypeResponse(dt);
+                })
                 .toList();
     }
 

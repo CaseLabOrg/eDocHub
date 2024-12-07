@@ -20,4 +20,5 @@ public interface AttributeRepository extends JpaRepository<Attribute, Long> {
     Optional<Attribute> findByName(String name);
     List<Attribute> findAttributesByIdIsIn(List<Long> ids);
     @NotNull Page<Attribute> findAll(@NotNull Pageable pageable);
+    Boolean existsByName(String name);
 }

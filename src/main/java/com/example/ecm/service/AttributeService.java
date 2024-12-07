@@ -3,6 +3,7 @@ package com.example.ecm.service;
 import com.example.ecm.dto.patch_requests.PatchAttributeRequest;
 import com.example.ecm.dto.requests.CreateAttributeRequest;
 import com.example.ecm.dto.responses.CreateAttributeResponse;
+import com.example.ecm.exception.ConflictException;
 import com.example.ecm.exception.NotFoundException;
 import com.example.ecm.mapper.AttributeMapper;
 import com.example.ecm.model.Attribute;
@@ -41,7 +42,12 @@ public class AttributeService {
     public CreateAttributeResponse createAttribute(CreateAttributeRequest request) {
         List<DocumentType> documentTypes = documentTypeRepository.findDocumentTypesByIdIsIn(request.getDocumentTypesIds());
 
+        if (attributeRepository.existsByName(request.getName())) {
+            throw new ConflictException("Attribute exists");
+        }
+
         Attribute attribute = attributeMapper.toAttribute(request);
+
         attribute.getDocumentTypes().addAll(documentTypes);
         return attributeMapper.toAttributeResponse(
                 attributeRepository.save(attribute)
@@ -113,6 +119,12 @@ public class AttributeService {
         Attribute attribute = attributeRepository.findById(id)
                 .filter(Attribute::getIsAlive)
                 .orElseThrow(() -> new NotFoundException("Attribute with id: " + id + " not found"));
+
+        for (DocumentType documentType : attribute.getDocumentTypes()) {
+            documentType.getAttributes().remove(attribute);
+            documentTypeRepository.save(documentType);
+        }
+
         attribute.setIsAlive(false);
         attributeRepository.save(attribute);
     }
