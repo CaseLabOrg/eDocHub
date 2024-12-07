@@ -10,7 +10,10 @@ INSERT INTO subscriptions (plan_id, tenant_id, status)
 VALUES
     (1, 1, 'INACTIVE'),
     (2, 2, 'INACTIVE'),
-    (3, 3, 'INACTIVE');
+    (3, 3, 'INACTIVE'),
+    (1, 4, 'INACTIVE'),
+    (2, 5, 'INACTIVE'),
+    (3, 6, 'INACTIVE');
 
 -- Insert into invoices
 INSERT INTO invoices(subscription_id, description, amount, status, created_date)
