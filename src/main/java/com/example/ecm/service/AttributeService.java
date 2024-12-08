@@ -11,15 +11,11 @@ import com.example.ecm.model.DocumentType;
 import com.example.ecm.repository.AttributeRepository;
 import com.example.ecm.repository.DocumentTypeRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-import java.util.stream.Collectors;
 
 /**
  * Сервис для работы с атрибутами документов.
@@ -75,20 +71,16 @@ public class AttributeService {
      *
      * @return список ответов с данными всех атрибутов документов
      */
-    public List<CreateAttributeResponse> getAllAttributes(Pageable pageable, Boolean showOnlyALive) {
-        Page<Attribute> attributePage = attributeRepository.findAll(pageable);
-        Stream<Attribute> attributeStream = attributePage.stream();
+    public List<CreateAttributeResponse> getAllAttributes(Boolean showOnlyALive) {
+        List<Attribute> attributeList = attributeRepository.findAll();
+        Stream<Attribute> attributeStream = attributeList.stream();
 
         attributeStream = attributeStream.filter(x -> x.getIsAlive().equals(showOnlyALive));
 
 
-        return new PageImpl<>(
-                attributeStream
+        return attributeStream
                         .map(attributeMapper::toAttributeResponse)
-                        .collect(Collectors.toList()),
-                pageable,
-                attributePage.getTotalElements()
-        ).getContent();
+                        .toList();
     }
 
     /**
