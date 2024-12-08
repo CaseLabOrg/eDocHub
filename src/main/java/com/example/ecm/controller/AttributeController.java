@@ -10,8 +10,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -62,20 +60,15 @@ public class AttributeController {
 
     /**
      * Получает все существующие атрибуты документов с поддержкой пагинации.
-     *
-     * @param page          Номер страницы (по умолчанию 0).
-     * @param size          Количество записей на странице (по умолчанию 10).
      * @param showOnlyAlive Флаг, показывающий, отображать ли только активные атрибуты (по умолчанию true).
      * @return Список атрибутов документов в виде объектов {@link CreateAttributeResponse}.
      */
     @GetMapping
     @Operation(summary = "Получение всех атрибутов", description = "Возвращает страницу атрибутов документов с поддержкой пагинации")
     public ResponseEntity<List<CreateAttributeResponse>> getAllAttributes(
-            @RequestParam(defaultValue = "0") @Parameter(description = "Номер страницы") int page,
-            @RequestParam(defaultValue = "10") @Parameter(description = "Количество записей на странице") int size,
             @RequestParam(defaultValue = "true") @Parameter(description = "Отображать только активные атрибуты") Boolean showOnlyAlive) {
-        Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(attributeService.getAllAttributes(pageable, showOnlyAlive));
+
+        return ResponseEntity.ok(attributeService.getAllAttributes(showOnlyAlive));
     }
 
     /**
