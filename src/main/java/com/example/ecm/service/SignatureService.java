@@ -108,21 +108,25 @@ public class SignatureService {
                 .findFirst().orElseThrow(() -> new NotFoundException("SignatureRequest with id: " + id + " not found or no longer active"));
 
 
-        if (!documentStateService.checkTransition(signRequest.getDocumentVersion().getDocument(), DocumentState.SIGNED)) {
+        if (!documentStateService.checkTransition(signRequest.getDocumentVersion().getDocument(), DocumentState.SIGNED) && signRequest.getVoting() == null) {
             throw new ConflictException("You cannot sign document with id: " + signRequest.getDocumentVersion().getDocument().getId() + " check available transitions");
         }
         signRequest.setStatus(request.getStatus());
 
         signatureRequestRepository.save(signRequest);
 
-        switch (request.getStatus()) {
-            case APPROVED -> signRequest.getDocumentVersion().getDocument().setState(DocumentState.SIGNED);
-            case REJECTED -> signRequest.getDocumentVersion().getDocument().setState(DocumentState.SENT_ON_REWORK);
-        }
+        if (!documentStateService.checkTransition(signRequest.getDocumentVersion().getDocument(), DocumentState.APPROVED_BY_VOTING) || signRequest.getVoting() == null) {
 
-        if (signRequest.getStatus().equals(SignatureRequestState.REJECTED)) {
-            documentRepository.save(signRequest.getDocumentVersion().getDocument());
-            return new GetSignatureResponse();
+
+            switch (request.getStatus()) {
+                case APPROVED -> signRequest.getDocumentVersion().getDocument().setState(DocumentState.SIGNED);
+                case REJECTED -> signRequest.getDocumentVersion().getDocument().setState(DocumentState.SENT_ON_REWORK);
+            }
+
+            if (signRequest.getStatus().equals(SignatureRequestState.REJECTED)) {
+                documentRepository.save(signRequest.getDocumentVersion().getDocument());
+                return new GetSignatureResponse();
+            }
         }
 
         documentRepository.save(signRequest.getDocumentVersion().getDocument());
